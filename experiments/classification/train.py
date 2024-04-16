@@ -33,14 +33,20 @@ class PL_model(pl.LightningModule):
         self.gts = torch.tensor([])
 
         # Store accuracy metrics for logging.
-        self.train_acc = torchmetrics.Accuracy()
-        self.test_acc = torchmetrics.Accuracy()
+        if args.dataset == "cifar10":
+            self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+            self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+        else:
+            raise NotImplementedError
 
         # Store accuracy metrics for testing.
         self.test_acc_dict = {}
         self.test_jitter = np.linspace(-0.5, 0.5, 37)
         for i in self.test_jitter:
-            self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy()
+            if args.dataset == "cifar10":
+                self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+            else:
+                raise NotImplementedError
 
         # Loss function
         self.criterion = nn.CrossEntropyLoss()
