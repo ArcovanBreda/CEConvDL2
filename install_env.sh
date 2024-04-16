@@ -15,7 +15,8 @@ module load Anaconda3/2022.05
 source ~/.bashrc
 cd $HOME/CEConvDL2/CEConv
 
-conda create -n CEConv python=3.12 pip
+# conda create -n CEConv python=3.12 pip
 conda activate CEConv
 
-pip install -r requirements.txt
+# pip install -r requirements.txt
+pip install --force-reinstall pytorch-lightning==1.9.0
