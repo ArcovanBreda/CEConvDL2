@@ -24,8 +24,8 @@ class PL_model(pl.LightningModule):
 
         # Logging.
         self.save_hyperparameters()
-        self.train_acc = torchmetrics.Accuracy()
-        self.test_acc = torchmetrics.Accuracy()
+        self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=30)
+        self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=30)
         self.preds = torch.tensor([])
         self.gts = torch.tensor([])
 
