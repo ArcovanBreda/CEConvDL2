@@ -24,8 +24,9 @@ python setup.py install
 
 Set the required environment variables:
 ```bash
-export WANDB_DIR = /path/to/wandb/directory  # Store wandb logs here.
-export DATA_DIR = /path/to/data/directory  # Store datasets here.
+export WANDB_DIR=/home/rensdebee/CEConvDL2/WANDB  # Store wandb logs here.
+export DATA_DIR=/home/rensdebee/CEConvDL2/DATA  # Store datasets here.
+export OUT_DIR=/home/rensdebee/CEConvDL2/OUT  # Store datasets here.
 ```
 
 ## How to use
