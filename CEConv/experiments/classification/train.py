@@ -36,6 +36,9 @@ class PL_model(pl.LightningModule):
         if args.dataset == "cifar10":
             self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
             self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+        elif args.dataset == "flowers102":
+            self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+            self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=102)
         else:
             raise NotImplementedError
 
@@ -45,6 +48,8 @@ class PL_model(pl.LightningModule):
         for i in self.test_jitter:
             if args.dataset == "cifar10":
                 self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+            elif args.dataset == "flowers102":
+                self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
             else:
                 raise NotImplementedError
 
@@ -229,8 +234,7 @@ def main(args) -> None:
     if args.run_name is not None:
         run_name += "-" + args.run_name
     mylogger = pl_loggers.WandbLogger(  # type: ignore
-        project="color-equivariance-classification",
-        entity="tudcv",
+        project="DL2 CEConv",
         config=vars(args),
         name=run_name,
         save_dir=os.environ["WANDB_DIR"],
