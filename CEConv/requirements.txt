@@ -1,6 +1,6 @@
 torch
 torchvision
-pytorch-lightning==1.9.0
+pytorch-lightning==1.9.5
 matplotlib
 torchinfo
 torchmetrics
@@ -8,3 +8,4 @@ wandb
 --extra-index-url https://developer.download.nvidia.com/compute/redist
 nvidia-dali-cuda110
 opencv-python
+scipy
