@@ -6,7 +6,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=18
 #SBATCH --time=00:15:00
-#SBATCH --output=run_model_data_%A.out
+#SBATCH --output=run_%A.out
 
 module purge
 module load 2022
@@ -18,10 +18,13 @@ conda activate CEConv
 # change working dir
 cd $HOME/CEConvDL2/CEConv
 
-# set env vars and print them
-export DATA_DIR=./data
-export WANDB_DIR=$HOME/.conda/envs/CEConv/lib/python3.12/site-packages
+# set env vars
+export DATA_DIR=./DATA
+# export WANDB_DIR=$HOME/.conda/envs/CEConv/lib/python3.12/site-packages #idk if we want to use this one instead
+export WANDB_DIR=$HOME/CEConvDL2/CEConv/WANDB
 export OUT_DIR=./output
+export WANDB_API_KEY=$YOUR_API_KEY
+export WANDB_NAME=testRun
 
 # ResNet44 (or optionally 18)
 # Baseline, grayscale and color jitter.

@@ -160,8 +160,6 @@ cython_debug/
 #.idea/
 DATA/
 WANDB/
-
-# do not include data folder
-data/
+output/
 
 *.out
