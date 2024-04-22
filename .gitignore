@@ -163,4 +163,3 @@ WANDB/
 output/
 
 *.out
-*.sh # it is not advised to commit your api key
