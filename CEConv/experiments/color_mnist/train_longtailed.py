@@ -21,7 +21,7 @@ from models.cnn import CECNN, CNN
 class PL_model(pl.LightningModule):
     def __init__(self, args):
         super(PL_model, self).__init__()
-
+        self.model_name = args.model_name
         self.num_classes = 30
         # Saving best model.
         self.best_val_acc = 0.0
@@ -145,15 +145,16 @@ class PL_model(pl.LightningModule):
         return class_accuracy
 
     def save_model(self, model_path="best_model.pth"):
+        os.makedirs("./output", exist_ok=True)
         torch.save({
             'model_state_dict': self.model.state_dict(),
             'best_epoch': self.best_epoch,
             'best_val_acc': self.best_val_acc,
             'class_acc': self.class_acc
-        }, model_path)
+        }, f"./output/{self.model_name}")
 
     def load_model(self, model_path="best_model.pth"):
-        checkpoint = torch.load(model_path)
+        checkpoint = torch.load(f"./output/{self.model_name}")
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.best_epoch = checkpoint['best_epoch']
         self.best_val_acc = checkpoint['best_val_acc']
@@ -229,13 +230,14 @@ def main(args) -> None:
     # Get data loaders.
     trainloader, testloader = getDataset()
     args.steps_per_epoch = len(trainloader)
+    run_name = "longtailed-seed_{}-rotations_{}-seed_{}".format(args.seed, args.rotations, args.seed)
+    args.model_name = run_name
 
     # Initialize model.
     model = PL_model(args)
     summary(model.model, (2, 3, 28, 28))
 
     # Callbacks and loggers.
-    run_name = "longtailed-seed_{}-rotations_{}".format(args.seed, args.rotations)
     mylogger = pl_loggers.WandbLogger(  # type: ignore
         project="CEConv",
         # entity="tudcv",
@@ -265,13 +267,12 @@ def main(args) -> None:
     )
 
     import matplotlib.pyplot as plt
+    print(args)
 
     model = PL_model(args)
 
     model.load_model()
-
-    classnames = [j + str(i) for i in range(10) for j in ["R", "G", "B"]]
-
+    
     print("Best epoch:", model.best_epoch)
     print("Class accuracy:", model.class_acc)
 
