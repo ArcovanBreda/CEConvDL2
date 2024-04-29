@@ -22,6 +22,10 @@ class PL_model(pl.LightningModule):
     def __init__(self, args):
         super(PL_model, self).__init__()
 
+        # Saving best model.
+        self.best_val_acc = 0.0
+        self.best_epoch = 0
+
         # Logging.
         self.save_hyperparameters()
         self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=30)
@@ -101,7 +105,15 @@ class PL_model(pl.LightningModule):
         return {"loss": loss}
 
     def validation_epoch_end(self, outputs):
-        self.log("test_acc_epoch", self.test_acc.compute())
+        curr_test_acc = self.test_acc.compute()
+
+        # Save the best model
+        if curr_test_acc > self.best_val_acc:
+            self.best_val_acc = curr_test_acc
+            self.best_epoch = self.trainer.current_epoch
+            self.save_model()
+
+        self.log("test_acc_epoch", curr_test_acc)
 
         # Log confusion matrix with wandb.
         classnames = [j + str(i) for i in range(10) for j in ["R", "G", "B"]]
@@ -118,6 +130,19 @@ class PL_model(pl.LightningModule):
         self.test_acc.reset()
         self.preds = torch.tensor([])
         self.gts = torch.tensor([])
+
+    def save_model(self, model_path="best_model.pth"):
+        torch.save({
+            'model_state_dict': self.model.state_dict(),
+            'best_epoch': self.best_epoch,
+            'best_val_acc': self.best_val_acc
+        }, model_path)
+
+    def load_model(self, model_path="best_model.pth"):
+        checkpoint = torch.load(model_path)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.best_epoch = checkpoint['best_epoch']
+        self.best_val_acc = checkpoint['best_val_acc']
 
 
 class CustomDataset(TensorDataset):
@@ -223,6 +248,12 @@ def main(args) -> None:
         train_dataloaders=trainloader,
         val_dataloaders=[testloader],
     )
+
+    model = PL_model(args)
+    model.load_model()
+    print(model.best_epoch)
+    print(model.best_val_acc)
+
 
 
 if __name__ == "__main__":
