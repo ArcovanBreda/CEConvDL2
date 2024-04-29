@@ -197,8 +197,8 @@ def main(args) -> None:
     # Callbacks and loggers.
     run_name = "longtailed-seed_{}-rotations_{}".format(args.seed, args.rotations)
     mylogger = pl_loggers.WandbLogger(  # type: ignore
-        project="ceconv-colormnist-new",
-        entity="tudcv",
+        project="CEConv",
+        # entity="tudcv",
         config=vars(args),
         name=run_name,
         tags=["longtailed"],
