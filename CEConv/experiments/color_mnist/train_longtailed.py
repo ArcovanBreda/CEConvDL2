@@ -230,7 +230,7 @@ def main(args) -> None:
     # Get data loaders.
     trainloader, testloader = getDataset()
     args.steps_per_epoch = len(trainloader)
-    run_name = "longtailed-seed_{}-rotations_{}-seed_{}".format(args.seed, args.rotations, args.seed)
+    run_name = "longtailed-seed_{}-rotations_{}".format(args.seed, args.rotations)
     args.model_name = run_name
 
     # Initialize model.
