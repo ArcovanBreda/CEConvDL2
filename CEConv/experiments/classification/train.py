@@ -175,6 +175,8 @@ class PL_model(pl.LightningModule):
 
     def test_epoch_end(self, outputs):
         # Log metrics and predictions, and reset metrics.
+        table = {"hue": [],
+                 "acc": []}
         columns = ["hue", "acc"]
         test_table = wandb.Table(columns=columns)
 
@@ -182,7 +184,12 @@ class PL_model(pl.LightningModule):
             test_table.add_data(
                 i, self.test_acc_dict["test_acc_{:.4f}".format(i)].compute().item()
             )
+            table["acc"].append(self.test_acc_dict["test_acc_{:.4f}".format(i)].compute().item())
+            table["hue"].append(i)
             self.test_acc_dict["test_acc_{:.4f}".format(i)].reset()
+
+        print(table["hue"], "\n\n")
+        print(table["acc"])
 
         # Log test table with wandb.
         self.logger.experiment.log({"test_table": test_table})  # type: ignore
@@ -278,13 +285,13 @@ def main(args) -> None:
         print("Files NOT found")
         weights_path = None
 
-    # Train model.
-    trainer.fit(
-        model=model,
-        train_dataloaders=trainloader,
-        val_dataloaders=[testloader],
-        ckpt_path=weights_path,
-    )
+    # # Train model.
+    # trainer.fit(
+    #     model=model,
+    #     train_dataloaders=trainloader,
+    #     val_dataloaders=[testloader],
+    #     ckpt_path=weights_path,
+    # )
 
     # Test model.
     trainer.test(model, dataloaders=testloader)
