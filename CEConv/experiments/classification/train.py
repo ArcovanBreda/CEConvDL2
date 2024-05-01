@@ -210,7 +210,7 @@ def main(args) -> None:
     # Get data loaders.
     trainloader, testloader = get_dataset(args)
     args.steps_per_epoch = len(trainloader)
-    args.epochs = math.ceil(args.epochs / args.split)
+    args.epochs = args.epochs # math.ceil(args.epochs / args.split)
 
     # Initialize model.
     model = PL_model(args)
@@ -241,15 +241,19 @@ def main(args) -> None:
     )
     lr_monitor = LearningRateMonitor(logging_interval="step")
 
+    print("run name:", run_name)
+
     # Define callback to store model weights.
     weights_dir = os.path.join(
         os.environ["OUT_DIR"], "color_equivariance/classification/"
     )
     os.makedirs(weights_dir, exist_ok=True)
     weights_name = run_name + ".pth.tar"
-    checkpoint_callback = ModelCheckpoint(dirpath=weights_dir, filename=weights_name)
+    checkpoint_callback = ModelCheckpoint(dirpath=weights_dir,
+                                          filename=weights_name,
+                                          save_on_train_epoch_end=True)
 
-    # Train model.
+    # Instantiate model.
     trainer = pl.Trainer.from_argparse_args(
         args,
         logger=mylogger,
@@ -269,7 +273,9 @@ def main(args) -> None:
             os.path.join(weights_dir, f) for f in checkpoint_files if weights_name in f
         ]
         weights_path = weights_path[0] if len(weights_path) > 0 else None
+        print("Files found")
     else:
+        print("Files NOT found")
         weights_path = None
 
     # Train model.
