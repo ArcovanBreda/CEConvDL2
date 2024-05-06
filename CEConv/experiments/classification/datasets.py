@@ -3,8 +3,7 @@ import torch
 import os
 
 from torchvision import datasets
-# from torchvision import transforms as T
-from torchvision.transforms import v2 as T  #TODO
+from torchvision import transforms as T
 
 from torch.utils.data import SubsetRandomSampler
 from torch.utils.data.dataloader import DataLoader
@@ -75,19 +74,19 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
         tr_train = T.Compose([T.Grayscale(num_output_channels=3), tr_train])
         tr_test = T.Compose([T.Grayscale(num_output_channels=3), tr_test])
     
-    if args.lab is True: #TODO
+    if args.lab is True:
         # ImageNet-style preprocessing.
         tr_train = T.Compose(
             [
                 T.ColorJitter(
                     brightness=0,
                     contrast=0,
-                    saturation=0, #TODO adjust this value once saturation equivariance implemented?
+                    saturation=0, #TODO adjust this value once saturation equivariance implemented
                     hue=args.jitter,
                 ),
                 T.RandomResizedCrop(224),
                 T.RandomHorizontalFlip(),
-                rgb2lab(), # convert to hsv after applying jitter
+                rgb2lab(), # convert to lab after applying jitter
                 T.ToTensor(),
             ]
         )
@@ -135,7 +134,7 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
         x_test = datasets.Flowers102(
             path, split="test", transform=tr_test, download=download
         )
-        args.classes = torch.arange(102)
+        args.classes = torch.arange(102)    
     elif args.dataset == "food101":
         x_train = datasets.Food101(
             path, split="train", transform=tr_train, download=download
