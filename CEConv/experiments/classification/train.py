@@ -111,7 +111,7 @@ class PL_model(pl.LightningModule):
 
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1)
+            x = normalize(x, grayscale=args.grayscale or args.rotations > 1) #TODO convert to hsv around here
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -132,7 +132,7 @@ class PL_model(pl.LightningModule):
 
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1)
+            x = normalize(x, grayscale=args.grayscale or args.rotations > 1) #TODO convert to hsv around here
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -156,7 +156,7 @@ class PL_model(pl.LightningModule):
 
             # Normalize images.
             if args.normalize:
-                x = normalize(x, grayscale=args.grayscale or args.rotations > 1)
+                x = normalize(x, grayscale=args.grayscale or args.rotations > 1) #TODO convert to hsv around here
 
             # Forward pass and compute loss.
             y_pred = self.model(x)
@@ -300,6 +300,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--nonorm", dest="normalize", action="store_false", help="no input norm."
     )
+    parser.add_argument("--lab", dest="lab", action="store_true", help="convert rgb image to hsv") #TODO
 
     # Training settings.
     parser.add_argument(

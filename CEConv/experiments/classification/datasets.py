@@ -3,10 +3,17 @@ import torch
 import os
 
 from torchvision import datasets
-from torchvision import transforms as T
+# from torchvision import transforms as T
+from torchvision.transforms import v2 as T  #TODO
 
 from torch.utils.data import SubsetRandomSampler
 from torch.utils.data.dataloader import DataLoader
+
+
+class rgb2lab(torch.nn.Module):
+    """ Converts a PIL image to LAB colorspace."""
+    def forward(self, img):
+        return img.convert("LAB")
 
 
 def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = False) -> torch.Tensor:
@@ -67,6 +74,24 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
     if args.grayscale is True:
         tr_train = T.Compose([T.Grayscale(num_output_channels=3), tr_train])
         tr_test = T.Compose([T.Grayscale(num_output_channels=3), tr_test])
+    
+    if args.lab is True: #TODO
+        # ImageNet-style preprocessing.
+        tr_train = T.Compose(
+            [
+                T.ColorJitter(
+                    brightness=0,
+                    contrast=0,
+                    saturation=0, #TODO adjust this value once saturation equivariance implemented?
+                    hue=args.jitter,
+                ),
+                T.RandomResizedCrop(224),
+                T.RandomHorizontalFlip(),
+                rgb2lab(), # convert to hsv after applying jitter
+                T.ToTensor(),
+            ]
+        )
+        tr_test = T.Compose([rgb2lab(), tr_test])
 
     # Set dataset path
     if path is None:
