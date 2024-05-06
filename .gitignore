@@ -171,3 +171,4 @@ colormnist_longtailed/
 MNIST/
 cifar-10-python.tar.gz
 CEConv/lightning_logs/version_0/hparams.yaml
+*.sh
