@@ -36,6 +36,33 @@ def _get_hue_rotation_matrix(rotations: int) -> torch.Tensor:
         dtype=torch.float32,
     )
 
+def _get_lab_rotation_matrix(rotations: int) -> torch.Tensor:
+    """Returns a 3x3 hue rotation matrix.
+
+    Rotates a 3D point by 360/rotations degrees along the diagonal.
+
+    Args:
+      rotations: int, number of rotations
+    """
+
+    assert rotations > 0, "Number of rotations must be positive."
+
+    # Angle to shift each image by
+    # By using the matrix power we do multiple rotations by aply this matrix
+    # multiple times
+    angle_delta = 2 * math.pi / rotations
+
+    # Rotation matrix
+    return torch.tensor(
+        [
+            [1, 0, 0],
+            [0, math.cos(angle_delta), -math.sin(angle_delta)],
+            [0, math.sin(angle_delta), math.cos(angle_delta)],
+        ],
+        dtype=torch.float32,
+    )
+
+
 
 def _trans_input_filter(weights, rotations, rotation_matrix) -> torch.Tensor:
     """Apply linear transformation to filter.
@@ -117,21 +144,24 @@ class CEConv2d(nn.Conv2d):
         kernel_size: typing.Union[int, typing.Tuple[int, int]],
         learnable: bool = False,
         separable: bool = True,
+        lab_space: bool = False,
         **kwargs
     ) -> None:
         self.in_rotations = in_rotations
         self.out_rotations = out_rotations
         self.separable = separable
-
+        self.labs_space = lab_space
         super().__init__(in_channels, out_channels, kernel_size, **kwargs)
 
         # Initialize transformation matrix and weights.
         if in_rotations == 1:
-            init = (
-                torch.rand((3, 3)) * 2.0 / 3 - (1.0 / 3)
-                if learnable
-                else _get_hue_rotation_matrix(out_rotations)
-            )
+            if learnable:
+                init =  torch.rand((3, 3)) * 2.0 / 3 - (1.0 / 3)
+            elif lab_space: 
+                init =_get_lab_rotation_matrix(out_rotations)  
+            else:
+                init =_get_hue_rotation_matrix(out_rotations)
+
             self.transformation_matrix = Parameter(init, requires_grad=learnable)
             self.weight = Parameter(
                 torch.Tensor(out_channels, in_channels, 1, *self.kernel_size)
@@ -173,7 +203,6 @@ class CEConv2d(nn.Conv2d):
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass."""
-
         # Compute full filter weights.
         if self.in_rotations == 1:
             # Apply rotation to input layer filter.
@@ -203,7 +232,7 @@ class CEConv2d(nn.Conv2d):
             input_shape[-2],
             input_shape[-1],
         )
-
+        input=input.float() 
         y = F.conv2d(
             input, weight=tw, bias=None, stride=self.stride, padding=self.padding
         )

@@ -16,7 +16,7 @@ from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from torchinfo import summary
 from torchvision.transforms.functional import adjust_hue
 
-from experiments.classification.datasets import get_dataset, normalize
+from experiments.classification.datasets import get_dataset, normalize, batch_lab2rgb, batch_rgb2lab
 from models.resnet import ResNet18, ResNet44
 from models.resnet_hybrid import HybridResNet18, HybridResNet44
 
@@ -27,7 +27,7 @@ class PL_model(pl.LightningModule):
 
         # Logging.
         self.save_hyperparameters()
-
+        self.lab = args.lab
         # Store predictions and ground truth for computing confusion matrix.
         self.preds = torch.tensor([])
         self.gts = torch.tensor([])
@@ -69,6 +69,7 @@ class PL_model(pl.LightningModule):
             "width": args.width,
             "num_classes": len(args.classes),
             "ce_stages": args.ce_stages,
+            "lab_space": args.lab,
         }
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
         self.model = architectures[args.architecture](**kwargs)
@@ -108,7 +109,6 @@ class PL_model(pl.LightningModule):
 
     def training_step(self, batch, batch_idx) -> dict[str, torch.Tensor]:
         x, y = batch
-
         # Normalize images.
         if args.normalize:
             x = normalize(x, grayscale=args.grayscale or args.rotations > 1) #TODO convert to hsv around here
@@ -149,10 +149,13 @@ class PL_model(pl.LightningModule):
 
     def test_step(self, batch, batch_idx) -> None:
         x_org, y = batch
-
         for i in self.test_jitter:
             # Apply hue shift.
-            x = adjust_hue(x_org, i)
+            if self.lab:
+                x_org = batch_lab2rgb(x_org)
+            x = adjust_hue(x_org, i) #TODO convert to hsv around here
+            if self.lab:
+                x = batch_rgb2lab(x_org)
 
             # Normalize images.
             if args.normalize:
@@ -232,6 +235,8 @@ def main(args) -> None:
         str(args.split).replace(".", "_"),
         args.seed,
     )
+    if args.lab:
+        run_name += "-lab_space"
     if args.grayscale:
         run_name += "-grayscale"
     if not args.normalize:
@@ -293,7 +298,6 @@ def main(args) -> None:
     #     ckpt_path=weights_path,
     # )
 
-    # Test model.
     trainer.test(model, dataloaders=testloader)
 
 
@@ -313,8 +317,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--nonorm", dest="normalize", action="store_false", help="no input norm."
     )
-    parser.add_argument("--lab", dest="lab", action="store_true", help="convert rgb image to hsv") #TODO
-
+    parser.add_argument("--lab", dest="lab", action="store_true", help="convert rgb image to lab")
     # Training settings.
     parser.add_argument(
         "--bs", type=int, default=256, help="training batch size (default: 256)"

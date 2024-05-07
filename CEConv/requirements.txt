@@ -9,3 +9,5 @@ wandb
 nvidia-dali-cuda110
 opencv-python
 scipy
+# For lab colour space
+scikit-image

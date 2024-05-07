@@ -1,6 +1,8 @@
 import math
 import torch
 import os
+from skimage import color
+import numpy as np
 
 from torchvision import datasets
 from torchvision import transforms as T
@@ -12,12 +14,43 @@ from torch.utils.data.dataloader import DataLoader
 class rgb2lab(torch.nn.Module):
     """ Converts a PIL image to LAB colorspace."""
     def forward(self, img):
-        return img.convert("LAB")
+        img = np.array(img)
+        img = color.rgb2lab(img)
+        return img
+
+class lab2rgb(torch.nn.Module):
+    """ Converts a LAB image to RGB colorspace."""
+    def forward(self, img):
+        img = np.array(img)
+        img = color.rgb2lab(img)
+        return img
 
 
-def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = False) -> torch.Tensor:
+# Holy shit dit is lelijk
+def batch_rgb2lab(batch):
+    temp = torch.zeros_like(batch)
+    batch = batch.cpu().moveaxis(1,-1).numpy()
+    transform = T.Compose([rgb2lab(), T.ToTensor()])
+    for i in range(batch.shape[0]):
+        temp[i] = transform(batch[i])
+    batch = temp
+    return batch
+
+
+def batch_lab2rgb(batch):
+    temp = torch.zeros_like(batch)
+    batch = batch.cpu().moveaxis(1,-1).numpy()
+    transform = T.Compose([lab2rgb(), T.ToTensor()])
+    for i in range(batch.shape[0]):
+        temp[i] = transform(batch[i])
+    batch = temp
+    return batch
+
+#TODO convert to hsv around here
+def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = False, lab: bool = False) -> torch.Tensor:
     """Normalize batch of images."""
-
+    if lab:
+        batch = batch_lab2rgb(batch)
     if not grayscale:
         mean = torch.tensor([0.485, 0.456, 0.406], device=batch.device).view(1, 3, 1, 1)
         std = torch.tensor([0.229, 0.224, 0.225], device=batch.device).view(1, 3, 1, 1)
@@ -25,9 +58,13 @@ def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = Fals
         mean = torch.tensor([0.485], device=batch.device).view(1, 1, 1, 1)
         std = torch.tensor([0.229], device=batch.device).view(1, 1, 1, 1)
     if inverse:
-        return batch * std + mean
-    return (batch - mean) / std
-
+        out= batch * std + mean
+    else:
+        out = (batch - mean) / std
+    if lab:
+        return batch_rgb2lab(out)
+    else:
+        return out
 
 def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoader, DataLoader]:
     """Get train and test dataloaders."""
@@ -51,7 +88,8 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
                 T.ToTensor(),
             ]
         )
-        tr_test = T.Compose([T.ToTensor()])
+        # tr_test = T.Compose([T.ToTensor()])
+        tr_test = T.Compose([])
     else:
         # ImageNet-style preprocessing.
         tr_train = T.Compose(
@@ -67,30 +105,20 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
                 T.ToTensor(),
             ]
         )
-        tr_test = T.Compose([T.Resize(256), T.CenterCrop(224), T.ToTensor()])
-
+        # tr_test = T.Compose([T.Resize(256), T.CenterCrop(224), T.ToTensor()])
+        tr_test = T.Compose([T.Resize(256), T.CenterCrop(224)])
     # Convert data to grayscale
     if args.grayscale is True:
         tr_train = T.Compose([T.Grayscale(num_output_channels=3), tr_train])
         tr_test = T.Compose([T.Grayscale(num_output_channels=3), tr_test])
     
     if args.lab is True:
-        # ImageNet-style preprocessing.
-        tr_train = T.Compose(
-            [
-                T.ColorJitter(
-                    brightness=0,
-                    contrast=0,
-                    saturation=0, #TODO adjust this value once saturation equivariance implemented
-                    hue=args.jitter,
-                ),
-                T.RandomResizedCrop(224),
-                T.RandomHorizontalFlip(),
-                rgb2lab(), # convert to lab after applying jitter
-                T.ToTensor(),
-            ]
-        )
-        tr_test = T.Compose([rgb2lab(), tr_test])
+        # convert to lab after applying jitter
+        tr_train = T.Compose([tr_train, rgb2lab(), T.ToTensor()]) 
+        tr_test = T.Compose([tr_test, rgb2lab(), T.ToTensor()])
+    else:
+        tr_train = T.Compose([tr_train, T.ToTensor()]) 
+        tr_test = T.Compose([tr_test, T.ToTensor()])
 
     # Set dataset path
     if path is None:
