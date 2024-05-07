@@ -368,8 +368,8 @@ if __name__ == "__main__":
     )
 
     # Test settings
-    parser.add_argument("--hue_test", dest="hue_test", action="store_true", help="test set should get hue shifts")
-    parser.add_argument("--sat_test", dest="sat_test", action="store_true", help="test set should get saturation shifts")
+    parser.add_argument("--hue_test", dest="hue_test", action="store_true", help="test set should get hue shifts. If hue_test and sat_test not provided, applies both")
+    parser.add_argument("--sat_test", dest="sat_test", action="store_true", help="test set should get saturation shifts. If hue_test and sat_test not provided, applies both")
 
     parser = PL_model.add_model_specific_args(parser)
 
