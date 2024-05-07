@@ -40,13 +40,13 @@ def plot_figure_2(data_dir, print_stats=False):
                   steps_per_epoch=5, 
                   model_name='longtailed-seed_0-rotations_3'),
     ]
-    
+
     train = CustomDataset(
             torch.load(os.path.join(data_dir, "colormnist_longtailed", "train.pt")),
             jitter=False,
             grayscale=False,
         )
-    
+
     samples_per_class = torch.unique(train.tensors[1], return_counts=True)
     sort_idx = torch.argsort(samples_per_class[1], descending=True)
     samples_per_class = (samples_per_class[0][sort_idx], samples_per_class[1][sort_idx])
@@ -56,7 +56,7 @@ def plot_figure_2(data_dir, print_stats=False):
 
     # Create empty arrays to store accuracy scores for each seed
     class_accs = [[],[]]
-    
+
     # Loop over seeds 1 to 10
     for seed in range(1, 11):
         # Loop over models

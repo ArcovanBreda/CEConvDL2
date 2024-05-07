@@ -255,10 +255,15 @@ def main(args) -> None:
         os.environ["OUT_DIR"], "color_equivariance/classification/"
     )
     os.makedirs(weights_dir, exist_ok=True)
+
+    print(f"saving in: {weights_dir}")
+
     weights_name = run_name + ".pth.tar"
     checkpoint_callback = ModelCheckpoint(dirpath=weights_dir,
                                           filename=weights_name,
-                                          save_on_train_epoch_end=True)
+                                          monitor='val_accuracy',
+                                        #   save_best_only=True,
+                                          mode='max')
 
     # Instantiate model.
     trainer = pl.Trainer.from_argparse_args(
@@ -285,13 +290,13 @@ def main(args) -> None:
         print("Files NOT found")
         weights_path = None
 
-    # # Train model.
-    # trainer.fit(
-    #     model=model,
-    #     train_dataloaders=trainloader,
-    #     val_dataloaders=[testloader],
-    #     ckpt_path=weights_path,
-    # )
+    # Train model.
+    trainer.fit(
+        model=model,
+        train_dataloaders=trainloader,
+        val_dataloaders=[testloader],
+        ckpt_path=weights_path,
+    )
 
     # Test model.
     trainer.test(model, dataloaders=testloader)
