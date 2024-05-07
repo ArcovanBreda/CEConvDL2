@@ -85,7 +85,6 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
                 ),
                 T.RandomCrop(32, padding=4),
                 T.RandomHorizontalFlip(p=0.5),
-                T.ToTensor(),
             ]
         )
         # tr_test = T.Compose([T.ToTensor()])
@@ -102,7 +101,6 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
                 ),
                 T.RandomResizedCrop(224),
                 T.RandomHorizontalFlip(),
-                T.ToTensor(),
             ]
         )
         # tr_test = T.Compose([T.Resize(256), T.CenterCrop(224), T.ToTensor()])

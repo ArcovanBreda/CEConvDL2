@@ -290,13 +290,13 @@ def main(args) -> None:
         print("Files NOT found")
         weights_path = None
 
-    # # Train model.
-    # trainer.fit(
-    #     model=model,
-    #     train_dataloaders=trainloader,
-    #     val_dataloaders=[testloader],
-    #     ckpt_path=weights_path,
-    # )
+    # Train model.
+    trainer.fit(
+        model=model,
+        train_dataloaders=trainloader,
+        val_dataloaders=[testloader],
+        ckpt_path=weights_path,
+    )
 
     trainer.test(model, dataloaders=testloader)
 
