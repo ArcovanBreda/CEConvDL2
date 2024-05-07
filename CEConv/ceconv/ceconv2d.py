@@ -37,7 +37,7 @@ def _get_hue_rotation_matrix(rotations: int) -> torch.Tensor:
     )
 
 
-def _trans_input_filter(weights, rotations, rotation_matrix) -> torch.Tensor:
+def _trans_input_filter(weights, rotations, rotation_matrix) -> torch.Tensor: #TODO
     """Apply linear transformation to filter.
 
     Args:

@@ -14,7 +14,7 @@ import wandb
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from torchinfo import summary
-from torchvision.transforms.functional import adjust_hue
+from torchvision.transforms.functional import adjust_hue, adjust_saturation
 
 from experiments.classification.datasets import get_dataset, normalize
 from models.resnet import ResNet18, ResNet44
@@ -44,14 +44,31 @@ class PL_model(pl.LightningModule):
 
         # Store accuracy metrics for testing.
         self.test_acc_dict = {}
-        self.test_jitter = np.linspace(-0.5, 0.5, 37)
-        for i in self.test_jitter:
-            if args.dataset == "cifar10":
-                self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
-            elif args.dataset == "flowers102":
-                self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
-            else:
-                raise NotImplementedError
+        self.hue_test, self.sat_test = False, False
+        
+        if args.hue_test and not args.sat_test:
+            self.hue_test = True
+            self.test_jitter = np.linspace(-0.5, 0.5, 37)
+            for i in self.test_jitter:
+                if args.dataset == "cifar10":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                elif args.dataset == "flowers102":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+                else:
+                    raise NotImplementedError
+        elif args.sat_test and not args.hue_test:
+            self.sat_test = True
+            self.test_jitter = np.append(np.linspace(0, 1, 5, endpoint=False), np.arange(1, 256, 1, dtype=int)) #TODO determine which sat factors we want to scale with
+            for i in self.test_jitter:
+                if args.dataset == "cifar10":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                elif args.dataset == "flowers102":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+                else:
+                    raise NotImplementedError
+        else:
+            self.hue_test, self.sat_test = True, True
+            raise NotImplementedError #TODO jitter for combinations of saturation and hue shifts
 
         # Loss function
         self.criterion = nn.CrossEntropyLoss()
@@ -111,7 +128,7 @@ class PL_model(pl.LightningModule):
 
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1) #TODO convert to hsv around here
+            x = normalize(x, grayscale=args.grayscale or args.rotations > 1)
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -132,7 +149,7 @@ class PL_model(pl.LightningModule):
 
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1) #TODO convert to hsv around here
+            x = normalize(x, grayscale=args.grayscale or args.rotations > 1)
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -151,12 +168,18 @@ class PL_model(pl.LightningModule):
         x_org, y = batch
 
         for i in self.test_jitter:
-            # Apply hue shift.
-            x = adjust_hue(x_org, i)
+            if self.hue_test and not self.sat_test:
+                # Apply hue shift.
+                x = adjust_hue(x_org, i)
+            elif self.sat_test and not self.hue_test:
+                # Apply saturation scale.
+                x = adjust_saturation(x_org, i)
+            else:
+                raise NotImplementedError #TODO test_jitter for combinations of hue and saturation perhaps make it a tuple in this case
 
             # Normalize images.
             if args.normalize:
-                x = normalize(x, grayscale=args.grayscale or args.rotations > 1) #TODO convert to hsv around here
+                x = normalize(x, grayscale=args.grayscale or args.rotations > 1)
 
             # Forward pass and compute loss.
             y_pred = self.model(x)
@@ -174,7 +197,7 @@ class PL_model(pl.LightningModule):
                 self.gts = torch.cat((self.gts, y.cpu()), 0)
 
     def test_epoch_end(self, outputs):
-        # Log metrics and predictions, and reset metrics.
+        # Log metrics and predictions, and reset metrics. #TODO adjust this func for sat possibly and both hue and sat?
         table = {"hue": [],
                  "acc": []}
         columns = ["hue", "acc"]
@@ -291,12 +314,12 @@ def main(args) -> None:
         weights_path = None
 
     # Train model.
-    trainer.fit(
-        model=model,
-        train_dataloaders=trainloader,
-        val_dataloaders=[testloader],
-        ckpt_path=weights_path,
-    )
+    # trainer.fit(
+    #     model=model,
+    #     train_dataloaders=trainloader,
+    #     val_dataloaders=[testloader],
+    #     ckpt_path=weights_path,
+    # )
 
     # Test model.
     trainer.test(model, dataloaders=testloader)
@@ -316,9 +339,13 @@ if __name__ == "__main__":
         "--jitter", type=float, default=0.0, help="color jitter strength"
     )
     parser.add_argument(
+        "--sat_jitter", type=int, nargs=2, default=(1, 1), help="saturation jitter factor chosen uniformly on [i, j]. Default is identity saturation"
+    )
+    parser.add_argument(
         "--nonorm", dest="normalize", action="store_false", help="no input norm."
     )
-    parser.add_argument("--lab", dest="lab", action="store_true", help="convert rgb image to hsv") #TODO
+    parser.add_argument("--lab", dest="lab", action="store_true", help="convert rgb image to lab")
+    parser.add_argument("--hsv", dest="hsv", action="store_true", help="convert rgb image to hsv")
 
     # Training settings.
     parser.add_argument(
@@ -339,6 +366,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--resume", dest="resume", action="store_true", help="resume training."
     )
+
+    # Test settings
+    parser.add_argument("--hue_test", dest="hue_test", action="store_true", help="test set should get hue shifts")
+    parser.add_argument("--sat_test", dest="sat_test", action="store_true", help="test set should get saturation shifts")
 
     parser = PL_model.add_model_specific_args(parser)
 

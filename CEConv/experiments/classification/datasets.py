@@ -15,6 +15,12 @@ class rgb2lab(torch.nn.Module):
         return img.convert("LAB")
 
 
+class rgb2hsv(torch.nn.Module):
+    """ Converts a PIL image to HSV colorspace."""
+    def forward(self, img):
+        return img.convert("HSV")
+
+
 def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = False) -> torch.Tensor:
     """Normalize batch of images."""
 
@@ -81,7 +87,7 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
                 T.ColorJitter(
                     brightness=0,
                     contrast=0,
-                    saturation=0, #TODO adjust this value once saturation equivariance implemented
+                    saturation=0,
                     hue=args.jitter,
                 ),
                 T.RandomResizedCrop(224),
@@ -91,6 +97,24 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
             ]
         )
         tr_test = T.Compose([rgb2lab(), tr_test])
+
+    if args.hsv is True:
+        # ImageNet-style preprocessing.
+        tr_train = T.Compose(
+            [
+                T.ColorJitter(
+                    brightness=0,
+                    contrast=0,
+                    saturation=args.sat_jitter,
+                    hue=args.jitter,
+                ),
+                T.RandomResizedCrop(224),
+                T.RandomHorizontalFlip(),
+                rgb2hsv(), # convert to hsv after applying jitter
+                T.ToTensor(),
+            ]
+        )
+        tr_test = T.Compose([rgb2hsv(), tr_test])
 
     # Set dataset path
     if path is None:
