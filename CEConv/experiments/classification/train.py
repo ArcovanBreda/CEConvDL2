@@ -19,7 +19,7 @@ from torchvision.transforms.functional import adjust_hue
 from experiments.classification.datasets import get_dataset, normalize, lab2rgb, rgb2lab
 from models.resnet import ResNet18, ResNet44
 from models.resnet_hybrid import HybridResNet18, HybridResNet44
-
+import matplotlib.pyplot as plt
 
 class PL_model(pl.LightningModule):
     def __init__(self, args) -> None:
@@ -111,7 +111,7 @@ class PL_model(pl.LightningModule):
         x, y = batch
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1) #TODO convert to hsv around here
+            x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=True if self.lab else False) #TODO convert to hsv around here
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -132,7 +132,7 @@ class PL_model(pl.LightningModule):
 
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1) #TODO convert to hsv around here
+            x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=True if self.lab else False) #TODO convert to hsv around here
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -152,14 +152,16 @@ class PL_model(pl.LightningModule):
         for i in self.test_jitter:
             # Apply hue shift.
             if self.lab:
-                x_org = lab2rgb(x_org)
-            x = adjust_hue(x_org, i) #TODO convert to hsv around here
+                x = lab2rgb.forward(None,x_org.clone())
+            else:
+                x = x_org.clone()
+            x = adjust_hue(x, i) #TODO convert to hsv around here
             if self.lab:
-                x = rgb2lab(x_org)
-
+                x = rgb2lab.forward(None,x)
+                
             # Normalize images.
             if args.normalize:
-                x = normalize(x, grayscale=args.grayscale or args.rotations > 1) #TODO convert to hsv around here
+                x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=True if self.lab else False) #TODO convert to hsv around here
 
             # Forward pass and compute loss.
             y_pred = self.model(x)
@@ -175,7 +177,7 @@ class PL_model(pl.LightningModule):
                     (self.preds, F.softmax(y_pred, 1).detach().cpu()), 0
                 )
                 self.gts = torch.cat((self.gts, y.cpu()), 0)
-
+        
     def test_epoch_end(self, outputs):
         # Log metrics and predictions, and reset metrics.
         table = {"hue": [],
@@ -302,7 +304,6 @@ def main(args) -> None:
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
 
     # Dataset settings.

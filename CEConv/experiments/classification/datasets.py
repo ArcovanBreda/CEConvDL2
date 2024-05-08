@@ -17,7 +17,6 @@ class rgb2lab(torch.nn.Module):
     input image tensor should be in range [0,1]
     """
     def forward(self, img):
-        assert img.min() >= 0 and img.max() <= 1, "input image tensor should be in range [0,1]"
         return color.rgb_to_lab(img)
 
 class lab2rgb(torch.nn.Module):
@@ -26,7 +25,6 @@ class lab2rgb(torch.nn.Module):
     input image tensor should be in range [0,1]
     """
     def forward(self, img):
-        assert img.min() >= 0 and img.max() <= 1, "input image tensor should be in range [0,1]"
         return color.lab_to_rgb(img)
 
 
@@ -34,7 +32,7 @@ class lab2rgb(torch.nn.Module):
 def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = False, lab: bool = False) -> torch.Tensor:
     """Normalize batch of images."""
     if lab:
-        batch = lab2rgb(batch)
+        batch = lab2rgb.forward(None, batch)
     if not grayscale:
         mean = torch.tensor([0.485, 0.456, 0.406], device=batch.device).view(1, 3, 1, 1)
         std = torch.tensor([0.229, 0.224, 0.225], device=batch.device).view(1, 3, 1, 1)
@@ -46,7 +44,7 @@ def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = Fals
     else:
         out = (batch - mean) / std
     if lab:
-        return rgb2lab(out)
+        return rgb2lab.forward(None, out)
     else:
         return out
 
