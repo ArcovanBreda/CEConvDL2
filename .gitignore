@@ -163,6 +163,7 @@ WANDB/
 output/
 
 *.out
+*.sh
 
 # Arco 
 flowers-102/
