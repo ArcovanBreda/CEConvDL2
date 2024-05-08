@@ -27,6 +27,9 @@ class PL_model(pl.LightningModule):
 
         # Logging.
         self.save_hyperparameters()
+        
+        #added
+        self.args =args
 
         # Store predictions and ground truth for computing confusion matrix.
         self.preds = torch.tensor([])
@@ -155,8 +158,8 @@ class PL_model(pl.LightningModule):
             x = adjust_hue(x_org, i)
 
             # Normalize images.
-            if args.normalize:
-                x = normalize(x, grayscale=args.grayscale or args.rotations > 1)
+            if self.args.normalize:
+                x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1)
 
             # Forward pass and compute loss.
             y_pred = self.model(x)
@@ -191,20 +194,20 @@ class PL_model(pl.LightningModule):
         print(table["hue"], "\n\n")
         print(table["acc"])
 
-        # Log test table with wandb.
-        self.logger.experiment.log({"test_table": test_table})  # type: ignore
+        # # Log test table with wandb.
+        # self.logger.experiment.log({"test_table": test_table})  # type: ignore
 
-        # Log confusion matrix with wandb.
-        self.logger.experiment.log(  # type: ignore
-            {
-                "test_conf_mat": wandb.plot.confusion_matrix(  # type: ignore
-                    probs=self.preds.numpy(),
-                    y_true=self.gts.numpy(),
-                    class_names=args.classes,
-                )
-            }
-        )
-
+        # # Log confusion matrix with wandb.
+        # self.logger.experiment.log(  # type: ignore
+        #     {
+        #         "test_conf_mat": wandb.plot.confusion_matrix(  # type: ignore
+        #             probs=self.preds.numpy(),
+        #             y_true=self.gts.numpy(),
+        #             class_names=self.args.classes,
+        #         )
+        #     }
+        # )
+        return [1,2,3]
 
 def main(args) -> None:
     # Create temp dir for wandb.
@@ -265,6 +268,7 @@ def main(args) -> None:
                                         #   save_best_only=True,
                                           mode='max')
 
+    print(args)
     # Instantiate model.
     trainer = pl.Trainer.from_argparse_args(
         args,

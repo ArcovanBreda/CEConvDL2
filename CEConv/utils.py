@@ -1,5 +1,4 @@
 import os
-from experiments.color_mnist.train_longtailed import PL_model, CustomDataset
 import torch
 from argparse import Namespace
 import matplotlib.pyplot as plt
@@ -8,10 +7,12 @@ import numpy as np
 
 def plot_figure_2(data_dir, print_stats=False):
     # List of model namespaces
+    from experiments.color_mnist.train_longtailed import PL_model, CustomDataset
+
     models = [
         Namespace(bs=256, 
                   test_bs=256, 
-                  grayscale=True, 
+                  grayscale=False, 
                   jitter=0.0, 
                   epochs=1000, 
                   seed=0, 
@@ -88,8 +89,8 @@ def plot_figure_2(data_dir, print_stats=False):
     fig, ax1 = plt.subplots(figsize=(12, 6))
 
     # Plot average accuracy with standard deviation as error bars
-    ax1.plot(labels, avg_class_acc[0, :], label='Z2CNN (grayscale)', color='darkorange')
-    ax1.fill_between(labels, avg_class_acc[0, :] - std_dev[0, :], avg_class_acc[0, :] + std_dev[0, :], color='darkorange', alpha=0.2)
+    ax1.plot(labels, avg_class_acc[0, :], label='Z2CNN', color='mediumblue')
+    ax1.fill_between(labels, avg_class_acc[0, :] - std_dev[0, :], avg_class_acc[0, :] + std_dev[0, :], color='mediumblue', alpha=0.2)
 
     ax1.plot(labels, avg_class_acc[1, :], label='CECNN', color='forestgreen')
     ax1.fill_between(labels, avg_class_acc[1, :] - std_dev[1, :], avg_class_acc[1, :] + std_dev[1, :], color='forestgreen', alpha=0.2)
@@ -99,7 +100,7 @@ def plot_figure_2(data_dir, print_stats=False):
     ax1.grid(axis='both')
     ax2 = ax1.twinx()
 
-    ax2.bar(labels, samples_per_class[1].numpy(), color="gray", alpha=0.3, width=0.65, label="Class frequency", zorder=0)
+    ax2.bar(labels, samples_per_class[1].numpy() / sum(samples_per_class[1].numpy()), color="gray", alpha=0.3, width=0.65, label="Class frequency", zorder=0)
     ax2.set_ylabel('Class frequency', fontsize=18)
 
     ax1.set_xlabel('Class', fontsize=18)
@@ -131,6 +132,8 @@ def plot_figure_2(data_dir, print_stats=False):
 
 
 def plot_figure_9():
+    from experiments.color_mnist.train_longtailed import PL_model, CustomDataset
+
     hue_values = [
     -0.5, -0.472222222222222, -0.444444444444444, -0.416666666666667, -0.388888888888889,
     -0.361111111111111, -0.333333333333333, -0.305555555555556, -0.277777777777778, -0.25,
@@ -188,3 +191,156 @@ def plot_figure_9():
     plt.grid(axis="both")
     plt.show()
 
+def evaluate_classify(path="output/color_equivariance/classification/cifar10-resnet44_1-false-jitter_0_0-split_0_1-seed_0.pth.tar.ckpt", ce_stages=None, seperable=True, width=None):
+    import pytorch_lightning as pl
+    from experiments.classification.datasets import get_dataset, normalize
+    from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
+    from pytorch_lightning import loggers as pl_loggers
+    from experiments.classification.train import PL_model
+
+
+
+
+    splitted = path.split("/")[-1].split("-")
+    dataset = splitted[0]
+    arch_rot = splitted[1].split("_")
+    architecture =  arch_rot[0]
+    rotations = int(arch_rot[1])
+    groupcosetmaxpool = False if splitted[2] == "false" else True
+    jitter = float(".".join(splitted[3].split("_")[1:]))
+    print(dataset)
+    print(architecture)
+    print(rotations)
+    print(groupcosetmaxpool)
+    print(jitter)
+    split = float(".".join(splitted[4].split("_")[1:]))
+    print(split)
+    seed = splitted[5].split("_")[1]
+    if len(seed.split(".")) != 1:
+        seed = int(seed.split(".")[0])
+    else:
+        seed = int(seed)
+    print(seed)
+    grayscale = True if "grayscale" in splitted else False
+    no_norm = True if "no_norm" in splitted else False
+    
+    args = Namespace(seed = seed,
+                    dataset = dataset,
+                    jitter = jitter,
+                    grayscale= grayscale,
+                    split= split,
+                    bs= 64,
+                    architecture=architecture,
+                    rotations=rotations,
+                    groupcosetmaxpool=groupcosetmaxpool,
+                    no_norm=no_norm,
+                    ce_stages=ce_stages,
+                    epochs=200,
+                    resume=True,
+                    normalize = not no_norm,
+                    separable=seperable,
+                    width=width
+    )
+    
+    run_name = "{}-{}_{}-{}-jitter_{}-split_{}-seed_{}".format(
+        args.dataset,
+        args.architecture,
+        args.rotations,
+        str(args.groupcosetmaxpool).lower(),
+        str(args.jitter).replace(".", "_"),
+        str(args.split).replace(".", "_"),
+        args.seed,
+    )
+    if args.grayscale:
+        run_name += "-grayscale"
+    if not args.normalize:
+        run_name += "-no_norm"
+    # if args.ce_stages is not None:
+        # run_name += "-{}_stages".format(args.ce_stages)
+    
+    args.model_name=run_name
+    # args.run_name=run_name
+    
+    mylogger = pl_loggers.WandbLogger(  # type: ignore
+        project="DL2 CEConv",
+        config=vars(args),
+        name=run_name,
+        save_dir=os.environ["WANDB_DIR"],
+    )
+    
+    
+    # Create temp dir for wandb.
+    os.makedirs(os.environ["WANDB_DIR"], exist_ok=True)
+
+    # Use fixed seed.
+    if seed is not None:
+        pl.seed_everything(seed, workers=True)
+
+    # Get data loaders.
+    trainloader, testloader = get_dataset(args)
+    args.steps_per_epoch = len(trainloader)
+    args.epochs = args.epochs # math.ceil(args.epochs / args.split)
+
+    # Initialize model.
+    model = PL_model(args)
+
+    # # Callbacks and loggers.
+   
+    lr_monitor = LearningRateMonitor(logging_interval="step")
+
+    # print("run name:", run_name)
+
+    # Define callback to store model weights.
+    weights_dir = os.path.join(
+        os.environ["OUT_DIR"], "color_equivariance/classification/"
+    )
+    os.makedirs(weights_dir, exist_ok=True)
+
+    print(f"saving in: {weights_dir}")
+
+    weights_name = run_name + ".pth.tar"
+    checkpoint_callback = ModelCheckpoint(dirpath=weights_dir,
+                                          filename=weights_name,
+                                          monitor='val_accuracy',
+                                        #   save_best_only=True,
+                                          mode='max')
+
+    # Instantiate model.
+    trainer = pl.Trainer.from_argparse_args(
+        args,
+        logger=mylogger,
+        accelerator="gpu" if torch.cuda.is_available() else "cpu",
+        devices=1,
+        callbacks=[lr_monitor, checkpoint_callback],
+        max_epochs=args.epochs,
+        log_every_n_steps=10,
+        deterministic=(args.seed is not None),
+        check_val_every_n_epoch=20,
+    )
+
+    # Get path to latest model weights if they exist.
+    if args.resume:
+        checkpoint_files = os.listdir(weights_dir)
+        weights_path = [
+            os.path.join(weights_dir, f) for f in checkpoint_files if weights_name in f
+        ]
+        weights_path = weights_path[0] if len(weights_path) > 0 else None
+        print("Files found")
+    else:
+        print("Files NOT found")
+        weights_path = None
+
+    # Train model.
+    # trainer.fit(
+    #     model=model,
+    #     train_dataloaders=trainloader,
+    #     val_dataloaders=[testloader],
+    #     ckpt_path=weights_path,
+    # )
+
+    # Test model.
+    results = trainer.test(model, dataloaders=testloader)
+    
+    print(results)
+
+evaluate_classify()
