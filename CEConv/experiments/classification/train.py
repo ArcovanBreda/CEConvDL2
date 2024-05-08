@@ -27,9 +27,7 @@ class PL_model(pl.LightningModule):
 
         # Logging.
         self.save_hyperparameters()
-        
-        #added
-        self.args =args
+        self.args = args
 
         # Store predictions and ground truth for computing confusion matrix.
         self.preds = torch.tensor([])
@@ -196,23 +194,20 @@ class PL_model(pl.LightningModule):
             table["hue"].append(i)
             self.test_acc_dict["test_acc_{:.4f}".format(i)].reset()
 
-        print(table["hue"], "\n\n")
-        print(table["acc"])
+        # Log test table with wandb.
+        self.logger.experiment.log({"test_table": test_table})  # type: ignore
 
-        # # Log test table with wandb.
-        # self.logger.experiment.log({"test_table": test_table})  # type: ignore
-
-        # # Log confusion matrix with wandb.
-        # self.logger.experiment.log(  # type: ignore
-        #     {
-        #         "test_conf_mat": wandb.plot.confusion_matrix(  # type: ignore
-        #             probs=self.preds.numpy(),
-        #             y_true=self.gts.numpy(),
-        #             class_names=self.args.classes,
-        #         )
-        #     }
-        # )
-        return [1,2,3]
+        # Log confusion matrix with wandb.
+        self.logger.experiment.log(  # type: ignore
+            {
+                "test_conf_mat": wandb.plot.confusion_matrix(  # type: ignore
+                    probs=self.preds.numpy(),
+                    y_true=self.gts.numpy(),
+                    class_names=self.args.classes,
+                )
+            }
+        )
+        self.results = table
 
 def main(args) -> None:
     # Create temp dir for wandb.
