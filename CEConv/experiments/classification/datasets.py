@@ -1,6 +1,8 @@
 import math
 import torch
 import os
+from kornia import color
+import numpy as np
 
 from torchvision import datasets
 from torchvision import transforms as T
@@ -10,14 +12,27 @@ from torch.utils.data.dataloader import DataLoader
 
 
 class rgb2lab(torch.nn.Module):
-    """ Converts a PIL image to LAB colorspace."""
+    """ 
+    Converts RGB image tensor of shape *,3,H,W to LAB image tensor with shame shape
+    input image tensor should be in range [0,1]
+    """
     def forward(self, img):
-        return img.convert("LAB")
+        return color.rgb_to_lab(img)
+
+class lab2rgb(torch.nn.Module):
+    """ 
+    Converts LAB image tensor of shape *,3,H,W to RGB image tensor with shame shape
+    input image tensor should be in range [0,1]
+    """
+    def forward(self, img):
+        return color.lab_to_rgb(img)
 
 
-def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = False) -> torch.Tensor:
+#TODO convert to hsv around here
+def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = False, lab: bool = False) -> torch.Tensor:
     """Normalize batch of images."""
-
+    if lab:
+        batch = lab2rgb.forward(None, batch)
     if not grayscale:
         mean = torch.tensor([0.485, 0.456, 0.406], device=batch.device).view(1, 3, 1, 1)
         std = torch.tensor([0.229, 0.224, 0.225], device=batch.device).view(1, 3, 1, 1)
@@ -25,9 +40,13 @@ def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = Fals
         mean = torch.tensor([0.485], device=batch.device).view(1, 1, 1, 1)
         std = torch.tensor([0.229], device=batch.device).view(1, 1, 1, 1)
     if inverse:
-        return batch * std + mean
-    return (batch - mean) / std
-
+        out= batch * std + mean
+    else:
+        out = (batch - mean) / std
+    if lab:
+        return rgb2lab.forward(None, out)
+    else:
+        return out
 
 def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoader, DataLoader]:
     """Get train and test dataloaders."""
@@ -48,10 +67,10 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
                 ),
                 T.RandomCrop(32, padding=4),
                 T.RandomHorizontalFlip(p=0.5),
-                T.ToTensor(),
             ]
         )
-        tr_test = T.Compose([T.ToTensor()])
+        # tr_test = T.Compose([T.ToTensor()])
+        tr_test = T.Compose([])
     else:
         # ImageNet-style preprocessing.
         tr_train = T.Compose(
@@ -64,33 +83,22 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
                 ),
                 T.RandomResizedCrop(224),
                 T.RandomHorizontalFlip(),
-                T.ToTensor(),
             ]
         )
-        tr_test = T.Compose([T.Resize(256), T.CenterCrop(224), T.ToTensor()])
-
+        # tr_test = T.Compose([T.Resize(256), T.CenterCrop(224), T.ToTensor()])
+        tr_test = T.Compose([T.Resize(256), T.CenterCrop(224)])
     # Convert data to grayscale
     if args.grayscale is True:
         tr_train = T.Compose([T.Grayscale(num_output_channels=3), tr_train])
         tr_test = T.Compose([T.Grayscale(num_output_channels=3), tr_test])
     
     if args.lab is True:
-        # ImageNet-style preprocessing.
-        tr_train = T.Compose(
-            [
-                T.ColorJitter(
-                    brightness=0,
-                    contrast=0,
-                    saturation=0, #TODO adjust this value once saturation equivariance implemented
-                    hue=args.jitter,
-                ),
-                T.RandomResizedCrop(224),
-                T.RandomHorizontalFlip(),
-                rgb2lab(), # convert to lab after applying jitter
-                T.ToTensor(),
-            ]
-        )
-        tr_test = T.Compose([rgb2lab(), tr_test])
+        # convert to lab after applying jitter
+        tr_train = T.Compose([tr_train, T.ToTensor(), rgb2lab()]) 
+        tr_test = T.Compose([tr_test, T.ToTensor(), rgb2lab()])
+    else:
+        tr_train = T.Compose([tr_train, T.ToTensor()]) 
+        tr_test = T.Compose([tr_test, T.ToTensor()])
 
     # Set dataset path
     if path is None:
