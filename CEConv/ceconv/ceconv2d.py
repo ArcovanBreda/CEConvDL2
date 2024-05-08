@@ -157,7 +157,8 @@ class CEConv2d(nn.Conv2d):
         if in_rotations == 1:
             if learnable:
                 init =  torch.rand((3, 3)) * 2.0 / 3 - (1.0 / 3)
-            elif lab_space: 
+            elif lab_space:
+                print("Using labspace") 
                 init =_get_lab_rotation_matrix(out_rotations)  
             else:
                 init =_get_hue_rotation_matrix(out_rotations)
