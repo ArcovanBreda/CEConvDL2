@@ -16,7 +16,7 @@ from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from torchinfo import summary
 from torchvision.transforms.functional import adjust_hue, adjust_saturation
 
-from experiments.classification.datasets import get_dataset, normalize
+from experiments.classification.datasets import get_dataset, normalize, lab2rgb, rgb2lab
 from models.resnet import ResNet18, ResNet44
 from models.resnet_hybrid import HybridResNet18, HybridResNet44
 
@@ -27,7 +27,7 @@ class PL_model(pl.LightningModule):
 
         # Logging.
         self.save_hyperparameters()
-
+        self.lab = args.lab
         # Store predictions and ground truth for computing confusion matrix.
         self.preds = torch.tensor([])
         self.gts = torch.tensor([])
@@ -86,6 +86,7 @@ class PL_model(pl.LightningModule):
             "width": args.width,
             "num_classes": len(args.classes),
             "ce_stages": args.ce_stages,
+            "lab_space": args.lab,
         }
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
         self.model = architectures[args.architecture](**kwargs)
@@ -125,7 +126,6 @@ class PL_model(pl.LightningModule):
 
     def training_step(self, batch, batch_idx) -> dict[str, torch.Tensor]:
         x, y = batch
-
         # Normalize images.
         if args.normalize:
             x = normalize(x, grayscale=args.grayscale or args.rotations > 1)
@@ -166,16 +166,21 @@ class PL_model(pl.LightningModule):
 
     def test_step(self, batch, batch_idx) -> None:
         x_org, y = batch
-
         for i in self.test_jitter:
+            if self.lab:
+                x_org = lab2rgb(x_org)
+
             if self.hue_test and not self.sat_test:
                 # Apply hue shift.
-                x = adjust_hue(x_org, i)
+                x = adjust_hue(x_org, i) #TODO convert to hsv around here
             elif self.sat_test and not self.hue_test:
                 # Apply saturation scale.
                 x = adjust_saturation(x_org, i)
             else:
                 raise NotImplementedError #TODO test_jitter for combinations of hue and saturation perhaps make it a tuple in this case
+            
+            if self.lab:
+                x = rgb2lab(x_org)
 
             # Normalize images.
             if args.normalize:
@@ -255,6 +260,8 @@ def main(args) -> None:
         str(args.split).replace(".", "_"),
         args.seed,
     )
+    if args.lab:
+        run_name += "-lab_space"
     if args.grayscale:
         run_name += "-grayscale"
     if not args.normalize:
@@ -314,14 +321,13 @@ def main(args) -> None:
         weights_path = None
 
     # Train model.
-    # trainer.fit(
-    #     model=model,
-    #     train_dataloaders=trainloader,
-    #     val_dataloaders=[testloader],
-    #     ckpt_path=weights_path,
-    # )
+    trainer.fit(
+        model=model,
+        train_dataloaders=trainloader,
+        val_dataloaders=[testloader],
+        ckpt_path=weights_path,
+    )
 
-    # Test model.
     trainer.test(model, dataloaders=testloader)
 
 
