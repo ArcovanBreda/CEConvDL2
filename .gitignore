@@ -160,3 +160,6 @@ cython_debug/
 #.idea/
 DATA/
 WANDB/
+
+#Ignore the flowers dataset
+102flowers/

@@ -67,6 +67,7 @@ class CECNN(nn.Module):
         groupcosetmaxpool: bool = False,
         num_classes: int = 10,
         separable: bool = True,
+        hsv_space: bool = False,
     ) -> None:
         super().__init__()
 
@@ -89,6 +90,7 @@ class CECNN(nn.Module):
                         planes,
                         kernel_size=kernels[i],
                         separable=separable,
+                        hsv_space=hsv_space,
                     ),
                     nn.BatchNorm3d(planes),
                     nn.ReLU(inplace=True),

@@ -1,11 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
 
-img = np.zeros((500, 500, 3), dtype=np.uint8)
-img[:, :, 0] = 255
-img[:, :, 2] = 55
+test = torch.tensor([-3.5, -2, -1, 1, 2, 3])
+print(torch.remainder(test, 2))
 
-plt.imsave("test_imgs/magneta.jpg", img)
+# img = np.zeros((500, 500, 3), dtype=np.uint8)
+# img[:, :, 0] = 255
+# img[:, :, 2] = 55
+
+# plt.imsave("test_imgs/magneta.jpg", img)
 
 # from PIL import Image
 

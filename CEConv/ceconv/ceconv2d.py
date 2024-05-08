@@ -9,6 +9,44 @@ from torch import nn
 from torch.nn.parameter import Parameter
 
 
+def _trans_input_filter_hsv(weights, out_rotations) -> torch.Tensor:
+    """
+    Args:
+        weights: float32, input filter of size [c_out, c_in (3), in_rot (1), k, k]
+        out_rotations: int, number of rotations applied to filter
+    
+    """
+    print(weights[:, 0, :, :, :])
+    exit()
+    # for i in range(out_rotations):
+    #     rot_i = 
+    # weights[]
+    return
+
+
+
+# # Apply rotations of 120 degrees 
+# for i in [0, 240, 120]:
+#     hsv_image = og_hsv_img.copy()
+#     # Hue / Sat / Val all on a 0 - 1 scale for skimage
+#     # Fix hue to 0 - 360 scale
+#     hsv_image[:, :, 0] = hsv_image[:, :, 0] * 360
+
+#     # Apply rotation
+#     hsv_image[:, :, 0] =  (hsv_image[:, :, 0] + i) % 360
+#     # Display the image
+#     plt.axis('off')  # Turn off axis:
+
+#     # Convert back to 0 - 1 scale for saving the image
+#     hsv_image[:, :, 0] = hsv_image[:, :, 0] / 360
+
+#     # Convert back to rgb for saving
+#     rbg_img = color.hsv2rgb(hsv_image)
+
+#     rot_img_list.append(rbg_img)
+
+
+
 def _get_hue_rotation_matrix(rotations: int) -> torch.Tensor:
     """Returns a 3x3 hue rotation matrix.
 
@@ -117,25 +155,33 @@ class CEConv2d(nn.Conv2d):
         kernel_size: typing.Union[int, typing.Tuple[int, int]],
         learnable: bool = False,
         separable: bool = True,
+        hsv_space: bool = False,
         **kwargs
     ) -> None:
         self.in_rotations = in_rotations
         self.out_rotations = out_rotations
         self.separable = separable
-
+        self.hsv_space = hsv_space
         super().__init__(in_channels, out_channels, kernel_size, **kwargs)
 
         # Initialize transformation matrix and weights.
         if in_rotations == 1:
-            init = (
-                torch.rand((3, 3)) * 2.0 / 3 - (1.0 / 3)
-                if learnable
-                else _get_hue_rotation_matrix(out_rotations)
-            )
-            self.transformation_matrix = Parameter(init, requires_grad=learnable)
-            self.weight = Parameter(
-                torch.Tensor(out_channels, in_channels, 1, *self.kernel_size)
-            )
+            if self.hsv_space:
+                self.weight = Parameter(
+                    torch.Tensor(out_channels, in_channels, 1, *self.kernel_size)
+                )
+            else:
+                if learnable:
+                    init = (
+                        torch.rand((3, 3)) * 2.0 / 3 - (1.0 / 3)  
+                    )
+                else:
+                    _get_hue_rotation_matrix(out_rotations)
+
+                self.transformation_matrix = Parameter(init, requires_grad=learnable)
+                self.weight = Parameter(
+                    torch.Tensor(out_channels, in_channels, 1, *self.kernel_size)
+                )
         else:
             if separable:
                 if in_rotations > 1:
@@ -176,10 +222,16 @@ class CEConv2d(nn.Conv2d):
 
         # Compute full filter weights.
         if self.in_rotations == 1:
-            # Apply rotation to input layer filter.
-            tw = _trans_input_filter(
-                self.weight, self.out_rotations, self.transformation_matrix
-            )
+            # Apply rotation to input layer filter HSV
+            if self.hsv_space:
+                tw = _trans_input_filter_hsv(self.weight, self.out_rotations)
+                print("dingdong")
+                exit()
+            # Apply rotation to input layer filter. (RGB)
+            else:
+                tw = _trans_input_filter(
+                    self.weight, self.out_rotations, self.transformation_matrix
+                )
         else:
             # Apply cyclic permutation to hidden layer filter.
             if self.separable:
