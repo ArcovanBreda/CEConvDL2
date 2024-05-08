@@ -16,7 +16,7 @@ from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from torchinfo import summary
 from torchvision.transforms.functional import adjust_hue
 
-from experiments.classification.datasets import get_dataset, normalize, batch_lab2rgb, batch_rgb2lab
+from experiments.classification.datasets import get_dataset, normalize, lab2rgb, rgb2lab
 from models.resnet import ResNet18, ResNet44
 from models.resnet_hybrid import HybridResNet18, HybridResNet44
 
@@ -152,10 +152,10 @@ class PL_model(pl.LightningModule):
         for i in self.test_jitter:
             # Apply hue shift.
             if self.lab:
-                x_org = batch_lab2rgb(x_org)
+                x_org = lab2rgb(x_org)
             x = adjust_hue(x_org, i) #TODO convert to hsv around here
             if self.lab:
-                x = batch_rgb2lab(x_org)
+                x = rgb2lab(x_org)
 
             # Normalize images.
             if args.normalize:

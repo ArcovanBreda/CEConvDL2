@@ -1,7 +1,7 @@
 import math
 import torch
 import os
-from skimage import color
+from kornia import color
 import numpy as np
 
 from torchvision import datasets
@@ -12,45 +12,29 @@ from torch.utils.data.dataloader import DataLoader
 
 
 class rgb2lab(torch.nn.Module):
-    """ Converts a PIL image to LAB colorspace."""
+    """ 
+    Converts RGB image tensor of shape *,3,H,W to LAB image tensor with shame shape
+    input image tensor should be in range [0,1]
+    """
     def forward(self, img):
-        img = np.array(img)
-        img = color.rgb2lab(img)
-        return img
+        assert img.min() >= 0 and img.max() <= 1, "input image tensor should be in range [0,1]"
+        return color.rgb_to_lab(img)
 
 class lab2rgb(torch.nn.Module):
-    """ Converts a LAB image to RGB colorspace."""
+    """ 
+    Converts LAB image tensor of shape *,3,H,W to RGB image tensor with shame shape
+    input image tensor should be in range [0,1]
+    """
     def forward(self, img):
-        img = np.array(img)
-        img = color.rgb2lab(img)
-        return img
+        assert img.min() >= 0 and img.max() <= 1, "input image tensor should be in range [0,1]"
+        return color.lab_to_rgb(img)
 
-
-# Holy shit dit is lelijk
-def batch_rgb2lab(batch):
-    temp = torch.zeros_like(batch)
-    batch = batch.cpu().moveaxis(1,-1).numpy()
-    transform = T.Compose([rgb2lab(), T.ToTensor()])
-    for i in range(batch.shape[0]):
-        temp[i] = transform(batch[i])
-    batch = temp
-    return batch
-
-
-def batch_lab2rgb(batch):
-    temp = torch.zeros_like(batch)
-    batch = batch.cpu().moveaxis(1,-1).numpy()
-    transform = T.Compose([lab2rgb(), T.ToTensor()])
-    for i in range(batch.shape[0]):
-        temp[i] = transform(batch[i])
-    batch = temp
-    return batch
 
 #TODO convert to hsv around here
 def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = False, lab: bool = False) -> torch.Tensor:
     """Normalize batch of images."""
     if lab:
-        batch = batch_lab2rgb(batch)
+        batch = lab2rgb(batch)
     if not grayscale:
         mean = torch.tensor([0.485, 0.456, 0.406], device=batch.device).view(1, 3, 1, 1)
         std = torch.tensor([0.229, 0.224, 0.225], device=batch.device).view(1, 3, 1, 1)
@@ -62,7 +46,7 @@ def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = Fals
     else:
         out = (batch - mean) / std
     if lab:
-        return batch_rgb2lab(out)
+        return rgb2lab(out)
     else:
         return out
 
@@ -112,8 +96,8 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
     
     if args.lab is True:
         # convert to lab after applying jitter
-        tr_train = T.Compose([tr_train, rgb2lab(), T.ToTensor()]) 
-        tr_test = T.Compose([tr_test, rgb2lab(), T.ToTensor()])
+        tr_train = T.Compose([tr_train, T.ToTensor(), rgb2lab()]) 
+        tr_test = T.Compose([tr_test, T.ToTensor(), rgb2lab()])
     else:
         tr_train = T.Compose([tr_train, T.ToTensor()]) 
         tr_test = T.Compose([tr_test, T.ToTensor()])
