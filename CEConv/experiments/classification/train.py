@@ -39,6 +39,9 @@ class PL_model(pl.LightningModule):
         elif args.dataset == "flowers102":
             self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=102)
             self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+        elif args.dataset == "stl10":
+            self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+            self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
         else:
             raise NotImplementedError
 
@@ -50,6 +53,8 @@ class PL_model(pl.LightningModule):
                 self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
             elif args.dataset == "flowers102":
                 self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+            elif args.dataset == "stl10":
+                self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
             else:
                 raise NotImplementedError
 
@@ -261,7 +266,7 @@ def main(args) -> None:
     weights_name = run_name + ".pth.tar"
     checkpoint_callback = ModelCheckpoint(dirpath=weights_dir,
                                           filename=weights_name,
-                                          monitor='val_accuracy',
+                                          monitor='test_acc_epoch',#val_accuracy',
                                         #   save_best_only=True,
                                           mode='max')
 
