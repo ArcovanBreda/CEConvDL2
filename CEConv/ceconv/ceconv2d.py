@@ -48,7 +48,7 @@ def _get_lab_rotation_matrix(rotations: int) -> torch.Tensor:
     assert rotations > 0, "Number of rotations must be positive."
 
     # Angle to shift each image by
-    # By using the matrix power we do multiple rotations by aply this matrix
+    # By using the matrix power we do multiple rotations by apply this matrix
     # multiple times
     angle_delta = 2 * math.pi / rotations
 
@@ -145,12 +145,13 @@ class CEConv2d(nn.Conv2d):
         learnable: bool = False,
         separable: bool = True,
         lab_space: bool = False,
+        hsv_space: bool = False, #TODO will probably need to be modified to deal with either or hue/saturation
         **kwargs
     ) -> None:
         self.in_rotations = in_rotations
         self.out_rotations = out_rotations
         self.separable = separable
-        self.labs_space = lab_space
+        self.labs_space = lab_space #TODO is this one necessary?
         super().__init__(in_channels, out_channels, kernel_size, **kwargs)
 
         # Initialize transformation matrix and weights.

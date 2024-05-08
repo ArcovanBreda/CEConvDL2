@@ -16,7 +16,7 @@ from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from torchinfo import summary
 from torchvision.transforms.functional import adjust_hue, adjust_saturation
 
-from experiments.classification.datasets import get_dataset, normalize, lab2rgb, rgb2lab
+from experiments.classification.datasets import get_dataset, normalize, lab2rgb, rgb2lab, hsv2rgb, rgb2hsv
 from models.resnet import ResNet18, ResNet44
 from models.resnet_hybrid import HybridResNet18, HybridResNet44
 
@@ -28,6 +28,8 @@ class PL_model(pl.LightningModule):
         # Logging.
         self.save_hyperparameters()
         self.lab = args.lab
+        self.hsv = args.hsv
+
         # Store predictions and ground truth for computing confusion matrix.
         self.preds = torch.tensor([])
         self.gts = torch.tensor([])
@@ -44,10 +46,10 @@ class PL_model(pl.LightningModule):
 
         # Store accuracy metrics for testing.
         self.test_acc_dict = {}
-        self.hue_test, self.sat_test = False, False
+        self.hue_shift, self.sat_shift = False, False
         
-        if args.hue_test and not args.sat_test:
-            self.hue_test = True
+        if args.hue_shift and not args.sat_shift:
+            self.hue_shift = True
             self.test_jitter = np.linspace(-0.5, 0.5, 37)
             for i in self.test_jitter:
                 if args.dataset == "cifar10":
@@ -56,9 +58,9 @@ class PL_model(pl.LightningModule):
                     self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
                 else:
                     raise NotImplementedError
-        elif args.sat_test and not args.hue_test:
-            self.sat_test = True
-            self.test_jitter = np.append(np.linspace(0, 1, 5, endpoint=False), np.arange(1, 256, 1, dtype=int)) #TODO determine which sat factors we want to scale with
+        elif args.sat_shift and not args.hue_shift:
+            self.sat_shift = True
+            self.test_jitter = np.append(np.linspace(0, 1, 5, endpoint=False), np.arange(1, 256, 1, dtype=int)) #TODO determine which sat factors we want to scale with. Also need to check if it works on normalized imgs
             for i in self.test_jitter:
                 if args.dataset == "cifar10":
                     self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
@@ -66,8 +68,8 @@ class PL_model(pl.LightningModule):
                     self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
                 else:
                     raise NotImplementedError
-        else:
-            self.hue_test, self.sat_test = True, True
+        elif args.sat_shift and args.hue_shift:
+            self.hue_shift, self.sat_shift = True, True
             raise NotImplementedError #TODO jitter for combinations of saturation and hue shifts
 
         # Loss function
@@ -87,6 +89,7 @@ class PL_model(pl.LightningModule):
             "num_classes": len(args.classes),
             "ce_stages": args.ce_stages,
             "lab_space": args.lab,
+            "hsv_space": args.hsv, #TODO will need to be adjusted just as in ceconv2d.py if we want to either/or hue or sat matrix
         }
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
         self.model = architectures[args.architecture](**kwargs)
@@ -169,18 +172,22 @@ class PL_model(pl.LightningModule):
         for i in self.test_jitter:
             if self.lab:
                 x_org = lab2rgb(x_org)
+            elif self.hsv:
+                x_org = hsv2rgb(x_org)
 
-            if self.hue_test and not self.sat_test:
+            if self.hue_shift and not self.sat_shift:
                 # Apply hue shift.
-                x = adjust_hue(x_org, i) #TODO convert to hsv around here
-            elif self.sat_test and not self.hue_test:
+                x = adjust_hue(x_org, i)
+            elif self.sat_shift and not self.hue_shift:
                 # Apply saturation scale.
                 x = adjust_saturation(x_org, i)
-            else:
+            elif self.sat_shift and self.hue_shift:
                 raise NotImplementedError #TODO test_jitter for combinations of hue and saturation perhaps make it a tuple in this case
             
             if self.lab:
                 x = rgb2lab(x_org)
+            elif self.hsv:
+                x = rgb2hsv(x_org)
 
             # Normalize images.
             if args.normalize:
@@ -262,6 +269,14 @@ def main(args) -> None:
     )
     if args.lab:
         run_name += "-lab_space"
+    if args.hsv:
+        run_name += "-hsv_space"
+    if args.hue_shift and not args.sat_shift:
+        run_name += "-hue_shift"
+    if args.sat_shift and not args.hue_shift:
+        run_name += "-sat_shift"
+    if args.hue_shift and args.sat_shift:
+        run_name += "-hue_and_sat_shift"
     if args.grayscale:
         run_name += "-grayscale"
     if not args.normalize:
@@ -374,8 +389,8 @@ if __name__ == "__main__":
     )
 
     # Test settings
-    parser.add_argument("--hue_test", dest="hue_test", action="store_true", help="test set should get hue shifts. If hue_test and sat_test not provided, applies both")
-    parser.add_argument("--sat_test", dest="sat_test", action="store_true", help="test set should get saturation shifts. If hue_test and sat_test not provided, applies both")
+    parser.add_argument("--hue_shift", dest="hue_shift", action="store_true", help="test set should get hue shifts.")
+    parser.add_argument("--sat_shift", dest="sat_shift", action="store_true", help="test set should get saturation shifts.")
 
     parser = PL_model.add_model_specific_args(parser)
 

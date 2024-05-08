@@ -22,8 +22,8 @@ class rgb2lab(torch.nn.Module):
 
 class lab2rgb(torch.nn.Module):
     """ 
-    Converts LAB image tensor of shape *,3,H,W to RGB image tensor with same shape
-    input image tensor should be in range [0,1]
+    Converts LAB image tensor of shape *,3,H,W to RGB image tensor with same shape.
+    Input image tensor should be in range [0,1]
     """
     def forward(self, img):
         assert img.min() >= 0 and img.max() <= 1, "input image tensor should be in range [0,1]"
@@ -31,16 +31,33 @@ class lab2rgb(torch.nn.Module):
 
 
 class rgb2hsv(torch.nn.Module):
-    """ Converts a PIL image to HSV colorspace."""
+    """ 
+    Converts RGB image tensor of shape *,3,H,W to HSV image tensor with same shape.
+    Input image tensor should be in range [0, 1].
+    """
     def forward(self, img):
-        return img.convert("HSV")
+        assert img.min() >= 0 and img.max() <= 1, "input image tensor should be in range [0,1]"
+        return color.rgb_to_hsv(img)
 
 
-#TODO convert to hsv around here
-def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = False, lab: bool = False) -> torch.Tensor:
+class hsv2rgb(torch.nn.Module):
+    """
+    Converts HSV image tensor of shape *,3,H,W to RGB image tensor with same shape.
+    H channel values are assumed to be in range [0, 2pi]. S and V are in range [0, 1].
+    """
+    def forward(self, img):
+        # assert img[:, 0, :, :].min() >= 0 and img[:, 0, :, :].max() <= 2 * torch.pi, "input image tensor H should be in range [0,2pi]"
+        assert img[:, 1:, :, :].min() >= 0 and img[:, 1:, :, :].max() <= 1, "input image tensor S and V should be in range [0,1]"
+        return color.hsv_to_rgb(img)
+
+
+def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = False, lab: bool = False, hsv: bool = False) -> torch.Tensor:
     """Normalize batch of images."""
     if lab:
         batch = lab2rgb(batch)
+    elif hsv:
+        batch = hsv2rgb(batch)
+
     if not grayscale:
         mean = torch.tensor([0.485, 0.456, 0.406], device=batch.device).view(1, 3, 1, 1)
         std = torch.tensor([0.229, 0.224, 0.225], device=batch.device).view(1, 3, 1, 1)
@@ -51,8 +68,11 @@ def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = Fals
         out= batch * std + mean
     else:
         out = (batch - mean) / std
+
     if lab:
         return rgb2lab(out)
+    elif hsv:
+        return rgb2hsv(out)
     else:
         return out
 
@@ -70,7 +90,7 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
                 T.ColorJitter(
                     brightness=0,
                     contrast=0,
-                    saturation=0,
+                    saturation=args.sat_jitter,
                     hue=args.jitter,
                 ),
                 T.RandomCrop(32, padding=4),
@@ -86,7 +106,7 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
                 T.ColorJitter(
                     brightness=0,
                     contrast=0,
-                    saturation=0,
+                    saturation=args.sat_jitter,
                     hue=args.jitter,
                 ),
                 T.RandomResizedCrop(224),
@@ -104,27 +124,13 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
         # convert to lab after applying jitter
         tr_train = T.Compose([tr_train, T.ToTensor(), rgb2lab()]) 
         tr_test = T.Compose([tr_test, T.ToTensor(), rgb2lab()])
+    elif args.hsv is True:
+        # convert to hsv after applying jitter
+        tr_train = T.Compose([tr_train, T.ToTensor(), rgb2hsv()]) 
+        tr_test = T.Compose([tr_test, T.ToTensor(), rgb2hsv()])
     else:
         tr_train = T.Compose([tr_train, T.ToTensor()]) 
         tr_test = T.Compose([tr_test, T.ToTensor()])
-
-    if args.hsv is True:
-        # ImageNet-style preprocessing.
-        tr_train = T.Compose(
-            [
-                T.ColorJitter(
-                    brightness=0,
-                    contrast=0,
-                    saturation=args.sat_jitter,
-                    hue=args.jitter,
-                ),
-                T.RandomResizedCrop(224),
-                T.RandomHorizontalFlip(),
-                rgb2hsv(), # convert to hsv after applying jitter
-                T.ToTensor(),
-            ]
-        )
-        tr_test = T.Compose([rgb2hsv(), tr_test])
 
     # Set dataset path
     if path is None:
