@@ -11,40 +11,30 @@ from torch.nn.parameter import Parameter
 
 def _trans_input_filter_hsv(weights, out_rotations) -> torch.Tensor:
     """
+    Apply Hue shift to kernels of the input layer
+
     Args:
         weights: float32, input filter of size [c_out, c_in (3), in_rot (1), k, k]
         out_rotations: int, number of rotations applied to filter
     
     """
-    print(weights[:, 0, :, :, :])
-    exit()
-    # for i in range(out_rotations):
-    #     rot_i = 
-    # weights[]
-    return
+    # [c_out, 1, c_in (3), in_rot (1), k, k]
+    # Where dim=1 is added for stacking every hue_shift
+    weights_reshaped = weights.unsqueeze(1)
 
+    # Create placeholder for output tensor
+    transformed_weights = weights_reshaped.repeat(1, out_rotations, 1, 1, 1, 1)
 
+    # Loop over all rotations
+    for i in range(out_rotations):
+        # For rotation i of the group -> with an angle i/out_rotations
+        # Add this hue angle to the current weights
+        temp = weights_reshaped[:, :, 0, :, :, :] + (i / out_rotations)
+        # Restrict the values between 0 - 1 for the hue using modulo
+        # TODO???? ALSO RESTRICT THE S AND V OR L VALUES ?
+        transformed_weights[:, i, 0, :, :, :] = torch.remainder(temp, 1)
 
-# # Apply rotations of 120 degrees 
-# for i in [0, 240, 120]:
-#     hsv_image = og_hsv_img.copy()
-#     # Hue / Sat / Val all on a 0 - 1 scale for skimage
-#     # Fix hue to 0 - 360 scale
-#     hsv_image[:, :, 0] = hsv_image[:, :, 0] * 360
-
-#     # Apply rotation
-#     hsv_image[:, :, 0] =  (hsv_image[:, :, 0] + i) % 360
-#     # Display the image
-#     plt.axis('off')  # Turn off axis:
-
-#     # Convert back to 0 - 1 scale for saving the image
-#     hsv_image[:, :, 0] = hsv_image[:, :, 0] / 360
-
-#     # Convert back to rgb for saving
-#     rbg_img = color.hsv2rgb(hsv_image)
-
-#     rot_img_list.append(rbg_img)
-
+    return transformed_weights
 
 
 def _get_hue_rotation_matrix(rotations: int) -> torch.Tensor:
@@ -176,7 +166,7 @@ class CEConv2d(nn.Conv2d):
                         torch.rand((3, 3)) * 2.0 / 3 - (1.0 / 3)  
                     )
                 else:
-                    _get_hue_rotation_matrix(out_rotations)
+                    init = _get_hue_rotation_matrix(out_rotations)
 
                 self.transformation_matrix = Parameter(init, requires_grad=learnable)
                 self.weight = Parameter(
@@ -222,11 +212,9 @@ class CEConv2d(nn.Conv2d):
 
         # Compute full filter weights.
         if self.in_rotations == 1:
-            # Apply rotation to input layer filter HSV
+            # Apply rotation to input layer filters HSV
             if self.hsv_space:
                 tw = _trans_input_filter_hsv(self.weight, self.out_rotations)
-                print("dingdong")
-                exit()
             # Apply rotation to input layer filter. (RGB)
             else:
                 tw = _trans_input_filter(
