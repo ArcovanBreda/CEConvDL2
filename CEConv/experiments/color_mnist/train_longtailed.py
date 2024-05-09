@@ -21,23 +21,29 @@ from models.cnn import CECNN, CNN
 class PL_model(pl.LightningModule):
     def __init__(self, args):
         super(PL_model, self).__init__()
+        self.model_name = args.model_name
+        self.num_classes = 30
+        # Saving best model.
+        self.best_val_acc = 0.0
+        self.best_epoch = 0
+        self.class_acc = np.array([0]*self.num_classes)
 
         # Logging.
         self.save_hyperparameters()
-        self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=30)
-        self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=30)
+        self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=self.num_classes)
+        self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=self.num_classes)
         self.preds = torch.tensor([])
         self.gts = torch.tensor([])
 
         # Model definition.
         if args.rotations == 1:
-            self.model = CNN(args.planes, num_classes=30)
+            self.model = CNN(args.planes, num_classes=self.num_classes)
         elif args.rotations > 1:
             self.model = CECNN(
                 args.planes,
                 args.rotations,
                 groupcosetmaxpool=args.groupcosetpool,
-                num_classes=30,
+                num_classes=self.num_classes,
                 separable=args.separable,
             )
 
@@ -101,7 +107,8 @@ class PL_model(pl.LightningModule):
         return {"loss": loss}
 
     def validation_epoch_end(self, outputs):
-        self.log("test_acc_epoch", self.test_acc.compute())
+        curr_test_acc = self.test_acc.compute()
+        self.log("test_acc_epoch", curr_test_acc)
 
         # Log confusion matrix with wandb.
         classnames = [j + str(i) for i in range(10) for j in ["R", "G", "B"]]
@@ -115,9 +122,43 @@ class PL_model(pl.LightningModule):
             }
         )
 
+        # Save the best model
+        if curr_test_acc > self.best_val_acc:
+            self.best_val_acc = curr_test_acc
+            self.class_acc = self.calculate_class_accuracy()
+            self.best_epoch = self.trainer.current_epoch
+            self.save_model()
+
         self.test_acc.reset()
         self.preds = torch.tensor([])
         self.gts = torch.tensor([])
+
+    def calculate_class_accuracy(self):
+        class_correct = np.zeros(self.num_classes)
+        class_total = np.zeros(self.num_classes)
+        for pred, gt in zip(self.preds, self.gts):
+            pred, gt = int(torch.argmax(pred).item()), int(gt)
+            class_correct[gt] += (int(pred) == gt)
+            class_total[gt] += 1
+
+        class_accuracy = class_correct / class_total
+        return class_accuracy
+
+    def save_model(self, model_path="best_model.pth"):
+        os.makedirs("./output", exist_ok=True)
+        torch.save({
+            'model_state_dict': self.model.state_dict(),
+            'best_epoch': self.best_epoch,
+            'best_val_acc': self.best_val_acc,
+            'class_acc': self.class_acc
+        }, f"./output/{self.model_name}")
+
+    def load_model(self, model_path="best_model.pth"):
+        checkpoint = torch.load(f"./output/{self.model_name}")
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.best_epoch = checkpoint['best_epoch']
+        self.best_val_acc = checkpoint['best_val_acc']
+        self.class_acc = checkpoint['class_acc']
 
 
 class CustomDataset(TensorDataset):
@@ -189,16 +230,17 @@ def main(args) -> None:
     # Get data loaders.
     trainloader, testloader = getDataset()
     args.steps_per_epoch = len(trainloader)
+    run_name = "longtailed-seed_{}-rotations_{}".format(args.seed, args.rotations)
+    args.model_name = run_name
 
     # Initialize model.
     model = PL_model(args)
     summary(model.model, (2, 3, 28, 28))
 
     # Callbacks and loggers.
-    run_name = "longtailed-seed_{}-rotations_{}".format(args.seed, args.rotations)
     mylogger = pl_loggers.WandbLogger(  # type: ignore
-        project="ceconv-colormnist-new",
-        entity="tudcv",
+        project="CEConv",
+        # entity="tudcv",
         config=vars(args),
         name=run_name,
         tags=["longtailed"],
@@ -223,6 +265,53 @@ def main(args) -> None:
         train_dataloaders=trainloader,
         val_dataloaders=[testloader],
     )
+
+    import matplotlib.pyplot as plt
+    print(args)
+
+    model = PL_model(args)
+
+    model.load_model()
+    
+    print("Best epoch:", model.best_epoch)
+    print("Class accuracy:", model.class_acc)
+
+    train = CustomDataset(
+        torch.load(os.environ["DATA_DIR"] + "/colormnist_longtailed/train.pt"),
+        jitter=args.jitter,
+        grayscale=args.grayscale,
+    )
+
+    samples_per_class = torch.unique(train.tensors[1], return_counts=True)
+    sort_idx = torch.argsort(samples_per_class[1], descending=True)
+    samples_per_class = (samples_per_class[0][sort_idx], samples_per_class[1][sort_idx])
+
+    labels = [j + str(i) for i in range(10) for j in ["R", "G", "B"]]
+    labels = [labels[i] for i in sort_idx.numpy()]
+
+    # Plot accuracy per class
+    magic_number = 18
+    fig, ax1 = plt.subplots(figsize=(12, 8))
+    ax1.plot(labels, model.class_acc[sort_idx], marker='o', color='orange', markersize=8, linewidth=2)
+    ax1.set_xlabel('Class', fontsize=magic_number)
+    ax1.set_ylabel('Accuracy', fontsize=magic_number)
+    ax1.set_ylim(0, 1)
+    ax1.grid(axis='y')
+
+    # Create second x-axis for samples per class
+    ax2 = ax1.twinx()
+    ax2.bar(labels, samples_per_class[1].numpy(), color="gray", alpha=0.2, width=0.5)
+    ax2.set_ylabel('Samples per Class', fontsize=magic_number)
+
+    # Set font size for x-axis ticks
+    plt.xticks(rotation=45, fontsize=magic_number+2)
+
+    # Set font size for y-axis ticks
+    ax1.tick_params(axis='y', labelsize=magic_number-2)
+    ax2.tick_params(axis='y', labelsize=magic_number-2)
+
+    plt.title('Accuracy and Samples per Class', fontsize=magic_number+4)
+    plt.show()
 
 
 if __name__ == "__main__":

@@ -43,22 +43,12 @@ class hsv2rgb(torch.nn.Module):
     def forward(self, img):
         return color.hsv_to_rgb(img)
     
-class hsv2rgb(torch.nn.Module):
-    """
-    Converts HSV image tensor of shape *,3,H,W to RGB image tensor with same shape.
-    H channel values are assumed to be in range [0, 2pi]. S and V are in range [0, 1].
-    """
-    def forward(self, img):
-        return color.hsv_to_rgb(img)
-
 def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = False, lab: bool = False, hsv: bool = False) -> torch.Tensor:
     """Normalize batch of images."""
     
     if lab:
         batch = lab2rgb.forward(None, batch)
     elif hsv:
-        # XXX HERE
-        # batch = hsv2rgb(batch)
         batch = color.hsv_to_rgb(batch)
 
 
@@ -74,10 +64,8 @@ def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = Fals
         out = (batch - mean) / std
 
     if lab:
-        return rgb2lab(out)
+        return rgb2lab.forward(None, out)
     elif hsv:
-        # XXX HERE
-        # return rgb2hsv(out)
         return color.rgb_to_hsv(out)
     else:
         return out
@@ -102,10 +90,8 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
                 ),
                 T.RandomCrop(32, padding=4),
                 T.RandomHorizontalFlip(p=0.5),
-                # T.ToTensor(),
             ]
         )
-        # tr_test = T.Compose([T.ToTensor()])
         tr_test = T.Compose([])
     else:
         # ImageNet-style preprocessing.
@@ -119,10 +105,8 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
                 ),
                 T.RandomResizedCrop(224),
                 T.RandomHorizontalFlip(),
-                # T.ToTensor(),
             ]
         )
-        # tr_test = T.Compose([T.Resize(256), T.CenterCrop(224), T.ToTensor()])
         tr_test = T.Compose([T.Resize(256), T.CenterCrop(224)])
 
     # Convert data to grayscale
@@ -130,7 +114,6 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
         tr_train = T.Compose([T.Grayscale(num_output_channels=3), tr_train])
         tr_test = T.Compose([T.Grayscale(num_output_channels=3), tr_test])
 
-    # TODO XZXZXZX
     if args.lab is True:
         # convert to lab after applying jitter
         tr_train = T.Compose([tr_train, T.ToTensor(), rgb2lab()]) 

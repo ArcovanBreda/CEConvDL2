@@ -64,6 +64,33 @@ def _get_hue_rotation_matrix(rotations: int) -> torch.Tensor:
         dtype=torch.float32,
     )
 
+def _get_lab_rotation_matrix(rotations: int) -> torch.Tensor:
+    """Returns a 3x3 hue rotation matrix.
+
+    Rotates a 3D point by 360/rotations degrees along the diagonal.
+
+    Args:
+      rotations: int, number of rotations
+    """
+
+    assert rotations > 0, "Number of rotations must be positive."
+
+    # Angle to shift each image by
+    # By using the matrix power we do multiple rotations by aply this matrix
+    # multiple times
+    angle_delta = 2 * math.pi / rotations
+
+    # Rotation matrix
+    return torch.tensor(
+        [
+            [1, 0, 0],
+            [0, math.cos(angle_delta), -math.sin(angle_delta)],
+            [0, math.sin(angle_delta), math.cos(angle_delta)],
+        ],
+        dtype=torch.float32,
+    )
+
+
 
 def _trans_input_filter(weights, rotations, rotation_matrix) -> torch.Tensor:
     """Apply linear transformation to filter.
@@ -210,7 +237,6 @@ class CEConv2d(nn.Conv2d):
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass."""
-
         # Compute full filter weights.
         if self.in_rotations == 1:
             # Apply rotation to input layer filters HSV
@@ -244,7 +270,7 @@ class CEConv2d(nn.Conv2d):
             input_shape[-2],
             input_shape[-1],
         )
-
+        input=input.float() 
         y = F.conv2d(
             input, weight=tw, bias=None, stride=self.stride, padding=self.padding
         )

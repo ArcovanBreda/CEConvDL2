@@ -14,9 +14,9 @@ from torch.utils.data import TensorDataset
 from torchvision.datasets import MNIST
 
 
-def generate_set(dataset, samples_per_class, train) -> TensorDataset:
+def generate_set(dataset, samples_per_class, train, seed=20) -> TensorDataset:
     """Generate 30-class color mnist dataset with long-tailed distribution."""
-
+    np.random.seed(seed)
     imgs, targets = dataset.data.numpy(), dataset.targets.numpy()
 
     if train:
