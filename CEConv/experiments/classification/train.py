@@ -19,7 +19,7 @@ from torchvision.transforms.functional import adjust_hue, adjust_saturation
 from experiments.classification.datasets import get_dataset, normalize, lab2rgb, rgb2lab, hsv2rgb, rgb2hsv
 from models.resnet import ResNet18, ResNet44
 from models.resnet_hybrid import HybridResNet18, HybridResNet44
-
+import matplotlib.pyplot as plt
 
 class PL_model(pl.LightningModule):
     def __init__(self, args) -> None:
@@ -28,6 +28,7 @@ class PL_model(pl.LightningModule):
         # Logging.
         self.save_hyperparameters()
         self.lab = args.lab
+        self.args = args
         self.hsv = args.hsv
 
         # Store predictions and ground truth for computing confusion matrix.
@@ -41,6 +42,9 @@ class PL_model(pl.LightningModule):
         elif args.dataset == "flowers102":
             self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=102)
             self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+        elif args.dataset == "stl10":
+            self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+            self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
         else:
             raise NotImplementedError
 
@@ -56,6 +60,8 @@ class PL_model(pl.LightningModule):
                     self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
                 elif args.dataset == "flowers102":
                     self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+                elif args.dataset == "stl10":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
                 else:
                     raise NotImplementedError
         elif args.sat_shift and not args.hue_shift:
@@ -66,6 +72,8 @@ class PL_model(pl.LightningModule):
                     self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
                 elif args.dataset == "flowers102":
                     self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+                elif args.dataset == "stl10":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
                 else:
                     raise NotImplementedError
         elif args.sat_shift and args.hue_shift:
@@ -133,7 +141,7 @@ class PL_model(pl.LightningModule):
         x, y = batch
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1)
+            x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=True if self.lab else False) #TODO convert to hsv around here
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -154,7 +162,7 @@ class PL_model(pl.LightningModule):
 
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1)
+            x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=True if self.lab else False) #TODO convert to hsv around here
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -173,13 +181,15 @@ class PL_model(pl.LightningModule):
         x_org, y = batch
         for i in self.test_jitter:
             if self.lab:
-                x_org = lab2rgb(x_org)
+                x = lab2rgb.forward(None,x_org.clone())
             elif self.hsv:
-                x_org = hsv2rgb(x_org)
+                x_org = hsv2rgb.forward(None, x_org.clone())
+            else:
+                x = x_org.clone()
 
             if self.hue_shift and not self.sat_shift:
                 # Apply hue shift.
-                x = adjust_hue(x_org, i)
+                x = adjust_hue(x, i)
             elif self.sat_shift and not self.hue_shift:
                 # Apply saturation scale.
                 x = adjust_saturation(x_org, i)
@@ -187,13 +197,13 @@ class PL_model(pl.LightningModule):
                 raise NotImplementedError #TODO test_jitter for combinations of hue and saturation perhaps make it a tuple in this case
             
             if self.lab:
-                x = rgb2lab(x_org)
+                x = rgb2lab.forward(None, x)
             elif self.hsv:
-                x = rgb2hsv(x_org)
-
+                x = rgb2hsv.forward(None, x)
+                
             # Normalize images.
             if args.normalize:
-                x = normalize(x, grayscale=args.grayscale or args.rotations > 1)
+                x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=True if self.lab else False) #TODO convert to hsv around here
 
             # Forward pass and compute loss.
             y_pred = self.model(x)
@@ -209,7 +219,7 @@ class PL_model(pl.LightningModule):
                     (self.preds, F.softmax(y_pred, 1).detach().cpu()), 0
                 )
                 self.gts = torch.cat((self.gts, y.cpu()), 0)
-
+        
     def test_epoch_end(self, outputs):
         # Log metrics and predictions, and reset metrics. #TODO adjust this func for sat possibly and both hue and sat?
         table = {"hue": [],
@@ -224,7 +234,6 @@ class PL_model(pl.LightningModule):
             table["acc"].append(self.test_acc_dict["test_acc_{:.4f}".format(i)].compute().item())
             table["hue"].append(i)
             self.test_acc_dict["test_acc_{:.4f}".format(i)].reset()
-
         print(table["hue"], "\n\n")
         print(table["acc"])
 
@@ -237,11 +246,11 @@ class PL_model(pl.LightningModule):
                 "test_conf_mat": wandb.plot.confusion_matrix(  # type: ignore
                     probs=self.preds.numpy(),
                     y_true=self.gts.numpy(),
-                    class_names=args.classes,
+                    class_names=self.args.classes,
                 )
             }
         )
-
+        self.results = table
 
 def main(args) -> None:
     # Create temp dir for wandb.
@@ -308,10 +317,11 @@ def main(args) -> None:
     weights_name = run_name + ".pth.tar"
     checkpoint_callback = ModelCheckpoint(dirpath=weights_dir,
                                           filename=weights_name,
-                                          monitor='val_accuracy',
+                                          monitor='test_acc_epoch',#val_accuracy',
                                         #   save_best_only=True,
                                           mode='max')
 
+    print(args)
     # Instantiate model.
     trainer = pl.Trainer.from_argparse_args(
         args,
@@ -349,7 +359,6 @@ def main(args) -> None:
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
 
     # Dataset settings.

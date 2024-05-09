@@ -17,7 +17,6 @@ class rgb2lab(torch.nn.Module):
     input image tensor should be in range [0,1]
     """
     def forward(self, img):
-        assert img.min() >= 0 and img.max() <= 1, "input image tensor should be in range [0,1]"
         return color.rgb_to_lab(img)
 
 class lab2rgb(torch.nn.Module):
@@ -26,7 +25,6 @@ class lab2rgb(torch.nn.Module):
     Input image tensor should be in range [0,1]
     """
     def forward(self, img):
-        assert img.min() >= 0 and img.max() <= 1, "input image tensor should be in range [0,1]"
         return color.lab_to_rgb(img)
 
 
@@ -36,7 +34,6 @@ class rgb2hsv(torch.nn.Module):
     Input image tensor should be in range [0, 1].
     """
     def forward(self, img):
-        assert img.min() >= 0 and img.max() <= 1, "input image tensor should be in range [0,1]"
         return color.rgb_to_hsv(img)
 
 
@@ -46,17 +43,15 @@ class hsv2rgb(torch.nn.Module):
     H channel values are assumed to be in range [0, 2pi]. S and V are in range [0, 1].
     """
     def forward(self, img):
-        # assert img[:, 0, :, :].min() >= 0 and img[:, 0, :, :].max() <= 2 * torch.pi, "input image tensor H should be in range [0,2pi]"
-        assert img[:, 1:, :, :].min() >= 0 and img[:, 1:, :, :].max() <= 1, "input image tensor S and V should be in range [0,1]"
         return color.hsv_to_rgb(img)
 
 
 def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = False, lab: bool = False, hsv: bool = False) -> torch.Tensor:
     """Normalize batch of images."""
     if lab:
-        batch = lab2rgb(batch)
+        batch = lab2rgb.forward(None, batch)
     elif hsv:
-        batch = hsv2rgb(batch)
+        batch = hsv2rgb.forward(None, batch)
 
     if not grayscale:
         mean = torch.tensor([0.485, 0.456, 0.406], device=batch.device).view(1, 3, 1, 1)
@@ -70,9 +65,9 @@ def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = Fals
         out = (batch - mean) / std
 
     if lab:
-        return rgb2lab(out)
+        return rgb2lab.forward(None, out)
     elif hsv:
-        return rgb2hsv(out)
+        return rgb2hsv.forward(None, out)
     else:
         return out
 

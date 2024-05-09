@@ -358,11 +358,11 @@ class HybridResNet(nn.Module):
                 channels[-1] * rotations * block.expansion, num_classes
             )
 
-    def _make_layer(self, block, planes, num_blocks, stride, rotations, separable):
+    def _make_layer(self, block, planes, num_blocks, stride, rotations, separable, lab_space):
         strides = [stride] + [1] * (num_blocks - 1)
         layers = []
         for stride in strides:
-            layers.append(block(self.in_planes, planes, stride, rotations, separable))
+            layers.append(block(self.in_planes, planes, stride, rotations, separable, lab_space=lab_space))
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 

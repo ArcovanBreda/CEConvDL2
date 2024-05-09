@@ -51,7 +51,6 @@ class BasicBlock(nn.Module):
         self, in_planes, planes, stride=1, rotations=1, separable=False, lab_space=False,
     ) -> None:
         super(BasicBlock, self).__init__()
-
         bnlayer = nn.BatchNorm2d if rotations == 1 else nn.BatchNorm3d
         self.bn1 = bnlayer(planes)
         self.bn2 = bnlayer(planes)
@@ -235,7 +234,6 @@ class ResNet(nn.Module):
         lab_space=False,
     ) -> None:
         super(ResNet, self).__init__()
-
         self.nopool = nopool
 
         assert rotations > 0, "rotations must be greater than 0"
@@ -303,6 +301,7 @@ class ResNet(nn.Module):
                     stride=strides[i],
                     rotations=rotations,
                     separable=separable,
+                    lab_space=lab_space,
                 )
             )
         # Pooling layers
@@ -316,11 +315,11 @@ class ResNet(nn.Module):
                 channels[-1] * rotations * block.expansion, num_classes
             )
 
-    def _make_layer(self, block, planes, num_blocks, stride, rotations, separable):
+    def _make_layer(self, block, planes, num_blocks, stride, rotations, separable, lab_space):
         strides = [stride] + [1] * (num_blocks - 1)
         layers = []
         for stride in strides:
-            layers.append(block(self.in_planes, planes, stride, rotations, separable))
+            layers.append(block(self.in_planes, planes, stride, rotations, separable, lab_space))
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 
