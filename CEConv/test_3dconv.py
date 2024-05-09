@@ -7,7 +7,7 @@ img = torch.tensor([[[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]
                     ).unsqueeze(0).unsqueeze(2)
 # Batch, inchannels (3), 1 (time dimension), H, W 
 img = img.repeat(1,1,4,1,1)
-# Batch, inchannels (3), 12 (time dimension) = image stack, H, W 
+# Batch, inchannels (3), 4(time dimension) = image stack, H, W 
 
 
 
