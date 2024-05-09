@@ -29,7 +29,7 @@ def _trans_input_filter_hsv(weights, out_rotations) -> torch.Tensor:
     for i in range(out_rotations):
         # For rotation i of the group -> with an angle i/out_rotations
         # Add this hue angle to the current weights
-        temp = weights_reshaped[:, :, 0, :, :, :] + (i / out_rotations)
+        temp = transformed_weights[:, i, 0, :, :, :] + (i / out_rotations)
         # Restrict the values between 0 - 1 for the hue using modulo
         # TODO???? ALSO RESTRICT THE S AND V OR L VALUES ?
         transformed_weights[:, i, 0, :, :, :] = torch.remainder(temp, 1)
@@ -145,6 +145,7 @@ class CEConv2d(nn.Conv2d):
         kernel_size: typing.Union[int, typing.Tuple[int, int]],
         learnable: bool = False,
         separable: bool = True,
+        lab_space: bool = False,
         hsv_space: bool = False,
         **kwargs
     ) -> None:

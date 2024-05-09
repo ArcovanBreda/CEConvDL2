@@ -16,9 +16,15 @@ from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from torchinfo import summary
 from torchvision.transforms.functional import adjust_hue
 
-from experiments.classification.datasets import get_dataset, normalize
+from experiments.classification.datasets import get_dataset, normalize, lab2rgb, rgb2lab, hsv2rgb, rgb2hsv
 from models.resnet import ResNet18, ResNet44
 from models.resnet_hybrid import HybridResNet18, HybridResNet44
+from datetime import date
+import time
+
+
+# XXX HERE
+from kornia import color
 
 
 class PL_model(pl.LightningModule):
@@ -27,6 +33,8 @@ class PL_model(pl.LightningModule):
 
         # Logging.
         self.save_hyperparameters()
+        self.lab = args.lab
+        self.hsv = args.hsv
 
         # Store predictions and ground truth for computing confusion matrix.
         self.preds = torch.tensor([])
@@ -69,6 +77,8 @@ class PL_model(pl.LightningModule):
             "width": args.width,
             "num_classes": len(args.classes),
             "ce_stages": args.ce_stages,
+            "lab_space": args.lab,
+            "hsv_space": args.hsv, #TODO will need to be adjusted just as in ceconv2d.py if we want to either/or hue or sat matrix
         }
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
         self.model = architectures[args.architecture](**kwargs)
@@ -111,7 +121,7 @@ class PL_model(pl.LightningModule):
 
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1)
+            x = normalize(x, grayscale=args.grayscale or args.rotations > 1, hsv=True if self.hsv else False)
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -132,7 +142,7 @@ class PL_model(pl.LightningModule):
 
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1)
+            x = normalize(x, grayscale=args.grayscale or args.rotations > 1, hsv=True if self.hsv else False)
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -151,12 +161,27 @@ class PL_model(pl.LightningModule):
         x_org, y = batch
 
         for i in self.test_jitter:
-            # Apply hue shift.
-            x = adjust_hue(x_org, i)
+            if self.lab:
+                x = lab2rgb.forward(None,x_org.clone())
+            elif self.hsv:
+                # XXX HERE
+                # x = hsv2rgb(x_org.clone())
+                x = color.hsv_to_rgb(x_org.clone())
+            else:
+                x = x_org.clone()
+
+            x = adjust_hue(x, i) #TODO convert to hsv around here
+            
+            if self.lab:
+                x = rgb2lab(x)
+            elif self.hsv:
+                # XXX HERE
+                # x = rgb2hsv(x)
+                x = color.rgb_to_hsv(x)
 
             # Normalize images.
             if args.normalize:
-                x = normalize(x, grayscale=args.grayscale or args.rotations > 1)
+                x = normalize(x, grayscale=args.grayscale or args.rotations > 1, hsv=True if self.hsv else False)
 
             # Forward pass and compute loss.
             y_pred = self.model(x)
@@ -175,6 +200,8 @@ class PL_model(pl.LightningModule):
 
     def test_epoch_end(self, outputs):
         # Log metrics and predictions, and reset metrics.
+        table = {"hue": [],
+                 "acc": []}
         columns = ["hue", "acc"]
         test_table = wandb.Table(columns=columns)
 
@@ -182,7 +209,12 @@ class PL_model(pl.LightningModule):
             test_table.add_data(
                 i, self.test_acc_dict["test_acc_{:.4f}".format(i)].compute().item()
             )
+            table["acc"].append(self.test_acc_dict["test_acc_{:.4f}".format(i)].compute().item())
+            table["hue"].append(i)
             self.test_acc_dict["test_acc_{:.4f}".format(i)].reset()
+
+        print(table["hue"], "\n\n")
+        print(table["acc"])
 
         # Log test table with wandb.
         self.logger.experiment.log({"test_table": test_table})  # type: ignore
@@ -197,6 +229,7 @@ class PL_model(pl.LightningModule):
                 )
             }
         )
+        self.results = table
 
 
 def main(args) -> None:
@@ -215,6 +248,11 @@ def main(args) -> None:
     # Initialize model.
     model = PL_model(args)
 
+    # Create date/time string
+    current_time = time.strftime("%H:%M:%S", time.localtime())
+    current_day = str(date.today())
+    day_time = current_day + "_" + current_time
+
     # Callbacks and loggers.
     run_name = "{}-{}_{}-{}-jitter_{}-split_{}-seed_{}".format(
         args.dataset,
@@ -225,6 +263,10 @@ def main(args) -> None:
         str(args.split).replace(".", "_"),
         args.seed,
     )
+    if args.lab:
+        run_name += "-lab_space"
+    if args.hsv:
+        run_name += "-hsv_space"
     if args.grayscale:
         run_name += "-grayscale"
     if not args.normalize:
@@ -233,21 +275,35 @@ def main(args) -> None:
         run_name += "-{}_stages".format(args.ce_stages)
     if args.run_name is not None:
         run_name += "-" + args.run_name
+    # Add day and time
+    run_name += "-" + day_time
     mylogger = pl_loggers.WandbLogger(  # type: ignore
-        project="DL2 CEConv",
+        entity="rens-uva-org",
+        project="dante_dl2",
         config=vars(args),
         name=run_name,
         save_dir=os.environ["WANDB_DIR"],
     )
     lr_monitor = LearningRateMonitor(logging_interval="step")
 
+    print("run name:", run_name)
+
     # Define callback to store model weights.
     weights_dir = os.path.join(
         os.environ["OUT_DIR"], "color_equivariance/classification/"
     )
     os.makedirs(weights_dir, exist_ok=True)
+
+    print(f"saving in: {weights_dir}")
+
     weights_name = run_name + ".pth.tar"
-    checkpoint_callback = ModelCheckpoint(dirpath=weights_dir, filename=weights_name)
+    checkpoint_callback = ModelCheckpoint(dirpath=weights_dir,
+                                          filename=weights_name,
+                                          monitor='test_acc_epoch',#val_accuracy',
+                                        #   save_best_only=True,
+                                          mode='max')
+    
+    print(args)
 
     # Train model.
     trainer = pl.Trainer.from_argparse_args(
@@ -269,7 +325,9 @@ def main(args) -> None:
             os.path.join(weights_dir, f) for f in checkpoint_files if weights_name in f
         ]
         weights_path = weights_path[0] if len(weights_path) > 0 else None
+        print("Files found")
     else:
+        print("Files NOT found")
         weights_path = None
 
     # Train model.
@@ -300,6 +358,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--nonorm", dest="normalize", action="store_false", help="no input norm."
     )
+    parser.add_argument("--lab", dest="lab", action="store_true", help="convert rgb image to lab")
+    parser.add_argument("--hsv", dest="hsv", action="store_true", help="convert rgb image to hsv")
 
     # Training settings.
     parser.add_argument(

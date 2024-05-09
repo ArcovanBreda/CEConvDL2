@@ -48,7 +48,7 @@ class BasicBlock(nn.Module):
     expansion = 1
 
     def __init__(
-        self, in_planes, planes, stride=1, rotations=1, separable=False
+        self, in_planes, planes, stride=1, rotations=1, separable=False, lab_space=False, hsv_space=False
     ) -> None:
         super(BasicBlock, self).__init__()
 
@@ -91,6 +91,8 @@ class BasicBlock(nn.Module):
                 padding=1,
                 bias=False,
                 separable=separable,
+                lab_space = lab_space,
+                hsv_space = hsv_space
             )
             self.conv2 = CEConv2d(
                 rotations,
@@ -102,6 +104,8 @@ class BasicBlock(nn.Module):
                 padding=1,
                 bias=False,
                 separable=separable,
+                lab_space = lab_space,
+                hsv_space = hsv_space
             )
             if stride != 1 or in_planes != self.expansion * planes:
                 self.shortcut = nn.Sequential(
@@ -114,6 +118,8 @@ class BasicBlock(nn.Module):
                         stride=stride,
                         bias=False,
                         separable=False,
+                        lab_space = lab_space,
+                        hsv_space = hsv_space
                     ),
                     bnlayer(self.expansion * planes),
                 )
@@ -129,7 +135,7 @@ class BasicBlock(nn.Module):
 class Bottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, in_planes, planes, stride=1, rotations=1, separable=False):
+    def __init__(self, in_planes, planes, stride=1, rotations=1, separable=False, lab_space = False, hsv_space = False):
         super(Bottleneck, self).__init__()
         bnlayer = nn.BatchNorm2d if rotations == 1 else nn.BatchNorm3d
         self.bn1 = bnlayer(planes)
@@ -167,6 +173,8 @@ class Bottleneck(nn.Module):
                 kernel_size=1,
                 bias=False,
                 separable=separable,
+                lab_space = lab_space,
+                hsv_space = hsv_space
             )
             self.conv2 = CEConv2d(
                 rotations,
@@ -178,6 +186,8 @@ class Bottleneck(nn.Module):
                 padding=1,
                 bias=False,
                 separable=separable,
+                lab_space = lab_space,
+                hsv_space = hsv_space
             )
             self.conv3 = CEConv2d(
                 rotations,
@@ -187,6 +197,8 @@ class Bottleneck(nn.Module):
                 kernel_size=1,
                 bias=False,
                 separable=separable,
+                lab_space = lab_space,
+                hsv_space = hsv_space
             )
 
             if stride != 1 or in_planes != self.expansion * planes:
@@ -200,6 +212,8 @@ class Bottleneck(nn.Module):
                         stride=stride,
                         bias=False,
                         separable=False,
+                        lab_space = lab_space,
+                        hsv_space = hsv_space
                     ),
                     bnlayer(self.expansion * planes),
                 )
@@ -225,6 +239,8 @@ class ResNet(nn.Module):
         width=64,
         separable=False,
         nopool=False,
+        lab_space = False,
+        hsv_space = False
     ) -> None:
         super(ResNet, self).__init__()
 
@@ -265,6 +281,8 @@ class ResNet(nn.Module):
                 bias=False,
                 learnable=learnable,
                 separable=separable,
+                lab_space = lab_space,
+                hsv_space = hsv_space
             )
             self.bn1 = nn.BatchNorm3d(channels[0])
             if not low_resolution:
