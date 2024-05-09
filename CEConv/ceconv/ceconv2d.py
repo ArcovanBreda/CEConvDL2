@@ -149,7 +149,7 @@ def _trans_input_filter_hsv_sat(weights, saturations, saturation_matrix) -> torc
 
     # Replace old saturation channel with transformed ones
     # weights[:, :, 1:2, :, :, :] = tw # would need to clone here
-    final_weights = torch.zeros(weights.shape) # otherwise would have needed to clone idk which one is more efficient #TODO
+    final_weights = torch.zeros(weights.shape, device=weights.device) # otherwise would have needed to clone idk which one is more efficient #TODO
     final_weights[:, :, 1:2, :, :, :] = tw
     final_weights[:, :, 0, :, :, :] = weights[:, :, 0, :, :, :]
     final_weights[:, :, 2, :, :, :] = weights[:, :, 2, :, :, :]
