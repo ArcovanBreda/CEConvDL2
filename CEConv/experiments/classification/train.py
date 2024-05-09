@@ -28,6 +28,7 @@ class PL_model(pl.LightningModule):
         # Logging.
         self.save_hyperparameters()
         self.lab = args.lab
+        self.args = args
         # Store predictions and ground truth for computing confusion matrix.
         self.preds = torch.tensor([])
         self.gts = torch.tensor([])
@@ -39,6 +40,9 @@ class PL_model(pl.LightningModule):
         elif args.dataset == "flowers102":
             self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=102)
             self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+        elif args.dataset == "stl10":
+            self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+            self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
         else:
             raise NotImplementedError
 
@@ -61,6 +65,8 @@ class PL_model(pl.LightningModule):
                 self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
             elif args.dataset == "flowers102":
                 self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+            elif args.dataset == "stl10":
+                self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
             else:
                 raise NotImplementedError
 
@@ -213,7 +219,6 @@ class PL_model(pl.LightningModule):
             table["acc"].append(self.test_acc_dict["test_acc_{:.4f}".format(i)].compute().item())
             table["hue"].append(i)
             self.test_acc_dict["test_acc_{:.4f}".format(i)].reset()
-
         print(table["hue"], "\n\n")
         print(table["acc"])
 
@@ -226,11 +231,11 @@ class PL_model(pl.LightningModule):
                 "test_conf_mat": wandb.plot.confusion_matrix(  # type: ignore
                     probs=self.preds.numpy(),
                     y_true=self.gts.numpy(),
-                    class_names=args.classes,
+                    class_names=self.args.classes,
                 )
             }
         )
-
+        self.results = table
 
 def main(args) -> None:
     # Create temp dir for wandb.
@@ -283,11 +288,17 @@ def main(args) -> None:
         os.environ["OUT_DIR"], "color_equivariance/classification/"
     )
     os.makedirs(weights_dir, exist_ok=True)
+
+    print(f"saving in: {weights_dir}")
+
     weights_name = run_name + ".pth.tar"
     checkpoint_callback = ModelCheckpoint(dirpath=weights_dir,
                                           filename=weights_name,
-                                          save_on_train_epoch_end=True)
+                                          monitor='test_acc_epoch',#val_accuracy',
+                                        #   save_best_only=True,
+                                          mode='max')
 
+    print(args)
     # Instantiate model.
     trainer = pl.Trainer.from_argparse_args(
         args,
