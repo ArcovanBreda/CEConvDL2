@@ -89,7 +89,9 @@ class PL_model(pl.LightningModule):
             "num_classes": len(args.classes),
             "ce_stages": args.ce_stages,
             "lab_space": args.lab,
-            "hsv_space": args.hsv, #TODO will need to be adjusted just as in ceconv2d.py if we want to either/or hue or sat matrix
+            "hsv_space": args.hsv,
+            "sat_shift": args.sat_shift,
+            "hue_shift": args.hue_shift,
         }
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
         self.model = architectures[args.architecture](**kwargs)
