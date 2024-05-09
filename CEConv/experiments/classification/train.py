@@ -198,6 +198,8 @@ class PL_model(pl.LightningModule):
             table["acc"].append(self.test_acc_dict["test_acc_{:.4f}".format(i)].compute().item())
             table["hue"].append(i)
             self.test_acc_dict["test_acc_{:.4f}".format(i)].reset()
+        print(table["hue"], "\n\n")
+        print(table["acc"])
 
         # Log test table with wandb.
         self.logger.experiment.log({"test_table": test_table})  # type: ignore
