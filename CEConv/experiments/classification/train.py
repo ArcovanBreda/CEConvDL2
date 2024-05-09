@@ -141,7 +141,7 @@ class PL_model(pl.LightningModule):
         x, y = batch
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=True if self.lab else False) #TODO convert to hsv around here
+            x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=self.lab, hsv=self.hsv) #TODO convert to hsv around here
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -162,7 +162,7 @@ class PL_model(pl.LightningModule):
 
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=True if self.lab else False) #TODO convert to hsv around here
+            x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=self.lab, hsv=self.hsv) #TODO convert to hsv around here
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -203,7 +203,7 @@ class PL_model(pl.LightningModule):
                 
             # Normalize images.
             if args.normalize:
-                x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=True if self.lab else False) #TODO convert to hsv around here
+                x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=self.lab, hsv=self.hsv) #TODO convert to hsv around here
 
             # Forward pass and compute loss.
             y_pred = self.model(x)
