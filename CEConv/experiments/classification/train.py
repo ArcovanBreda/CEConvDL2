@@ -44,7 +44,18 @@ class PL_model(pl.LightningModule):
 
         # Store accuracy metrics for testing.
         self.test_acc_dict = {}
-        self.test_jitter = np.linspace(-0.5, 0.5, 37)
+        self.test_rotations = 37
+        self.test_jitter = np.linspace(-0.5, 0.5, self.test_rotations)
+        self.lab_test = args.lab_test
+        if self.lab_test:
+            angle_delta =  2 * math.pi / self.test_rotations
+            self.lab_angle_matrix = torch.tensor(
+        [
+            [1, 0, 0],
+            [0, math.cos(angle_delta), -math.sin(angle_delta)],
+            [0, math.sin(angle_delta), math.cos(angle_delta)],
+        ]
+    )    
         for i in self.test_jitter:
             if args.dataset == "cifar10":
                 self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
@@ -151,12 +162,23 @@ class PL_model(pl.LightningModule):
         x_org, y = batch
         for i in self.test_jitter:
             # Apply hue shift.
-            if self.lab:
+            if self.lab and not self.lab_test:
                 x = lab2rgb.forward(None,x_org.clone())
             else:
                 x = x_org.clone()
-            x = adjust_hue(x, i) #TODO convert to hsv around here
-            if self.lab:
+            if not self.lab_test:
+                x = adjust_hue(x, i)
+            else:
+                # Apply hue shift in lab space
+                # Convert torch hue angle to aplications of rotation matrix
+                times = 360 - (i*(180/0.5))
+                times = times / (360/self.test_rotations)
+                w=x.shape[2]
+                h=x.shape[3]
+                # Apply shift to batc
+                matrix = torch.matrix_power(self.lab_angle_matrix, int(times)).repeat(x.shape[0],1,1)
+                x = torch.bmm(matrix.cuda(), x.reshape((x.shape[0], 3, -1))).reshape((x.shape[0], 3, w, h))
+            if self.lab and not self.lab_test:
                 x = rgb2lab.forward(None,x)
                 
             # Normalize images.
@@ -177,7 +199,6 @@ class PL_model(pl.LightningModule):
                     (self.preds, F.softmax(y_pred, 1).detach().cpu()), 0
                 )
                 self.gts = torch.cat((self.gts, y.cpu()), 0)
-        
     def test_epoch_end(self, outputs):
         # Log metrics and predictions, and reset metrics.
         table = {"hue": [],
@@ -318,7 +339,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--nonorm", dest="normalize", action="store_false", help="no input norm."
     )
-    parser.add_argument("--lab", dest="lab", action="store_true", help="convert rgb image to lab")
+    parser.add_argument("--lab", dest="lab", action="store_true", help="Train in LAB space")
+    parser.add_argument("--lab_test", dest="lab_test", action="store_true", help="Apply test time hue shift in LAB space")
     # Training settings.
     parser.add_argument(
         "--bs", type=int, default=256, help="training batch size (default: 256)"
