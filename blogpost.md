@@ -22,20 +22,20 @@ Deep Convolutional Neural Networks have been around since the late 1980s and ove
 The generalization of translation equivariance is achieved through Group Convolutional Neural Networks (G-CNN). A CNN layer is equivariant to a group if for all transformations $g \in G$, doing the transformation $T_g$ on the input and then the feature mapping $\Phi (x)$ is similar to doing the feature mapping on the input and the transformation $T'_g$ thereafter: 
 
 $$\begin{align} 
-\Phi (T_g x) = T'_g \Phi (x) & \qquad \qquad \forall g \in G, \\ 
+\Phi (T_g x) = T'_g \Phi (x) & \qquad \qquad \forall g \in G, & \qquad \qquad (\text{Equation 1})\\ 
 \end{align}$$
 
 where $T_g$ and $T'_g$ can be equivalent.
 We utilise the equation from \[2\] to show that G-CNNs are equivariant. Instead of shifting a filter, correlation in the first layer can be described more generally by replacing it with some transformation from group $G$, whereby $f$ is the input image and $\psi$ is the filter:
 
 $$\begin{align} 
-[f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_k f_k(y)\psi_k(g^{-1}y) \\ 
+[f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_k f_k(y)\psi_k(g^{-1}y) & \qquad \qquad (\text{Equation 2}) \\ 
 \end{align}$$
 
 Since the feature map $f \star \psi$ is a function on G, the filters are functions on G for all layers after the first. The correlation then becomes:
 
 $$\begin{align} 
-[f \star \psi](g) = \sum_{h \in G}\sum_k f_k(h)\psi_k(g^{-1}h) \\ 
+[f \star \psi](g) = \sum_{h \in G}\sum_k f_k(h)\psi_k(g^{-1}h) & \qquad \qquad (\text{Equation 3}) \\ 
 \end{align}$$
 
 Using the substition $h \rightarrow uh$, the equivariance of the correlation can be derived such that a translation followed by a correlation is equivalent to a correlation followed by a translation:
@@ -44,7 +44,7 @@ $$\begin{align}
 [[L_uf] \star \psi](g) &= \sum_{h \in G}\sum_k f_k(u^{-1}h)\psi(g^{-1}h) \\ 
 &= \sum_{h \in G}\sum_kf(h)\psi(g^{-1}uh) \\
 &= \sum_{h \in G}\sum_kf(h)\psi((u^{-1}g)^{-1}h) \\
-&= [L_u[f \star \psi]](g)
+&= [L_u[f \star \psi]](g) & \qquad \qquad (\text{Equation 4})
 \end{align}$$
 
 <!---
