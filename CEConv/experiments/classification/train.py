@@ -30,6 +30,9 @@ class PL_model(pl.LightningModule):
         self.lab = args.lab
         self.args = args
         self.hsv = args.hsv
+        self.hsv_test = args.hsv_test
+        self.normalize = args.normalize
+        self._device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         # Store predictions and ground truth for computing confusion matrix.
         self.preds = torch.tensor([])
@@ -66,7 +69,19 @@ class PL_model(pl.LightningModule):
                     raise NotImplementedError
         elif args.sat_shift and not args.hue_shift:
             self.sat_shift = True
-            self.test_jitter = np.append(np.linspace(0, 1, 5, endpoint=False), np.arange(1, 256, 1, dtype=int)) #TODO determine which sat factors we want to scale with. Also need to check if it works on normalized imgs
+
+            if self.hsv_test:
+                saturations = 50
+                neg_sats = saturations // 2
+                pos_sats = neg_sats - 1 + saturations % 2
+
+                # In case of even saturations, consider 0 to be positive
+                self.test_jitter = torch.concat((torch.linspace(-1, 0, neg_sats + 1)[:-1],
+                                                torch.tensor([0]),
+                                                torch.linspace(0, 1, pos_sats + 1)[1:])).type(torch.float32).to(self._device) #TODO check if this is nice
+            else:
+                self.test_jitter = np.append(np.linspace(0, 1, 25, endpoint=False), np.arange(1, 10, 1, dtype=int)) #TODO determine which sat factors we want to scale with. Also need to check if it works on normalized imgs
+            
             for i in self.test_jitter:
                 if args.dataset == "cifar10":
                     self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
@@ -79,6 +94,7 @@ class PL_model(pl.LightningModule):
         elif args.sat_shift and args.hue_shift:
             self.hue_shift, self.sat_shift = True, True
             raise NotImplementedError #TODO jitter for combinations of saturation and hue shifts
+            #TODO keep hsv_test in mind here as well
 
         # Loss function
         self.criterion = nn.CrossEntropyLoss()
@@ -141,7 +157,7 @@ class PL_model(pl.LightningModule):
         x, y = batch
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=self.lab, hsv=self.hsv) #TODO convert to hsv around here
+            x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv) #TODO convert to hsv around here
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -162,7 +178,7 @@ class PL_model(pl.LightningModule):
 
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=self.lab, hsv=self.hsv) #TODO convert to hsv around here
+            x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv) #TODO convert to hsv around here
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -182,7 +198,7 @@ class PL_model(pl.LightningModule):
         for i in self.test_jitter:
             if self.lab:
                 x = lab2rgb.forward(None,x_org.clone())
-            elif self.hsv:
+            elif self.hsv and not self.hsv_test:
                 x_org = hsv2rgb.forward(None, x_org.clone())
             else:
                 x = x_org.clone()
@@ -191,19 +207,31 @@ class PL_model(pl.LightningModule):
                 # Apply hue shift.
                 x = adjust_hue(x, i)
             elif self.sat_shift and not self.hue_shift:
-                # Apply saturation scale.
-                x = adjust_saturation(x_org, i)
+                # Apply saturation shift.
+                if self.hsv_test:
+                    # print("DEBUG devices", x.device, i.unsqueeze(0).device)
+                    add_val = i.unsqueeze(0)[:, None,None] # 1, 1, 1
+                    w = x.shape[2]
+                    h = x.shape[3]
+                    x = x.reshape((x.shape[0], 3, -1)) # B, C, H*W
+                    # print("DEBUG devices", x.device, add_val.device)
+                    x[:, 1:2, :] += add_val # add to saturation channel
+                    x[:, 1:2, :] = torch.clip(x[:, 1:2, :], min=0, max=1) # clip saturation channel 0-1
+                    x = x.reshape((x.shape[0], 3, w, h))
+                else:
+                    x = adjust_saturation(x_org, i)
             elif self.sat_shift and self.hue_shift:
                 raise NotImplementedError #TODO test_jitter for combinations of hue and saturation perhaps make it a tuple in this case
-            
+                #TODO keep hsv_test in mind here
+
             if self.lab:
                 x = rgb2lab.forward(None, x)
-            elif self.hsv:
+            elif self.hsv and not self.hsv_test:
                 x = rgb2hsv.forward(None, x)
                 
             # Normalize images.
-            if args.normalize:
-                x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=self.lab, hsv=self.hsv) #TODO convert to hsv around here
+            if self.normalize:
+                x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv) #TODO convert to hsv around here
 
             # Forward pass and compute loss.
             y_pred = self.model(x)
@@ -288,6 +316,8 @@ def main(args) -> None:
         run_name += "-sat_shift"
     if args.hue_shift and args.sat_shift:
         run_name += "-hue_and_sat_shift"
+    if args.sat_jitter:
+        run_name += f"-sat_jitter_{args.sat_jitter[0]}_{args.sat_jitter[1]}"
     if args.grayscale:
         run_name += "-grayscale"
     if not args.normalize:
@@ -402,6 +432,7 @@ if __name__ == "__main__":
     # Test settings
     parser.add_argument("--hue_shift", dest="hue_shift", action="store_true", help="test set should get hue shifts.")
     parser.add_argument("--sat_shift", dest="sat_shift", action="store_true", help="test set should get saturation shifts.")
+    parser.add_argument("--hsv_test", dest="hsv_test", action="store_true", help="perform hue or saturation shift directly in HSV space")
 
     parser = PL_model.add_model_specific_args(parser)
 
