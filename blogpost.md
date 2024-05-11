@@ -10,7 +10,10 @@ TODO: Introduction text
 
 ## Color for Classification
 
+<!---
 TODO: Text about the influence of color on classification (related work: color invariance)
+--->
+Color is an important feature for recognition/classification by humans. One example is investiged by \[1\], who found that color facilitates expert bird-watchers in faster and more accurate recognition at both high (family) and low (specimen) levels of bird recognition. 
 
 ## Recap on Group Equivariant Convolutions
 
@@ -28,9 +31,9 @@ $$\begin{align}
 where $T_g$ and $T'_g$ can be equivalent.
 We utilise the equation from \[2\] to show that G-CNNs are equivariant. Instead of shifting a filter, correlation in the first layer can be described more generally by replacing it with some transformation from group $G$, whereby $f$ is the input image and $\psi$ is the filter:
 
-$$\begin{align} 
-[f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_k f_k(y)\psi_k(g^{-1}y) & \qquad \qquad (\text{Equation 2})\\ 
-\end{align}$$
+$$ 
+[f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_k f_k(y)\psi_k(g^{-1}y) \qquad \qquad (\text{Equation 2})
+$$
 
 Since the feature map $f \star \psi$ is a function on G, the filters are functions on G for all layers after the first. The correlation then becomes:
 
