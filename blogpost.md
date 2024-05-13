@@ -125,14 +125,26 @@ Two models were tested. The Z2CNN, a vanilla CNN model, consists of 25,990 train
 
 ![Longtailed dataset results](blogpost_imgs/Longtailed.png)
 
+*Figure 1: ...*
+
 The figure is ordered in the availability of training samples for every class. Performance of the shape-sharing CECNN consistently outperforms the baseline Z2CNN, where the average performance of the Z2CNN is 68.8% $\pm$ 0.6% and for the CECNN is 85.2 $\pm$ 1.2%. Most performance increase is seen in classes where little training data is provided thus confirming the hypothesis that the CECNN is able to share shape weight information effectively. These results are in line with the findings of the original authors which also describe a large performance increase. A difference in findings is the std of the CECNN which is larger than that of the Z2CNN however, this could be due to the randomness in data generation* which resulted in a different data distribution for our experiment.
 
 <span style="color:grey">* We made the data generation deterministic by setting a seed, recreating our experiment would return the same data distribution.</span>
 
 
 #### Color Selectivity
-
+<!---
 TODO: in which stages is color equivariance useful (figure 3 about color selective datasets)
+--->
+Color selectivity is defined as: “Color selectivity is the property of a neuron that activates highly when a particular color appears in the input image and, in contrast, shows low activation when this color is not present.” BRON. The authors of the original paper utilize this notion to define color selectivity of a dataset. Namely, they computed the color selectivity as an average of all neurons in the baseline CNN trained on the respective dataset. We reproduced the experiment to investigate the influence of using color equivariance up to late stages. Due to computational constraints, only two of the four datasets were explored; flowers102 with the highest color selectivity (0.70) and STL10 with the lowest color selectivity (0.38). While we did not explore the remaining datasets extensively, their color selectivity was comparable to STL10, suggesting that our findings are inclusive for the additional datasets.
+
+In Figure 2, the accuracy improvement of color equivariance up to later stages in the network are displayed for both mentioned datasets. The baseline is the ResNet18 model with one rotation (equivariance up to 0 stages). For the other values, HybridResNet18 models are trained with 3 rotations, max pooling, separable kernels and the number of color equivariant stages as shown in the figure. Additionally, the graph on the right shows the result with color-jitter augmentation.
+
+![Color selectivity results](blogpost_imgs/color_selectivity.png)
+
+*Figure 2: Influence of color equivariance embedded up to late stages in the network on datasets with high and low color selectivity.*
+
+Similar to the original paper’s results, the color selective dataset seems to benefit from color equivariance up to later stages in the network, in contrast to the less color selective dataset. This is especially clear for the graph with color-jitter augmentation. However, the color selectivity seems detrimental at the earlier stages without color-jitter augmentation for the color selective dataset. In general, the accuracy improvements/deteriorations are less extreme compared to the original results. The differences might be explained by the fact that we trained the model on the full datasets instead of on a subset. By our results, we suspect that color equivariance is solely significantly beneficial for color selective datasets in combination with color-jitter augmentation. Otherwise, the differences are negligible. 
 
 ### Color Equivariance in Image Classification and impact of hyperparameters
 
