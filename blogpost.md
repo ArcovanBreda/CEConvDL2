@@ -1,6 +1,6 @@
 # Title
 
-**Authors:** *S.A. Abbring, H.C. van den Bos, R. den Braber, A.J. van Breda, D. Zegveld*
+**Authors:** *S.R. Abbring, H.C. van den Bos, R. den Braber, A.J. van Breda, D. Zegveld*
 
 ---
 
