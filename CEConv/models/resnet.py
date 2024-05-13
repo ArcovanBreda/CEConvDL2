@@ -48,10 +48,9 @@ class BasicBlock(nn.Module):
     expansion = 1
 
     def __init__(
-        self, in_planes, planes, stride=1, rotations=1, separable=False
+        self, in_planes, planes, stride=1, rotations=1, separable=False, lab_space=False,
     ) -> None:
         super(BasicBlock, self).__init__()
-
         bnlayer = nn.BatchNorm2d if rotations == 1 else nn.BatchNorm3d
         self.bn1 = bnlayer(planes)
         self.bn2 = bnlayer(planes)
@@ -91,6 +90,7 @@ class BasicBlock(nn.Module):
                 padding=1,
                 bias=False,
                 separable=separable,
+                lab_space = lab_space,
             )
             self.conv2 = CEConv2d(
                 rotations,
@@ -102,6 +102,7 @@ class BasicBlock(nn.Module):
                 padding=1,
                 bias=False,
                 separable=separable,
+                lab_space = lab_space,
             )
             if stride != 1 or in_planes != self.expansion * planes:
                 self.shortcut = nn.Sequential(
@@ -114,6 +115,7 @@ class BasicBlock(nn.Module):
                         stride=stride,
                         bias=False,
                         separable=False,
+                        lab_space = lab_space,
                     ),
                     bnlayer(self.expansion * planes),
                 )
@@ -129,7 +131,7 @@ class BasicBlock(nn.Module):
 class Bottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, in_planes, planes, stride=1, rotations=1, separable=False):
+    def __init__(self, in_planes, planes, stride=1, rotations=1, separable=False, lab_space=False):
         super(Bottleneck, self).__init__()
         bnlayer = nn.BatchNorm2d if rotations == 1 else nn.BatchNorm3d
         self.bn1 = bnlayer(planes)
@@ -167,6 +169,7 @@ class Bottleneck(nn.Module):
                 kernel_size=1,
                 bias=False,
                 separable=separable,
+                lab_space = lab_space,
             )
             self.conv2 = CEConv2d(
                 rotations,
@@ -178,6 +181,7 @@ class Bottleneck(nn.Module):
                 padding=1,
                 bias=False,
                 separable=separable,
+                lab_space = lab_space,
             )
             self.conv3 = CEConv2d(
                 rotations,
@@ -187,6 +191,7 @@ class Bottleneck(nn.Module):
                 kernel_size=1,
                 bias=False,
                 separable=separable,
+                lab_space = lab_space,
             )
 
             if stride != 1 or in_planes != self.expansion * planes:
@@ -200,6 +205,7 @@ class Bottleneck(nn.Module):
                         stride=stride,
                         bias=False,
                         separable=False,
+                        lab_space = lab_space,
                     ),
                     bnlayer(self.expansion * planes),
                 )
@@ -225,9 +231,9 @@ class ResNet(nn.Module):
         width=64,
         separable=False,
         nopool=False,
+        lab_space=False,
     ) -> None:
         super(ResNet, self).__init__()
-
         self.nopool = nopool
 
         assert rotations > 0, "rotations must be greater than 0"
@@ -265,6 +271,7 @@ class ResNet(nn.Module):
                 bias=False,
                 learnable=learnable,
                 separable=separable,
+                lab_space = lab_space,
             )
             self.bn1 = nn.BatchNorm3d(channels[0])
             if not low_resolution:
@@ -294,6 +301,7 @@ class ResNet(nn.Module):
                     stride=strides[i],
                     rotations=rotations,
                     separable=separable,
+                    lab_space=lab_space,
                 )
             )
         # Pooling layers
@@ -307,11 +315,11 @@ class ResNet(nn.Module):
                 channels[-1] * rotations * block.expansion, num_classes
             )
 
-    def _make_layer(self, block, planes, num_blocks, stride, rotations, separable):
+    def _make_layer(self, block, planes, num_blocks, stride, rotations, separable, lab_space):
         strides = [stride] + [1] * (num_blocks - 1)
         layers = []
         for stride in strides:
-            layers.append(block(self.in_planes, planes, stride, rotations, separable))
+            layers.append(block(self.in_planes, planes, stride, rotations, separable, lab_space))
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 

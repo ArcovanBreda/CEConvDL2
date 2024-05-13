@@ -16,9 +16,10 @@ from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from torchinfo import summary
 from torchvision.transforms.functional import adjust_hue
 
-from experiments.classification.datasets import get_dataset, normalize
+from experiments.classification.datasets import get_dataset, normalize, lab2rgb, rgb2lab
 from models.resnet import ResNet18, ResNet44
 from models.resnet_hybrid import HybridResNet18, HybridResNet44
+import matplotlib.pyplot as pltimport 
 import time
 
 
@@ -28,8 +29,8 @@ class PL_model(pl.LightningModule):
 
         # Logging.
         self.save_hyperparameters()
+        self.lab = args.lab
         self.args = args
-
         # Store predictions and ground truth for computing confusion matrix.
         self.preds = torch.tensor([])
         self.gts = torch.tensor([])
@@ -49,7 +50,18 @@ class PL_model(pl.LightningModule):
 
         # Store accuracy metrics for testing.
         self.test_acc_dict = {}
-        self.test_jitter = np.linspace(-0.5, 0.5, 37)
+        self.test_rotations = 37
+        self.test_jitter = np.linspace(-0.5, 0.5, self.test_rotations)
+        self.lab_test = args.lab_test
+        if self.lab_test:
+            angle_delta =  2 * math.pi / self.test_rotations
+            self.lab_angle_matrix = torch.tensor(
+        [
+            [1, 0, 0],
+            [0, math.cos(angle_delta), -math.sin(angle_delta)],
+            [0, math.sin(angle_delta), math.cos(angle_delta)],
+        ]
+    )    
         for i in self.test_jitter:
             if args.dataset == "cifar10":
                 self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
@@ -76,6 +88,7 @@ class PL_model(pl.LightningModule):
             "width": args.width,
             "num_classes": len(args.classes),
             "ce_stages": args.ce_stages,
+            "lab_space": args.lab,
         }
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
         self.model = architectures[args.architecture](**kwargs)
@@ -115,10 +128,9 @@ class PL_model(pl.LightningModule):
 
     def training_step(self, batch, batch_idx) -> dict[str, torch.Tensor]:
         x, y = batch
-
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1) #TODO convert to hsv around here
+            x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=True if self.lab else False) #TODO convert to hsv around here
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -139,7 +151,7 @@ class PL_model(pl.LightningModule):
 
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1) #TODO convert to hsv around here
+            x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=True if self.lab else False) #TODO convert to hsv around here
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -156,14 +168,30 @@ class PL_model(pl.LightningModule):
 
     def test_step(self, batch, batch_idx) -> None:
         x_org, y = batch
-
         for i in self.test_jitter:
             # Apply hue shift.
-            x = adjust_hue(x_org, i)
-
+            if self.lab and not self.lab_test:
+                x = lab2rgb.forward(None,x_org.clone())
+            else:
+                x = x_org.clone()
+            if not self.lab_test:
+                x = adjust_hue(x, i)
+            else:
+                # Apply hue shift in lab space
+                # Convert torch hue angle to aplications of rotation matrix
+                times = 360 - (i*(180/0.5))
+                times = times / (360/self.test_rotations)
+                w=x.shape[2]
+                h=x.shape[3]
+                # Apply shift to batc
+                matrix = torch.matrix_power(self.lab_angle_matrix, int(times)).repeat(x.shape[0],1,1)
+                x = torch.bmm(matrix.cuda(), x.reshape((x.shape[0], 3, -1))).reshape((x.shape[0], 3, w, h))
+            if self.lab and not self.lab_test:
+                x = rgb2lab.forward(None,x)
+                
             # Normalize images.
             if args.normalize:
-                x = normalize(x, grayscale=args.grayscale or args.rotations > 1) #TODO convert to hsv around here
+                x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=True if self.lab else False) #TODO convert to hsv around here
 
             # Forward pass and compute loss.
             y_pred = self.model(x)
@@ -179,7 +207,6 @@ class PL_model(pl.LightningModule):
                     (self.preds, F.softmax(y_pred, 1).detach().cpu()), 0
                 )
                 self.gts = torch.cat((self.gts, y.cpu()), 0)
-
     def test_epoch_end(self, outputs):
         # Log metrics and predictions, and reset metrics.
         table = {"hue": [],
@@ -194,6 +221,8 @@ class PL_model(pl.LightningModule):
             table["acc"].append(self.test_acc_dict["test_acc_{:.4f}".format(i)].compute().item())
             table["hue"].append(i)
             self.test_acc_dict["test_acc_{:.4f}".format(i)].reset()
+        print(table["hue"], "\n\n")
+        print(table["acc"])
 
         # Log test table with wandb.
         self.logger.experiment.log({"test_table": test_table})  # type: ignore
@@ -236,6 +265,8 @@ def main(args) -> None:
         str(args.split).replace(".", "_"),
         args.seed,
     )
+    if args.lab:
+        run_name += "-lab_space"
     if args.grayscale:
         run_name += "-grayscale"
     if not args.normalize:
@@ -310,12 +341,15 @@ def main(args) -> None:
     training_time = end_time - start_time
     print("Training time:", training_time, "seconds")
 
+    end_time = time.time()
+    training_time = end_time - start_time
+    print("Training time:", training_time, "seconds")
+
     # Test model.
     trainer.test(model, dataloaders=testloader)
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
 
     # Dataset settings.
@@ -330,8 +364,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--nonorm", dest="normalize", action="store_false", help="no input norm."
     )
-    parser.add_argument("--lab", dest="lab", action="store_true", help="convert rgb image to hsv") #TODO
-
+    parser.add_argument("--lab", dest="lab", action="store_true", help="Train in LAB space")
+    parser.add_argument("--lab_test", dest="lab_test", action="store_true", help="Apply test time hue shift in LAB space")
     # Training settings.
     parser.add_argument(
         "--bs", type=int, default=256, help="training batch size (default: 256)"
