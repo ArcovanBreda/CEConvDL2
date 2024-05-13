@@ -26,7 +26,7 @@ class TestCECNN(unittest.TestCase):
 
     def test_forward(self) -> None:
         """Test the forward pass of the CECNN."""
-        model = CECNN(planes=32, rotations=4)
+        model = CECNN(planes=32, rotations=4, hsv_space=True)
         y = model(_create_dummy_input())
         self.assertEqual(y.shape, (8, 10))
 

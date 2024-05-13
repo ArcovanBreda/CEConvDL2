@@ -203,7 +203,10 @@ class PL_model(pl.LightningModule):
             if self.lab:
                 x = lab2rgb.forward(None,x_org.clone())
             elif self.hsv and not self.hsv_test:
-                x_org = hsv2rgb.forward(None, x_org.clone())
+                if self.hue_shift:
+                    x = hsv2rgb.forward(None, x_org.clone())
+                else:
+                    x_org = hsv2rgb.forward(None, x_org.clone())
             else:
                 x = x_org.clone()
 
