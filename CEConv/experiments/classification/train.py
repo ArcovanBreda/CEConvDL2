@@ -14,9 +14,9 @@ import wandb
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from torchinfo import summary
-from torchvision.transforms.functional import adjust_hue
+from torchvision.transforms.functional import adjust_hue, adjust_saturation
 
-from experiments.classification.datasets import get_dataset, normalize, lab2rgb, rgb2lab
+from experiments.classification.datasets import get_dataset, normalize, lab2rgb, rgb2lab, hsv2rgb, rgb2hsv
 from models.resnet import ResNet18, ResNet44
 from models.resnet_hybrid import HybridResNet18, HybridResNet44
 import matplotlib.pyplot as pltimport 
@@ -31,6 +31,11 @@ class PL_model(pl.LightningModule):
         self.save_hyperparameters()
         self.lab = args.lab
         self.args = args
+        self.hsv = args.hsv
+        self.hsv_test = args.hsv_test
+        self.normalize = args.normalize
+        self._device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
         # Store predictions and ground truth for computing confusion matrix.
         self.preds = torch.tensor([])
         self.gts = torch.tensor([])
@@ -52,25 +57,73 @@ class PL_model(pl.LightningModule):
         self.test_acc_dict = {}
         self.test_rotations = 37
         self.test_jitter = np.linspace(-0.5, 0.5, self.test_rotations)
+        self.hue_shift, self.sat_shift = False, False
         self.lab_test = args.lab_test
+
+        # Hue shift in lab space
         if self.lab_test:
             angle_delta =  2 * math.pi / self.test_rotations
             self.lab_angle_matrix = torch.tensor(
-        [
-            [1, 0, 0],
-            [0, math.cos(angle_delta), -math.sin(angle_delta)],
-            [0, math.sin(angle_delta), math.cos(angle_delta)],
-        ]
-    )    
-        for i in self.test_jitter:
-            if args.dataset == "cifar10":
-                self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
-            elif args.dataset == "flowers102":
-                self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
-            elif args.dataset == "stl10":
-                self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+            [
+                [1, 0, 0],
+                [0, math.cos(angle_delta), -math.sin(angle_delta)],
+                [0, math.sin(angle_delta), math.cos(angle_delta)],
+            ]
+        )
+
+            for i in self.test_jitter:
+                if args.dataset == "cifar10":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                elif args.dataset == "flowers102":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+                elif args.dataset == "stl10":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                else:
+                    raise NotImplementedError
+        # Hue shift in HSV space
+        elif args.hue_shift and not args.sat_shift:
+            self.hue_shift = True
+
+            for i in self.test_jitter:
+                if args.dataset == "cifar10":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                elif args.dataset == "flowers102":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+                elif args.dataset == "stl10":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                else:
+                    raise NotImplementedError
+        # Saturation shift
+        elif args.sat_shift and not args.hue_shift:
+            self.sat_shift = True
+
+            # In HSV space
+            if self.hsv_test:
+                saturations = 50
+                neg_sats = saturations // 2
+                pos_sats = neg_sats - 1 + saturations % 2
+
+                # In case of even saturations, consider 0 to be positive
+                self.test_jitter = torch.concat((torch.linspace(-1, 0, neg_sats + 1)[:-1],
+                                                torch.tensor([0]),
+                                                torch.linspace(0, 1, pos_sats + 1)[1:])).type(torch.float32).to(self._device)
             else:
-                raise NotImplementedError
+                # When img is in RGB instead of HSV
+                self.test_jitter = np.append(np.linspace(0, 1, 25, endpoint=False), np.arange(1, 10, 1, dtype=int))
+            
+            for i in self.test_jitter:
+                if args.dataset == "cifar10":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                elif args.dataset == "flowers102":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+                elif args.dataset == "stl10":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                else:
+                    raise NotImplementedError
+        elif args.sat_shift and args.hue_shift:
+            self.hue_shift, self.sat_shift = True, True
+            raise NotImplementedError #TODO jitter for combinations of saturation and hue shifts
+            #TODO keep hsv_test in mind here as well, because for saturation we cannot convert HSV -> RGB -> HSV
 
         # Loss function
         self.criterion = nn.CrossEntropyLoss()
@@ -89,6 +142,9 @@ class PL_model(pl.LightningModule):
             "num_classes": len(args.classes),
             "ce_stages": args.ce_stages,
             "lab_space": args.lab,
+            "hsv_space": args.hsv,
+            "sat_shift": args.sat_shift,
+            "hue_shift": args.hue_shift,
         }
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
         self.model = architectures[args.architecture](**kwargs)
@@ -130,7 +186,7 @@ class PL_model(pl.LightningModule):
         x, y = batch
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=True if self.lab else False) #TODO convert to hsv around here
+            x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv)
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -151,7 +207,7 @@ class PL_model(pl.LightningModule):
 
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=True if self.lab else False) #TODO convert to hsv around here
+            x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv)
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -169,29 +225,50 @@ class PL_model(pl.LightningModule):
     def test_step(self, batch, batch_idx) -> None:
         x_org, y = batch
         for i in self.test_jitter:
-            # Apply hue shift.
             if self.lab and not self.lab_test:
                 x = lab2rgb.forward(None,x_org.clone())
+            elif self.hsv and not self.hsv_test:
+                x_org = hsv2rgb.forward(None, x_org.clone())
             else:
                 x = x_org.clone()
-            if not self.lab_test:
-                x = adjust_hue(x, i)
-            else:
+
+            if self.lab_test:
                 # Apply hue shift in lab space
-                # Convert torch hue angle to aplications of rotation matrix
+                # Convert torch hue angle to applications of rotation matrix
                 times = 360 - (i*(180/0.5))
                 times = times / (360/self.test_rotations)
                 w=x.shape[2]
                 h=x.shape[3]
-                # Apply shift to batc
+                # Apply shift to batch
                 matrix = torch.matrix_power(self.lab_angle_matrix, int(times)).repeat(x.shape[0],1,1)
                 x = torch.bmm(matrix.cuda(), x.reshape((x.shape[0], 3, -1))).reshape((x.shape[0], 3, w, h))
+            elif self.hue_shift and not self.sat_shift:
+                # Apply hue shift with pytorch's function; image must be in RGB so provide either --hsv or --lab.
+                x = adjust_hue(x, i)
+            elif self.sat_shift and not self.hue_shift:
+                # Apply saturation shift.
+                if self.hsv_test:
+                    add_val = i.unsqueeze(0)[:, None,None] # 1, 1, 1
+                    w = x.shape[2]
+                    h = x.shape[3]
+                    x = x.reshape((x.shape[0], 3, -1)) # B, C, H*W
+                    x[:, 1:2, :] += add_val # add to saturation channel
+                    x[:, 1:2, :] = torch.clip(x[:, 1:2, :], min=0, max=1) # clip saturation channel 0-1
+                    x = x.reshape((x.shape[0], 3, w, h)) # B, C, W, H
+                else:
+                    x = adjust_saturation(x_org, i)
+            elif self.sat_shift and self.hue_shift:
+                raise NotImplementedError #TODO test_jitter for combinations of hue and saturation perhaps make it a tuple in this case
+                #TODO keep hsv_test in mind here
+
             if self.lab and not self.lab_test:
-                x = rgb2lab.forward(None,x)
+                x = rgb2lab.forward(None, x)
+            elif self.hsv and not self.hsv_test:
+                x = rgb2hsv.forward(None, x)
                 
             # Normalize images.
-            if args.normalize:
-                x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=True if self.lab else False) #TODO convert to hsv around here
+            if self.normalize:
+                x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv)
 
             # Forward pass and compute loss.
             y_pred = self.model(x)
@@ -207,8 +284,9 @@ class PL_model(pl.LightningModule):
                     (self.preds, F.softmax(y_pred, 1).detach().cpu()), 0
                 )
                 self.gts = torch.cat((self.gts, y.cpu()), 0)
+        
     def test_epoch_end(self, outputs):
-        # Log metrics and predictions, and reset metrics.
+        # Log metrics and predictions, and reset metrics. #TODO adjust this func for sat possibly and both hue and sat?
         table = {"hue": [],
                  "acc": []}
         columns = ["hue", "acc"]
@@ -267,6 +345,16 @@ def main(args) -> None:
     )
     if args.lab:
         run_name += "-lab_space"
+    if args.hsv:
+        run_name += "-hsv_space"
+    if args.hue_shift and not args.sat_shift:
+        run_name += "-hue_shift"
+    if args.sat_shift and not args.hue_shift:
+        run_name += "-sat_shift"
+    if args.hue_shift and args.sat_shift:
+        run_name += "-hue_and_sat_shift"
+    if args.sat_jitter:
+        run_name += f"-sat_jitter_{args.sat_jitter[0]}_{args.sat_jitter[1]}"
     if args.grayscale:
         run_name += "-grayscale"
     if not args.normalize:
@@ -362,10 +450,14 @@ if __name__ == "__main__":
         "--jitter", type=float, default=0.0, help="color jitter strength"
     )
     parser.add_argument(
+        "--sat_jitter", type=int, nargs=2, default=(1, 1), help="saturation jitter factor chosen uniformly on [i, j]. Default is identity saturation"
+    )
+    parser.add_argument(
         "--nonorm", dest="normalize", action="store_false", help="no input norm."
     )
-    parser.add_argument("--lab", dest="lab", action="store_true", help="Train in LAB space")
-    parser.add_argument("--lab_test", dest="lab_test", action="store_true", help="Apply test time hue shift in LAB space")
+    parser.add_argument("--lab", dest="lab", action="store_true", help="convert rgb image to lab")
+    parser.add_argument("--hsv", dest="hsv", action="store_true", help="convert rgb image to hsv")
+
     # Training settings.
     parser.add_argument(
         "--bs", type=int, default=256, help="training batch size (default: 256)"
@@ -385,6 +477,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--resume", dest="resume", action="store_true", help="resume training."
     )
+
+    # Test settings
+    parser.add_argument("--hue_shift", dest="hue_shift", action="store_true", help="test set should get hue shifts.")
+    parser.add_argument("--sat_shift", dest="sat_shift", action="store_true", help="test set should get saturation shifts.")
+    parser.add_argument("--hsv_test", dest="hsv_test", action="store_true", help="Apply test time saturation shift directly in HSV space")
+    parser.add_argument("--lab_test", dest="lab_test", action="store_true", help="Apply test time hue shift in LAB space")
 
     parser = PL_model.add_model_specific_args(parser)
 

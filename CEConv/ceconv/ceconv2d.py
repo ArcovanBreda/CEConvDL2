@@ -1,5 +1,6 @@
 """Color Equivariant Convolutional Layer."""
 
+import einops
 import math
 import typing
 import numpy as np
@@ -36,6 +37,7 @@ def _get_hue_rotation_matrix(rotations: int) -> torch.Tensor:
         dtype=torch.float32,
     )
 
+
 def _get_lab_rotation_matrix(rotations: int) -> torch.Tensor:
     """Returns a 3x3 hue rotation matrix.
 
@@ -48,7 +50,7 @@ def _get_lab_rotation_matrix(rotations: int) -> torch.Tensor:
     assert rotations > 0, "Number of rotations must be positive."
 
     # Angle to shift each image by
-    # By using the matrix power we do multiple rotations by aply this matrix
+    # By using the matrix power we do multiple rotations by apply this matrix
     # multiple times
     angle_delta = 2 * math.pi / rotations
 
@@ -62,6 +64,28 @@ def _get_lab_rotation_matrix(rotations: int) -> torch.Tensor:
         dtype=torch.float32,
     )
 
+
+def _get_hsv_saturation_matrix(saturations: int) -> torch.Tensor:
+    """
+    Returns a [saturations, 1, 1] saturation matrix.
+    Saturation assumed to be in [0,1].
+
+    Args:
+      saturations: int, number of saturation shifts
+    """
+
+    assert saturations > 0, "Number of saturation shifts must be positive."
+
+    # Scalar to add each saturation value in image by
+    neg_sats = saturations // 2
+    pos_sats = neg_sats - 1 + saturations % 2
+
+    # In case of even saturations, consider 0 to be positive
+    saturation_scales = torch.concat((torch.linspace(-1, 0, neg_sats + 1)[:-1],
+                                      torch.tensor([0]),
+                                      torch.linspace(0, 1, pos_sats + 1)[1:])).type(torch.float32)
+
+    return saturation_scales[:, None, None]
 
 
 def _trans_input_filter(weights, rotations, rotation_matrix) -> torch.Tensor:
@@ -92,6 +116,46 @@ def _trans_input_filter(weights, rotations, rotation_matrix) -> torch.Tensor:
     tw = transformed_weights.permute(3, 0, 2, 1, 4, 5)
 
     return tw.contiguous()
+
+
+def _trans_input_filter_hsv_sat(weights, saturations, saturation_matrix) -> torch.Tensor:
+    """Apply linear transformation on saturation channel of HSV filter.
+
+    Args:
+      weights: float32, input filter of size [c_out, 3 (c_in), 1, k, k]
+      rotations: int, number of rotations applied to filter
+      rotation_matrix: float32, rotation matrix of size [saturations, 1, 1]
+    """
+    # Obtain saturation channel weights
+    weights_sat = weights[:, 1:2, :, :, :] # [c_out, 1 (c_sat), 1, k, k]
+
+    # Flatten weights saturation tensor.
+    weights_flat = weights_sat.permute(2, 1, 0, 3, 4)  # [1, 1 (c_sat), c_out, k, k]
+    weights_shape = weights_flat.shape
+    weights_flat = weights_flat.reshape((1, 1, -1))  # [1, 1 (c_sat), c_out*k*k]
+
+    # Apply transformation to saturation weights.
+    # [rotations, 1 (c_sat), 1 (c_sat)] + [1 (c_sat), 1 (c_sat), c_out*k*k] --> [rotations, 1 (c_sat), c_out*k*k]
+    transformed_weights = saturation_matrix + weights_flat
+    # clip to be in [0, 1]
+    transformed_weights = torch.clip(transformed_weights, min=0., max=1.)
+    # [rotations, 1, 1 (c_sat), c_out, k, k]
+    transformed_weights = transformed_weights.view((saturations,) + weights_shape)
+    # [c_out, rotations, 1 (c_sat), 1, k, k]
+    tw = transformed_weights.permute(3, 0, 2, 1, 4, 5)
+
+    # Add saturation dimension(s) to original weights
+    weights = einops.repeat(weights, 'm n o p q-> m k n o p q', k=saturations)
+
+    # Replace old saturation channel with transformed ones
+    # weights[:, :, 1:2, :, :, :] = tw # would need to clone here
+    final_weights = torch.zeros(weights.shape, device=weights.device) # otherwise would have needed to clone idk which one is more efficient #TODO
+    final_weights[:, :, 1:2, :, :, :] = tw
+    final_weights[:, :, 0, :, :, :] = weights[:, :, 0, :, :, :]
+    final_weights[:, :, 2, :, :, :] = weights[:, :, 2, :, :, :]
+
+    # [c_out, rotations, c_in (3), 1, k, k]
+    return final_weights.contiguous()
 
 
 def _trans_hidden_filter(weights: torch.Tensor, rotations: int) -> torch.Tensor:
@@ -145,21 +209,28 @@ class CEConv2d(nn.Conv2d):
         learnable: bool = False,
         separable: bool = True,
         lab_space: bool = False,
+        hsv_space: bool = False, #TODO will probably need to be modified to deal with either or hue/saturation
+        sat_shift: bool = False, #TODO will probably need to be modified to deal with either or hue/saturation
+        hue_shift: bool = False, #TODO will probably need to be modified to deal with either or hue/saturation
         **kwargs
     ) -> None:
         self.in_rotations = in_rotations
         self.out_rotations = out_rotations
         self.separable = separable
         self.labs_space = lab_space
+        self.hsv_space = hsv_space
+        self.sat_shift = sat_shift
+        self.hue_shift = hue_shift
         super().__init__(in_channels, out_channels, kernel_size, **kwargs)
 
         # Initialize transformation matrix and weights.
         if in_rotations == 1:
             if learnable:
                 init =  torch.rand((3, 3)) * 2.0 / 3 - (1.0 / 3)
-            elif lab_space:
-                print("Using labspace") 
-                init =_get_lab_rotation_matrix(out_rotations)  
+            elif lab_space: 
+                init =_get_lab_rotation_matrix(out_rotations)
+            elif hsv_space and sat_shift and not hue_shift:
+                init = _get_hsv_saturation_matrix(out_rotations)
             else:
                 init =_get_hue_rotation_matrix(out_rotations)
 
@@ -207,9 +278,13 @@ class CEConv2d(nn.Conv2d):
         # Compute full filter weights.
         if self.in_rotations == 1:
             # Apply rotation to input layer filter.
-            tw = _trans_input_filter(
-                self.weight, self.out_rotations, self.transformation_matrix
-            )
+            if self.hsv_space and self.sat_shift and not self.hue_shift:
+                tw = _trans_input_filter_hsv_sat(
+                    self.weight, self.out_rotations, self.transformation_matrix)
+            else:
+                tw = _trans_input_filter(
+                    self.weight, self.out_rotations, self.transformation_matrix
+                )
         else:
             # Apply cyclic permutation to hidden layer filter.
             if self.separable:
