@@ -34,6 +34,10 @@ where $T_g$ and $T'_g$ can be equivalent.
 We utilise the equation from \[5\] to show that G-CNNs are equivariant. Instead of shifting a filter, correlation in the first layer can be described more generally by replacing it with some transformation from group $G$, whereby $f$ is the input image and $\psi$ is the filter:
 
 $$\begin{align} 
+[f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_k f_k(y) \psi_k(g^(-1)y) & \qquad \qquad (\text{Equation 4})\\ 
+\end{align}$$
+
+$$\begin{align} 
 [f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_k f_k(y)\psi_k(g^{-1}y) & & \qquad \qquad \text{(Equation 4)}\\ 
 \end{align}$$
 
@@ -87,7 +91,7 @@ $$
 The group of discrete hue shifts is combined with the group of discrete 2D translations into the group $G = \mathbb{Z}^2 \times H_n$. Now Color Equivariant Convolution (CEConv) in the first layer is defined:
 
 $$\begin{align} 
-[f \star \psi^i](x, k) = \sum_{y \in \mathbf{Z}^2}\sum_{c=1}^{C^l}f_c(y) \cdot H_n(k)\psi_c^i(y - x) & \qquad \qquad (\text{Equation 6})\\ 
+[f \star \psi^i](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{c=1}^{C^l}f_c(y) \cdot H_n(k)\psi_c^i(y - x) & \qquad \qquad (\text{Equation 6})\\ 
 \end{align}$$
 
 For the derivation of the equivariance of the CEConv layer, we refer to the original paper BRON.
@@ -95,7 +99,7 @@ For the derivation of the equivariance of the CEConv layer, we refer to the orig
 For the hidden layers, the feature map $[f \star \psi]$ is a function on $G$ parameterized by x,k. The CEConv hidden layers are defined as:
 
 $$\begin{align} 
-[f \star \psi^i](x, k) = \sum_{y \in \mathbf{Z}^2}\sum_{r=1}^n\sum_{c=1}^{C^l}f_c(y,r) \cdot \psi_c^i(y - x, (r-k)\%n) & \qquad \qquad (\text{Equation 7})\\ 
+[f \star \psi^i](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{r=1}^n\sum_{c=1}^{C^l}f_c(y,r) \cdot \psi_c^i(y - x, (r-k)\%n) & \qquad \qquad (\text{Equation 7})\\ 
 \end{align}$$
 
 <!---
