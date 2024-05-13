@@ -34,17 +34,13 @@ where $T_g$ and $T'_g$ can be equivalent.
 We utilise the equation from \[5\] to show that G-CNNs are equivariant. Instead of shifting a filter, correlation in the first layer can be described more generally by replacing it with some transformation from group $G$, whereby $f$ is the input image and $\psi$ is the filter:
 
 $$\begin{align} 
-[f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_k f_k(y) \psi_k(g^(-1)y) & \qquad \qquad (\text{Equation 4})\\ 
-\end{align}$$
-
-$$\begin{align} 
-[f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_k f_k(y)\psi_k(g^{-1}y) & & \qquad \qquad \text{(Equation 4)}\\ 
+[f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_{k} f_k(y) \psi_{k}(g^(-1)y) & \qquad \qquad (\text{Equation 4})\\ 
 \end{align}$$
 
 Since the feature map $f \star \psi$ is a function on G, the filters are functions on G for all layers after the first. The correlation then becomes:
 
 $$\begin{align} 
-[f \star \psi](g) = \sum_{h \in G}\sum_k f_k(h)\psi_k(g^{-1}h) & \qquad \qquad (\text{Equation 3})\\ 
+[f \star \psi](g) = \sum_{h \in G}\sum_{k}f_k(h)\psi_{k}(g^{-1}h) & \qquad \qquad (\text{Equation 3})\\ 
 \end{align}$$
 
 Using the substition $h \rightarrow uh$ and the notation:
