@@ -302,6 +302,9 @@ class PL_model(pl.LightningModule):
         print(table["hue"], "\n\n")
         print(table["acc"])
 
+        os.makedirs("output/test_results", exist_ok=True)
+        np.savez(f"output/test_results/{self.run_name}", hue=table["hue"], acc=table["acc"])
+
         # Log test table with wandb.
         self.logger.experiment.log({"test_table": test_table})  # type: ignore
 
