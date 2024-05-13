@@ -33,11 +33,9 @@ $$\begin{align}
 where $T_g$ and $T'_g$ can be equivalent.
 We utilise the equation from \[5\] to show that G-CNNs are equivariant. Instead of shifting a filter, correlation in the first layer can be described more generally by replacing it with some transformation from group $G$, whereby $f$ is the input image and $\psi$ is the filter:
 
-```
 $$\begin{align} 
 [f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_k f_k(y)\psi_k(g^{-1}y) & & \qquad \qquad \text{(Equation 4)}\\ 
 \end{align}$$
-```
 
 Since the feature map $f \star \psi$ is a function on G, the filters are functions on G for all layers after the first. The correlation then becomes:
 
@@ -63,6 +61,25 @@ Mss zijn deze formules allemaal net iets teveel overgenomen van [2]
 TODO: explain specifically for color equivariance (technical)
 --->
 The original paper exploits the concept of group equivariant convolutions to achieve color equivariance, defined as equivariance to hue shifts. In the HSV (Hue-Saturation-Value) color space, hue is represented as an angular scalar value. The hue value is shifted by adding an offset after which the modulo is taken to ensure a valid range. The HSV space is reprojected to the RGB (Red-Green-Blue) color space such that the hue shifts correspond to a rotation along the diagonal vector [1, 1, 1]. 
+
+This definition is extended to group theory, by defining the group $H_n$ as a subgroup of the $SO(3)$ group. Specifically, $H_n$ consists of multiples of 360/n-degree rotations about the [1, 1, 1] diagonal vector in $\mathbb{R}^3$ space. The rotation around a unit vector $\mathbf{u}$ by angle $\theta$ is defined in 5 steps: 
+
+1. Rotate the vector such that it lies in one of the coordinate planes (e.g. $xz$)
+1. Rotate the vector such that it lies on one of the coordinate axes (e.g. $x$)
+1. Rotate the point around vector $\mathbf{u}$ on the x-axis
+1. Reverse the rotation in step 2
+1. Reverse the rotation in step 1
+
+This leads to the following parameterization of $H_n$, with $n$ the number of rotations (discrete) and $k$ the rotation:
+
+$$ 
+H_n = 
+\begin{bmatrix}
+\cos (\frac{2k\pi}{n}) + a & a - b & a + b \\
+a + b & \cos (\frac{2k\pi}{n}) + a & a - b \\
+a - b & a + b & \cos (\frac{2k\pi}{n}) + a \\
+\end{bmatrix}
+$$
 
 ## (Maybe Architecture/Evaluation/Dataset(s) explanation or Something)
 
