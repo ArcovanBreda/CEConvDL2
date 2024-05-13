@@ -113,9 +113,14 @@ The derivation equivariance of the CEConv layer can be derived (for $C^l = 1$) a
 
 ## Reproduction of Experiments
 
+<!---
 TODO: explain findings about the reproduction of figure 2, figure 2, figure 9 and figure 13 in the following narrative: 
+--->
+The reproduction of (a selection of) the experiments is primarily achieved through the code provided along with the original paper. However, it does not include the code to reproduce the plots which had to be written manually. Moreover, supplementing functionalities such as saving, loading and evaluation of the results needed to be integraded for sufficient reproduction. Lastly, not all commands are provided/explained in the READme file to easily run all experiments. Therefore, some investigation of the code was needed to run the exact experiments.
 
 ### When is color equivariance useful? 
+
+Firstly, the experiments that show the importance of color equivariance are reproduced. This mainly includes exploring various dataset, starting with a color imbalanced dataset and followed by the investigation of datasets with a high/low color selectivity.
 
 #### Color imbalance
 
