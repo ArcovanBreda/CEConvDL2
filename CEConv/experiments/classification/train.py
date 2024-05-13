@@ -19,7 +19,9 @@ from torchvision.transforms.functional import adjust_hue, adjust_saturation
 from experiments.classification.datasets import get_dataset, normalize, lab2rgb, rgb2lab, hsv2rgb, rgb2hsv
 from models.resnet import ResNet18, ResNet44
 from models.resnet_hybrid import HybridResNet18, HybridResNet44
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as pltimport 
+import time
+
 
 class PL_model(pl.LightningModule):
     def __init__(self, args) -> None:
@@ -386,7 +388,6 @@ def main(args) -> None:
                                         #   save_best_only=True,
                                           mode='max')
 
-    print(args)
     # Instantiate model.
     trainer = pl.Trainer.from_argparse_args(
         args,
@@ -413,6 +414,10 @@ def main(args) -> None:
         weights_path = None
 
     # Train model.
+    import time
+
+    start_time = time.time()
+
     trainer.fit(
         model=model,
         train_dataloaders=trainloader,
@@ -420,6 +425,15 @@ def main(args) -> None:
         ckpt_path=weights_path,
     )
 
+    end_time = time.time()
+    training_time = end_time - start_time
+    print("Training time:", training_time, "seconds")
+
+    end_time = time.time()
+    training_time = end_time - start_time
+    print("Training time:", training_time, "seconds")
+
+    # Test model.
     trainer.test(model, dataloaders=testloader)
 
 

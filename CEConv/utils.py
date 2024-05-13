@@ -81,6 +81,13 @@ def plot_figure_2(data_dir, print_stats=False):
     # Compute the average class accuracy and standard deviation
     avg_class_acc = np.mean(class_accs, axis=1)
     std_dev = np.std(class_accs, axis=1)
+    
+    avg_model_acc = np.mean(class_accs, axis=(1,2))
+    std_dev_model = np.std(np.mean(class_accs, axis=2), axis=1)
+    
+    # print(np.array(class_accs).shape)
+    print(f"model performances:\n\tZ2CNN: {avg_model_acc[0]:.3f}+/-{std_dev_model[0]:.3f}\n\tCECNN: {avg_model_acc[1]:.3f}+/-{std_dev_model[1]:.3f}")
+    # print(f"stds: {std_dev_model}")
 
     avg_class_acc = avg_class_acc[:, sort_idx]
     std_dev = std_dev[:, sort_idx]

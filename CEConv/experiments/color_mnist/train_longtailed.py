@@ -14,6 +14,7 @@ from pytorch_lightning.callbacks import LearningRateMonitor
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.data import TensorDataset
 from torchinfo import summary
+import time
 
 from models.cnn import CECNN, CNN
 
@@ -260,59 +261,21 @@ def main(args) -> None:
         deterministic=(args.seed is not None),
         check_val_every_n_epoch=50,
     )
+    start_time = time.time()
     trainer.fit(
         model=model,
         train_dataloaders=trainloader,
         val_dataloaders=[testloader],
     )
-
-    import matplotlib.pyplot as plt
-    print(args)
+    end_time = time.time()
+    training_time = end_time - start_time
+    print("Training time:", training_time, "seconds")
 
     model = PL_model(args)
-
     model.load_model()
     
     print("Best epoch:", model.best_epoch)
     print("Class accuracy:", model.class_acc)
-
-    train = CustomDataset(
-        torch.load(os.environ["DATA_DIR"] + "/colormnist_longtailed/train.pt"),
-        jitter=args.jitter,
-        grayscale=args.grayscale,
-    )
-
-    samples_per_class = torch.unique(train.tensors[1], return_counts=True)
-    sort_idx = torch.argsort(samples_per_class[1], descending=True)
-    samples_per_class = (samples_per_class[0][sort_idx], samples_per_class[1][sort_idx])
-
-    labels = [j + str(i) for i in range(10) for j in ["R", "G", "B"]]
-    labels = [labels[i] for i in sort_idx.numpy()]
-
-    # Plot accuracy per class
-    magic_number = 18
-    fig, ax1 = plt.subplots(figsize=(12, 8))
-    ax1.plot(labels, model.class_acc[sort_idx], marker='o', color='orange', markersize=8, linewidth=2)
-    ax1.set_xlabel('Class', fontsize=magic_number)
-    ax1.set_ylabel('Accuracy', fontsize=magic_number)
-    ax1.set_ylim(0, 1)
-    ax1.grid(axis='y')
-
-    # Create second x-axis for samples per class
-    ax2 = ax1.twinx()
-    ax2.bar(labels, samples_per_class[1].numpy(), color="gray", alpha=0.2, width=0.5)
-    ax2.set_ylabel('Samples per Class', fontsize=magic_number)
-
-    # Set font size for x-axis ticks
-    plt.xticks(rotation=45, fontsize=magic_number+2)
-
-    # Set font size for y-axis ticks
-    ax1.tick_params(axis='y', labelsize=magic_number-2)
-    ax2.tick_params(axis='y', labelsize=magic_number-2)
-
-    plt.title('Accuracy and Samples per Class', fontsize=magic_number+4)
-    plt.show()
-
 
 if __name__ == "__main__":
 
