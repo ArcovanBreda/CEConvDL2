@@ -40,7 +40,7 @@ $$
 $$[f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_k f_k(y)\psi_k(g^{-1}y) \qquad \qquad (\text{Equation 2})$$
 
 $$\begin{align} 
-[f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_k f_k(y)\psi_k(g^{-1}y) & \qquad \qquad \text{(Equation 4)} \\ 
+[f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_k f_k(y)\psi_k(g^{-1}y) & & \qquad \qquad \text{(Equation 4)}\\ 
 \end{align}$$
 
 Since the feature map $f \star \psi$ is a function on G, the filters are functions on G for all layers after the first. The correlation then becomes:
