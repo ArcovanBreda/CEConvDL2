@@ -19,16 +19,6 @@ def plot_figure_9(checkpoints, hsv_test=False):
     0.361111111111111, 0.388888888888889, 0.416666666666667, 0.444444444444444, 0.472222222222222, 0.5
     ]
 
-    # checkpoints = ["/home/arco/Downloads/Master AI/CEConvDL2/output/classification/flowers102-resnet18_1-false-jitter_0_0-split_1_0-seed_0.pth.tar.ckpt",
-    #                "/home/arco/Downloads/Master AI/CEConvDL2/output/classification/flowers102-resnet18_1-false-jitter_0_5-split_1_0-seed_0.pth.tar.ckpt",
-    #                "/home/arco/Downloads/Master AI/CEConvDL2/output/classification/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0.pth.tar.ckpt",
-    #                "/home/arco/Downloads/Master AI/CEConvDL2/output/classification/flowers102-resnet18_3-true-jitter_0_5-split_1_0-seed_0.pth.tar.ckpt"]
-    
-#     checkpoints = [[0.04602374508976936, 0.045047976076602936, 0.043584324419498444, 0.04651162773370743, 0.04586111381649971, 0.04228329658508301, 0.036916572600603104, 0.032037731260061264, 0.028947796672582626, 0.030248820781707764, 0.034802407026290894, 0.04683688282966614, 0.07058057934045792, 0.12701252102851868, 0.21092860400676727, 0.3407058119773865, 0.5132541656494141, 0.6563668847084045, 0.7025532722473145, 0.6407545804977417, 0.4532444179058075, 0.2693120837211609, 0.1771019697189331, 0.12408521771430969, 0.09773947298526764, 0.07513416558504105, 0.06017238646745682, 0.04976418986916542, 0.043584324419498444, 0.03984387591481209, 0.04212066903710365, 0.04521060362458229, 0.045373231172561646, 0.04439746215939522, 0.042933810502290726, 0.042933810502290726, 0.04602374508976936],
-#                    [0.7154008746147156, 0.714913010597229, 0.7142624855041504, 0.7163766622543335, 0.7180029153823853, 0.7186534404754639, 0.7199544906616211, 0.720767617225647, 0.7241827845573425, 0.7212554812431335, 0.7219060063362122, 0.7210928797721863, 0.7160513997077942, 0.7168645262718201, 0.714913010597229, 0.7142624855041504, 0.7201170921325684, 0.7217433452606201, 0.7248333096504211, 0.7243454456329346, 0.7232069969177246, 0.7219060063362122, 0.7222312688827515, 0.7209302186965942, 0.7175150513648987, 0.7158887386322021, 0.7152382731437683, 0.7163766622543335, 0.717677652835846, 0.7189787030220032, 0.7225565314292908, 0.7204423546791077, 0.7209302186965942, 0.7202796936035156, 0.7204423546791077, 0.7163766622543335, 0.7154008746147156],
-#                    [0.10765977948904037, 0.11709220707416534, 0.17645145952701569, 0.30818018317222595, 0.491136759519577, 0.6527890563011169, 0.70108962059021, 0.6319726705551147, 0.45373231172561646, 0.27402830123901367, 0.17726460099220276, 0.1279882937669754, 0.10765977948904037, 0.11709220707416534, 0.17645145952701569, 0.30818018317222595, 0.491136759519577, 0.6527890563011169, 0.70108962059021, 0.6319726705551147, 0.45373231172561646, 0.2741909325122833, 0.17726460099220276, 0.1279882937669754, 0.10765977948904037, 0.11709220707416534, 0.17645145952701569, 0.30818018317222595, 0.491136759519577, 0.6527890563011169, 0.70108962059021, 0.6319726705551147, 0.45373231172561646, 0.27402830123901367, 0.17726460099220276, 0.1279882937669754, 0.10765977948904037],
-#                    [0.7536184787750244, 0.7528053522109985, 0.751341700553894, 0.7550821304321289, 0.7557326555252075, 0.7606114745140076, 0.7612619996070862, 0.760123610496521, 0.7584972977638245, 0.7575215697288513, 0.75703364610672, 0.7544316053390503, 0.7536184787750244, 0.7528053522109985, 0.751341700553894, 0.7550821304321289, 0.7557326555252075, 0.7609367370605469, 0.7612619996070862, 0.759960949420929, 0.7584972977638245, 0.7575215697288513, 0.75703364610672, 0.754269003868103, 0.7536184787750244, 0.7528053522109985, 0.7515043020248413, 0.7550821304321289, 0.7557326555252075, 0.7607741355895996, 0.7612619996070862, 0.760123610496521, 0.7584972977638245, 0.7575215697288513, 0.75703364610672, 0.7544316053390503, 0.7536184787750244]
-# ]
     model_names = ["No norm + Jitter", "RGB norm + Jitter",
                    "No norm", "RGB norm"]
     colors = [['darkorange', "--"], ['mediumblue', "--"], ['darkorange', "-"], ['mediumblue', "-"]]
@@ -42,19 +32,16 @@ def plot_figure_9(checkpoints, hsv_test=False):
             results["hue"] = [i.item() for i in results["hue"]]
         
         plt.plot(results["hue"], results["acc"], color[1], label=name, color=color[0], linewidth=3)
-        # plt.plot(hue_values, checkpoint, color[1], label=name, color=color[0], linewidth=3)
 
     plt.title("Saturation Equivariant ResNet-18 trained in HSV space", fontsize=22)
     plt.ylabel("Test accuracy (%)", fontsize=18)
     plt.yticks(fontsize=16,)
     plt.ylim(top=0.99)
     plt.xlabel("Test-time saturation shift", fontsize=18)
-    # plt.xticks(fontsize=16,ticks=[-0.45, -0.3, -0.15, 0, 0.15, 0.3, 0.45],labels=["-150", "-100", "-50", "0", "50", "100", "150" ])
     plt.legend(fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 0.99),
             borderaxespad=0., ncol=2, fancybox=True, shadow=True,
             columnspacing=0.7, handletextpad=0.2)
     plt.grid(axis="both")
-    # plt.show()
     plt.savefig(f"sat_equiv_kernel_hsv_test={hsv_test}.png")
 
 
@@ -95,10 +82,6 @@ def evaluate_classify(path="/home/arco/Downloads/Master AI/CEConvDL2/output/clas
 
         sat_jitter.append(float(".".join(tmp)))
 
-    print("DEBUG SAT JITTER EXTRACTION: ", sat_jitter)
-
-    # sat_jitter = [float(i.split(".")[0]) for i in sat_jitter] #dont use float sat_jitter values for now #TODO
-
     no_norm = True if "no_norm" in splitted else False
 
     args = Namespace(seed = seed,
@@ -123,7 +106,7 @@ def evaluate_classify(path="/home/arco/Downloads/Master AI/CEConvDL2/output/clas
                     hue_shift=hue_shift,
                     sat_shift=sat_shift,
                     sat_jitter=sat_jitter,
-                    hsv_test=hsv_test #TODO this wasnt necessary... although...??? since its here now might as well keep it...
+                    hsv_test=hsv_test
     )
 
     run_name = "{}-{}_{}-{}-jitter_{}-split_{}-seed_{}".format(
@@ -206,9 +189,6 @@ checkpoints = [
     "/home/sabbring/CEConvDL2/CEConv/output/color_equivariance/classification/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.pth.tar.ckpt",
     "/home/sabbring/CEConvDL2/CEConv/output/color_equivariance/classification/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1.pth.tar.ckpt"
 ]
+
 plot_figure_9(checkpoints, hsv_test=True)
 
-# test = torch.linspace(0, 1, 50)
-# print(test.shape)
-# for i in test:
-#     print(i, i.unsqueeze(0)[:, None,None], i.unsqueeze(0)[:, None,None].shape)

@@ -78,9 +78,9 @@ class PL_model(pl.LightningModule):
                 # In case of even saturations, consider 0 to be positive
                 self.test_jitter = torch.concat((torch.linspace(-1, 0, neg_sats + 1)[:-1],
                                                 torch.tensor([0]),
-                                                torch.linspace(0, 1, pos_sats + 1)[1:])).type(torch.float32).to(self._device) #TODO check if this is nice
+                                                torch.linspace(0, 1, pos_sats + 1)[1:])).type(torch.float32).to(self._device)
             else:
-                self.test_jitter = np.append(np.linspace(0, 1, 25, endpoint=False), np.arange(1, 10, 1, dtype=int)) #TODO determine which sat factors we want to scale with. Also need to check if it works on normalized imgs
+                self.test_jitter = np.append(np.linspace(0, 1, 25, endpoint=False), np.arange(1, 10, 1, dtype=int))
             
             for i in self.test_jitter:
                 if args.dataset == "cifar10":
@@ -157,7 +157,7 @@ class PL_model(pl.LightningModule):
         x, y = batch
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv) #TODO convert to hsv around here
+            x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv)
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -178,7 +178,7 @@ class PL_model(pl.LightningModule):
 
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv) #TODO convert to hsv around here
+            x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv)
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -209,15 +209,13 @@ class PL_model(pl.LightningModule):
             elif self.sat_shift and not self.hue_shift:
                 # Apply saturation shift.
                 if self.hsv_test:
-                    # print("DEBUG devices", x.device, i.unsqueeze(0).device)
                     add_val = i.unsqueeze(0)[:, None,None] # 1, 1, 1
                     w = x.shape[2]
                     h = x.shape[3]
                     x = x.reshape((x.shape[0], 3, -1)) # B, C, H*W
-                    # print("DEBUG devices", x.device, add_val.device)
                     x[:, 1:2, :] += add_val # add to saturation channel
                     x[:, 1:2, :] = torch.clip(x[:, 1:2, :], min=0, max=1) # clip saturation channel 0-1
-                    x = x.reshape((x.shape[0], 3, w, h))
+                    x = x.reshape((x.shape[0], 3, w, h)) # B, C, W, H
                 else:
                     x = adjust_saturation(x_org, i)
             elif self.sat_shift and self.hue_shift:
@@ -231,7 +229,7 @@ class PL_model(pl.LightningModule):
                 
             # Normalize images.
             if self.normalize:
-                x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv) #TODO convert to hsv around here
+                x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv)
 
             # Forward pass and compute loss.
             y_pred = self.model(x)
