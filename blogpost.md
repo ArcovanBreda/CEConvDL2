@@ -43,13 +43,16 @@ $$\begin{align}
 [f \star \psi](g) = \sum_{h \in G}\sum_k f_k(h)\psi_k(g^{-1}h) & \qquad \qquad (\text{Equation 3})\\ 
 \end{align}$$
 
-Using the substition $h \rightarrow uh$, the equivariance of the correlation can be derived such that a translation followed by a correlation is equivalent to a correlation followed by a translation:
+Using the substition $h \rightarrow uh$ and the notation:
+$$\begin{align} [L_gf](x) = [f \circ g^{-1}](x) = f(g^{-1}x) & \qquad \qquad (\text{Equation 4})\end{align} $$
+
+, the equivariance of the correlation can be derived such that a translation followed by a correlation is equivalent to a correlation followed by a translation:
 
 $$\begin{align} 
 [[L_uf] \star \psi](g) &= \sum_{h \in G}\sum_k f_k(u^{-1}h)\psi(g^{-1}h)\\ 
 &= \sum_{h \in G}\sum_kf(h)\psi(g^{-1}uh)\\
 &= \sum_{h \in G}\sum_kf(h)\psi((u^{-1}g)^{-1}h)\\
-&= [L_u[f \star \psi]](g) & \qquad \qquad (\text{Equation 4})\\
+&= [L_u[f \star \psi]](g) & \qquad \qquad (\text{Equation 5})\\
 \end{align}$$
 
 <!---
@@ -80,6 +83,31 @@ a + b & \cos (\frac{2k\pi}{n}) + a & a - b \\
 a - b & a + b & \cos (\frac{2k\pi}{n}) + a \\
 \end{bmatrix}
 $$
+
+The group of discrete hue shifts is combined with the group of discrete 2D translations into the group $G = \mathbb{Z}^2 \times H_n$. Now Color Equivariant Convolution (CEConv) in the first layer is defined:
+
+$$\begin{align} 
+[f \star \psi^i](x, k) = \sum_{y \in \mathbf{Z}^2}\sum_{c=1}^{C^l}f_c(y) \cdot H_n(k)\psi_c^i(y - x) & \qquad \qquad (\text{Equation 6})\\ 
+\end{align}$$
+
+For the derivation of the equivariance of the CEConv layer, we refer to the original paper BRON.
+
+For the hidden layers, the feature map $[f \star \psi]$ is a function on $G$ parameterized by x,k. The CEConv hidden layers are defined as:
+
+$$\begin{align} 
+[f \star \psi^i](x, k) = \sum_{y \in \mathbf{Z}^2}\sum_{r=1}^n\sum_{c=1}^{C^l}f_c(y,r) \cdot \psi_c^i(y - x, (r-k)\%n) & \qquad \qquad (\text{Equation 7})\\ 
+\end{align}$$
+
+<!---
+The operator $\mathcal{L}_g = \mathcal{L}_{(t, m)}$ expresses the translation $t$ and hue shift $m$ acting on input $f$:
+
+$$\begin{align} 
+[\mathcal{L}_gf](x) = [\mathcal{L}_{(t,m)}f](x) = H_n(m)f(x-t)& \qquad \qquad (\text{Equation 7})\\ 
+\end{align}$$
+
+The derivation equivariance of the CEConv layer can be derived (for $C^l = 1$) as:
+--->
+
 
 ## (Maybe Architecture/Evaluation/Dataset(s) explanation or Something)
 
