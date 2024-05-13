@@ -26,6 +26,7 @@ import time
 class PL_model(pl.LightningModule):
     def __init__(self, args) -> None:
         super(PL_model, self).__init__()
+        self._check_input(args)
 
         # Logging.
         self.save_hyperparameters()
@@ -124,6 +125,16 @@ class PL_model(pl.LightningModule):
             self.hue_shift, self.sat_shift = True, True
             raise NotImplementedError #TODO jitter for combinations of saturation and hue shifts
             #TODO keep hsv_test in mind here as well, because for saturation we cannot convert HSV -> RGB -> HSV
+        else:
+            for i in self.test_jitter:
+                if args.dataset == "cifar10":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                elif args.dataset == "flowers102":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+                elif args.dataset == "stl10":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                else:
+                    raise NotImplementedError
 
         # Loss function
         self.criterion = nn.CrossEntropyLoss()
@@ -152,6 +163,24 @@ class PL_model(pl.LightningModule):
         # Print model summary.
         resolution = 32 if args.architecture == "resnet44" else 224
         summary(self.model, (2, 3, resolution, resolution), device="cpu")
+    
+    def _check_input(self, args):
+        """
+        Certain combinations of commandline arguments are not allowed.
+        This function checks those and provides the user with feedback.
+        """
+        if (args.lab_test and not args.lab) or (args.hsv_test and not args.hsv):
+            raise Exception("When testing in certain color space, also provide --space.")
+        if (args.hsv or args.hsv_test) and (args.lab or args.lab_test):
+            raise Exception("Can only work in one of HSV and lab space!")
+        if args.lab and (args.hue_shift or args.sat_shift):
+            raise Exception("Lab space only does hue equivariance. No need to provide a type of shift.")
+        if args.hsv and not args.hue_shift and not args.sat_shift:
+            raise Exception("Please provide either --hue_shift or --sat_shift when working in HSV.")
+        if (args.hue_shift or args.sat_shift) and not args.hsv:
+            raise Exception("Please provide --hsv when providing --hue/sat_shift!")
+        if args.hsv_test and (args.hue_shift and not args.sat_shift): #TODO adjust this one maybe later
+            raise Exception("--hsv_test can only be provided when --sat_shift and --hsv are both given as well.")
 
     @staticmethod
     def add_model_specific_args(parent_parser):
@@ -228,7 +257,7 @@ class PL_model(pl.LightningModule):
             if self.lab and not self.lab_test:
                 x = lab2rgb.forward(None,x_org.clone())
             elif self.hsv and not self.hsv_test:
-                x_org = hsv2rgb.forward(None, x_org.clone())
+                x = hsv2rgb.forward(None, x_org.clone())
             else:
                 x = x_org.clone()
 
@@ -243,11 +272,12 @@ class PL_model(pl.LightningModule):
                 matrix = torch.matrix_power(self.lab_angle_matrix, int(times)).repeat(x.shape[0],1,1)
                 x = torch.bmm(matrix.cuda(), x.reshape((x.shape[0], 3, -1))).reshape((x.shape[0], 3, w, h))
             elif self.hue_shift and not self.sat_shift:
-                # Apply hue shift with pytorch's function; image must be in RGB so provide either --hsv or --lab.
+                # Apply hue shift with pytorch's function
                 x = adjust_hue(x, i)
             elif self.sat_shift and not self.hue_shift:
                 # Apply saturation shift.
                 if self.hsv_test:
+                    # Img in HSV space
                     add_val = i.unsqueeze(0)[:, None,None] # 1, 1, 1
                     w = x.shape[2]
                     h = x.shape[3]
@@ -256,10 +286,14 @@ class PL_model(pl.LightningModule):
                     x[:, 1:2, :] = torch.clip(x[:, 1:2, :], min=0, max=1) # clip saturation channel 0-1
                     x = x.reshape((x.shape[0], 3, w, h)) # B, C, W, H
                 else:
-                    x = adjust_saturation(x_org, i)
+                    # Img in RGB space
+                    x = adjust_saturation(x, i)
             elif self.sat_shift and self.hue_shift:
                 raise NotImplementedError #TODO test_jitter for combinations of hue and saturation perhaps make it a tuple in this case
                 #TODO keep hsv_test in mind here
+            else:
+                # Hue shift
+                x = adjust_hue(x, i)
 
             if self.lab and not self.lab_test:
                 x = rgb2lab.forward(None, x)
@@ -297,10 +331,13 @@ class PL_model(pl.LightningModule):
                 i, self.test_acc_dict["test_acc_{:.4f}".format(i)].compute().item()
             )
             table["acc"].append(self.test_acc_dict["test_acc_{:.4f}".format(i)].compute().item())
-            table["hue"].append(i)
+            table["hue"].append(i.item())
             self.test_acc_dict["test_acc_{:.4f}".format(i)].reset()
         print(table["hue"], "\n\n")
         print(table["acc"])
+
+        os.makedirs("output/test_results", exist_ok=True)
+        np.savez(f"output/test_results/{self.args.run_name}", hue=table["hue"], acc=table["acc"])
 
         # Log test table with wandb.
         self.logger.experiment.log({"test_table": test_table})  # type: ignore
@@ -387,6 +424,8 @@ def main(args) -> None:
                                           monitor='test_acc_epoch',#val_accuracy',
                                         #   save_best_only=True,
                                           mode='max')
+
+    args.run_name = run_name
 
     # Instantiate model.
     trainer = pl.Trainer.from_argparse_args(
