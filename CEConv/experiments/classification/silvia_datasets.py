@@ -27,6 +27,7 @@ class lab2rgb(torch.nn.Module):
     def forward(self, img):
         return color.lab_to_rgb(img)
 
+
 class rgb2hsv(torch.nn.Module):
     """ 
     Converts RGB image tensor of shape *,3,H,W to HSV image tensor with same shape.
@@ -35,6 +36,7 @@ class rgb2hsv(torch.nn.Module):
     def forward(self, img):
         return color.rgb_to_hsv(img)
 
+
 class hsv2rgb(torch.nn.Module):
     """
     Converts HSV image tensor of shape *,3,H,W to RGB image tensor with same shape.
@@ -42,14 +44,14 @@ class hsv2rgb(torch.nn.Module):
     """
     def forward(self, img):
         return color.hsv_to_rgb(img)
-    
+
+
 def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = False, lab: bool = False, hsv: bool = False) -> torch.Tensor:
-    """Normalize batch of images."""   
+    """Normalize batch of images."""
     if lab:
         batch = lab2rgb.forward(None, batch)
     elif hsv:
         batch = hsv2rgb.forward(None, batch)
-
 
     if not grayscale:
         mean = torch.tensor([0.485, 0.456, 0.406], device=batch.device).view(1, 3, 1, 1)
@@ -68,7 +70,6 @@ def normalize(batch: torch.Tensor, grayscale: bool = False, inverse: bool = Fals
         return rgb2hsv.forward(None, out)
     else:
         return out
-
 
 def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoader, DataLoader]:
     """Get train and test dataloaders."""
@@ -91,6 +92,7 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
                 T.RandomHorizontalFlip(p=0.5),
             ]
         )
+        # tr_test = T.Compose([T.ToTensor()])
         tr_test = T.Compose([])
     else:
         # ImageNet-style preprocessing.
@@ -106,13 +108,13 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
                 T.RandomHorizontalFlip(),
             ]
         )
+        # tr_test = T.Compose([T.Resize(256), T.CenterCrop(224), T.ToTensor()])
         tr_test = T.Compose([T.Resize(256), T.CenterCrop(224)])
-
     # Convert data to grayscale
     if args.grayscale is True:
         tr_train = T.Compose([T.Grayscale(num_output_channels=3), tr_train])
         tr_test = T.Compose([T.Grayscale(num_output_channels=3), tr_test])
-
+    
     if args.lab is True:
         # convert to lab after applying jitter
         tr_train = T.Compose([tr_train, T.ToTensor(), rgb2lab()]) 
@@ -167,7 +169,7 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
         x_test = datasets.Flowers102(
             path, split="test", transform=tr_test, download=download
         )
-        args.classes = torch.arange(102)
+        args.classes = torch.arange(102)    
     elif args.dataset == "food101":
         x_train = datasets.Food101(
             path, split="train", transform=tr_train, download=download

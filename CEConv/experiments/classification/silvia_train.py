@@ -16,16 +16,13 @@ from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from torchinfo import summary
 from torchvision.transforms.functional import adjust_hue, adjust_saturation
 
-from experiments.classification.datasets import get_dataset, normalize, lab2rgb, rgb2lab, hsv2rgb, rgb2hsv
+from experiments.classification.silvia_datasets import get_dataset, normalize, lab2rgb, rgb2lab, hsv2rgb, rgb2hsv
 from models.resnet import ResNet18, ResNet44
 from models.resnet_hybrid import HybridResNet18, HybridResNet44
+import matplotlib.pyplot as plt
+
 from datetime import date
 import time
-
-
-# XXX HERE
-from kornia import color
-
 
 class PL_model(pl.LightningModule):
     def __init__(self, args, run_name) -> None:
@@ -34,9 +31,9 @@ class PL_model(pl.LightningModule):
         # Logging.
         self.save_hyperparameters()
         self.lab = args.lab
-        self.hsv = args.hsv
         self.args = args
         self.run_name = run_name
+        self.hsv = args.hsv
         self.hsv_test = args.hsv_test
         self.normalize = args.normalize
         self._device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -52,15 +49,16 @@ class PL_model(pl.LightningModule):
         elif args.dataset == "flowers102":
             self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=102)
             self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+        elif args.dataset == "stl10":
+            self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+            self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
         else:
             raise NotImplementedError
 
         # Store accuracy metrics for testing.
         self.test_acc_dict = {}
         self.hue_shift, self.sat_shift = False, False
-
-        # Create test jitter depending on which shift to test for
-        # HUE SHIFT
+        
         if args.hue_shift and not args.sat_shift:
             self.hue_shift = True
             self.test_jitter = np.linspace(-0.5, 0.5, 37)
@@ -69,9 +67,10 @@ class PL_model(pl.LightningModule):
                     self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
                 elif args.dataset == "flowers102":
                     self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+                elif args.dataset == "stl10":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
                 else:
                     raise NotImplementedError
-        # SAT SHIFT
         elif args.sat_shift and not args.hue_shift:
             self.sat_shift = True
 
@@ -83,16 +82,24 @@ class PL_model(pl.LightningModule):
                 # In case of even saturations, consider 0 to be positive
                 self.test_jitter = torch.concat((torch.linspace(-1, 0, neg_sats + 1)[:-1],
                                                 torch.tensor([0]),
-                                                torch.linspace(0, 1, pos_sats + 1)[1:])).type(torch.float32).to(self._device)
+                                                torch.linspace(0, 1, pos_sats + 1)[1:])).type(torch.float32).to(self._device) #TODO check if this is nice
+            else:
+                self.test_jitter = np.append(np.linspace(0, 1, 25, endpoint=False), np.arange(1, 10, 1, dtype=int)) #TODO determine which sat factors we want to scale with. Also need to check if it works on normalized imgs
             
             for i in self.test_jitter:
                 if args.dataset == "cifar10":
                     self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
                 elif args.dataset == "flowers102":
                     self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+                elif args.dataset == "stl10":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
                 else:
                     raise NotImplementedError
-            
+        elif args.sat_shift and args.hue_shift:
+            self.hue_shift, self.sat_shift = True, True
+            raise NotImplementedError #TODO jitter for combinations of saturation and hue shifts
+            #TODO keep hsv_test in mind here as well
+
         # Loss function
         self.criterion = nn.CrossEntropyLoss()
 
@@ -110,7 +117,7 @@ class PL_model(pl.LightningModule):
             "num_classes": len(args.classes),
             "ce_stages": args.ce_stages,
             "lab_space": args.lab,
-            "hsv_space": args.hsv, #TODO will need to be adjusted just as in ceconv2d.py if we want to either/or hue or sat matrix
+            "hsv_space": args.hsv,
             "sat_shift": args.sat_shift,
             "hue_shift": args.hue_shift,
         }
@@ -152,10 +159,9 @@ class PL_model(pl.LightningModule):
 
     def training_step(self, batch, batch_idx) -> dict[str, torch.Tensor]:
         x, y = batch
-
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=self.lab, hsv=self.hsv)
+            x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv) #TODO convert to hsv around here
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -176,7 +182,7 @@ class PL_model(pl.LightningModule):
 
         # Normalize images.
         if args.normalize:
-            x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=self.lab, hsv=self.hsv)
+            x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv) #TODO convert to hsv around here
 
         # Forward pass and compute loss.
         y_pred = self.model(x)
@@ -193,12 +199,11 @@ class PL_model(pl.LightningModule):
 
     def test_step(self, batch, batch_idx) -> None:
         x_org, y = batch
-
         for i in self.test_jitter:
             if self.lab:
                 x = lab2rgb.forward(None,x_org.clone())
             elif self.hsv and not self.hsv_test:
-                x = hsv2rgb.forward(None, x_org.clone())
+                x_org = hsv2rgb.forward(None, x_org.clone())
             else:
                 x = x_org.clone()
 
@@ -207,25 +212,30 @@ class PL_model(pl.LightningModule):
                 x = adjust_hue(x, i)
             elif self.sat_shift and not self.hue_shift:
                 # Apply saturation shift.
-                add_val = i.unsqueeze(0)[:, None,None] # 1, 1, 1
-                w = x.shape[2]
-                h = x.shape[3]
-                x = x.reshape((x.shape[0], 3, -1)) # B, C, H*W
-                # print("DEBUG devices", x.device, add_val.device)
-                x[:, 1:2, :] += add_val # add to saturation channel
-                x[:, 1:2, :] = torch.clip(x[:, 1:2, :], min=0, max=1) # clip saturation channel 0-1
-                x = x.reshape((x.shape[0], 3, w, h))
-            else:
-                x = adjust_saturation(x, i)
-            
+                if self.hsv_test:
+                    # print("DEBUG devices", x.device, i.unsqueeze(0).device)
+                    add_val = i.unsqueeze(0)[:, None,None] # 1, 1, 1
+                    w = x.shape[2]
+                    h = x.shape[3]
+                    x = x.reshape((x.shape[0], 3, -1)) # B, C, H*W
+                    # print("DEBUG devices", x.device, add_val.device)
+                    x[:, 1:2, :] += add_val # add to saturation channel
+                    x[:, 1:2, :] = torch.clip(x[:, 1:2, :], min=0, max=1) # clip saturation channel 0-1
+                    x = x.reshape((x.shape[0], 3, w, h))
+                else:
+                    x = adjust_saturation(x_org, i)
+            elif self.sat_shift and self.hue_shift:
+                raise NotImplementedError #TODO test_jitter for combinations of hue and saturation perhaps make it a tuple in this case
+                #TODO keep hsv_test in mind here
+
             if self.lab:
                 x = rgb2lab.forward(None, x)
-            elif self.hsv:
+            elif self.hsv and not self.hsv_test:
                 x = rgb2hsv.forward(None, x)
-
+                
             # Normalize images.
-            if args.normalize:
-                x = normalize(x, grayscale=args.grayscale or args.rotations > 1, lab=self.lab, hsv=self.hsv)
+            if self.normalize:
+                x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv) #TODO convert to hsv around here
 
             # Forward pass and compute loss.
             y_pred = self.model(x)
@@ -241,9 +251,9 @@ class PL_model(pl.LightningModule):
                     (self.preds, F.softmax(y_pred, 1).detach().cpu()), 0
                 )
                 self.gts = torch.cat((self.gts, y.cpu()), 0)
-
+        
     def test_epoch_end(self, outputs):
-        # Log metrics and predictions, and reset metrics.
+        # Log metrics and predictions, and reset metrics. #TODO adjust this func for sat possibly and both hue and sat?
         table = {"hue": [],
                  "acc": []}
         columns = ["hue", "acc"]
@@ -256,12 +266,12 @@ class PL_model(pl.LightningModule):
             table["acc"].append(self.test_acc_dict["test_acc_{:.4f}".format(i)].compute().item())
             table["hue"].append(i.item())
             self.test_acc_dict["test_acc_{:.4f}".format(i)].reset()
-
         print(table["hue"], "\n\n")
         print(table["acc"])
 
         os.makedirs("outputs/test_results", exist_ok=True)
-        np.savez(f"outputs/test_results/{self.run_name}", hue=table["hue"], acc=table["acc"])
+        np.savez(f"outputs/test_results/sil_{self.run_name}", hue=table["hue"], acc=table["acc"])
+
 
         # Log test table with wandb.
         self.logger.experiment.log({"test_table": test_table})  # type: ignore
@@ -272,12 +282,11 @@ class PL_model(pl.LightningModule):
                 "test_conf_mat": wandb.plot.confusion_matrix(  # type: ignore
                     probs=self.preds.numpy(),
                     y_true=self.gts.numpy(),
-                    class_names=args.classes,
+                    class_names=self.args.classes,
                 )
             }
         )
         self.results = table
-
 
 def main(args) -> None:
     # Create temp dir for wandb.
@@ -290,7 +299,7 @@ def main(args) -> None:
     # Get data loaders.
     trainloader, testloader = get_dataset(args)
     args.steps_per_epoch = len(trainloader)
-    args.epochs = math.ceil(args.epochs / args.split)
+    args.epochs = args.epochs # math.ceil(args.epochs / args.split)
 
     # Create date/time string
     current_time = time.strftime("%H:%M:%S", time.localtime())
@@ -315,6 +324,8 @@ def main(args) -> None:
         run_name += "-hue_shift"
     if args.sat_shift and not args.hue_shift:
         run_name += "-sat_shift"
+    if args.hue_shift and args.sat_shift:
+        run_name += "-hue_and_sat_shift"
     if args.sat_jitter:
         run_name += f"-sat_jitter_{args.sat_jitter[0]}_{args.sat_jitter[1]}"
     if args.grayscale:
@@ -325,8 +336,8 @@ def main(args) -> None:
         run_name += "-{}_stages".format(args.ce_stages)
     if args.run_name is not None:
         run_name += "-" + args.run_name
-    # Add day and time
     run_name += "-" + day_time
+
     print("run name:", run_name)
 
     # Initialize model.
@@ -339,6 +350,7 @@ def main(args) -> None:
         name=run_name,
         save_dir=os.environ["WANDB_DIR"],
     )
+
     lr_monitor = LearningRateMonitor(logging_interval="step")
 
     # Define callback to store model weights.
@@ -355,10 +367,9 @@ def main(args) -> None:
                                           monitor='test_acc_epoch',#val_accuracy',
                                         #   save_best_only=True,
                                           mode='max')
-    
-    print(args)
 
-    # Train model.
+    print(args)
+    # Instantiate model.
     trainer = pl.Trainer.from_argparse_args(
         args,
         logger=mylogger,
@@ -391,12 +402,10 @@ def main(args) -> None:
         ckpt_path=weights_path,
     )
 
-    # Test model.
     trainer.test(model, dataloaders=testloader)
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
 
     # Dataset settings.

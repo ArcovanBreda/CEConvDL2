@@ -9,14 +9,14 @@ from torch import nn
 from torch.nn.parameter import Parameter
 
 
-def _trans_input_filter_hsv(weights, out_rotations, hue_shift, sat_shift) -> torch.Tensor:
+def _trans_input_filter_hsv(weights, out_rotations) -> torch.Tensor:
     """
     Apply Hue shift to kernels of the input layer
 
     Args:
         weights: float32, input filter of size [c_out, c_in (3), in_rot (1), k, k]
         out_rotations: int, number of rotations applied to filter
-
+    
     """
     # [c_out, 1, c_in (3), in_rot (1), k, k]
     # Where dim=1 is added for stacking every hue_shift
@@ -30,66 +30,11 @@ def _trans_input_filter_hsv(weights, out_rotations, hue_shift, sat_shift) -> tor
         # For rotation i of the group -> with an angle i/out_rotations
         # Add this hue angle to the current weights
         temp = transformed_weights[:, i, 0, :, :, :] + (i / out_rotations * 2*np.pi)
-        # Restrict the values between 0 - 2pi for the hue using modulo
+        # Restrict the values between 0 - 1 for the hue using modulo
         # TODO???? ALSO RESTRICT THE S AND V OR L VALUES ?
         transformed_weights[:, i, 0, :, :, :] = torch.remainder(temp, 2*np.pi)
 
     return transformed_weights
-
-
-def _trans_input_filter_repeat(weights, out_rotations) -> torch.Tensor:
-    """stack the same weight filter out_rotation number of times
-
-    Args:
-      weights: float32, input filter of size [c_out, 3 (c_in), 1, k, k]
-      out_rotations: int, number of rotations (Hue shifts)
-    """
-    # Reshape to [c_out, 1, 3 (c_in), 1, k, k]
-    weights = weights.unsqueeze(1)
-    # [c_out, rotations, c_in (3), 1, k, k]
-    tw = weights.repeat(1,out_rotations,1,1,1,1)
-
-    return tw.contiguous()
-
-
-def _shifted_img_stack(imgs, out_rotations, hue_shift, sat_shift):
-    """stack the same weight filter out_rotation number of times
-
-    Args:
-      imgs: float32, input image of size [Batch, channels, H, W]
-      out_rotations: int, number of rotations (Hue / Sat shifts) applied to the input image
-    """
-    imgs_stacked = []
-
-    # Create sat shifts between -1 and 1 depending on number of "out_rotations" (shifts)
-    if sat_shift:
-        neg_sats = out_rotations // 2
-        pos_sats = neg_sats - 1 + out_rotations % 2
-        sat_shifts = np.append(np.linspace(-1, 0, neg_sats+1)[:-1], np.linspace(0, 1, pos_sats+1))
-
-    for i in range(out_rotations):
-        imgs_cloned = imgs.clone()
-
-        if hue_shift:
-            # For rotation i of the group -> with an angle: i/out_rotations * 2 pi
-            # Add this hue angle to the input image
-            temp = imgs[:, 0:1, :, :] + (i / out_rotations * 2*np.pi)
-            # Restrict the values between 0 - 2pi for the hue using modulo
-            temp = torch.remainder(temp, 2*np.pi)
-            imgs_cloned[:, 0:1, :, :] = temp
-        if sat_shift:
-            # Add the corresponding sat shift to the input image
-            temp = imgs[:, 1:2, :, :] + sat_shifts[i]
-            # Restrict the sat channel to fall within the required 0-1 range
-            temp = torch.clip(temp, min=0, max=1)
-            imgs_cloned[:, 1:2, :, :] = temp
-
-        imgs_stacked.append(imgs_cloned)
-
-    # Concatenate the hue / sat shifted images to create the final image stack
-    hue_shifted_img_stack = torch.cat(imgs_stacked, dim=1)
-
-    return hue_shifted_img_stack
 
 
 def _get_hue_rotation_matrix(rotations: int) -> torch.Tensor:
@@ -119,7 +64,6 @@ def _get_hue_rotation_matrix(rotations: int) -> torch.Tensor:
         dtype=torch.float32,
     )
 
-
 def _get_lab_rotation_matrix(rotations: int) -> torch.Tensor:
     """Returns a 3x3 hue rotation matrix.
 
@@ -141,32 +85,10 @@ def _get_lab_rotation_matrix(rotations: int) -> torch.Tensor:
         [
             [1, 0, 0],
             [0, math.cos(angle_delta), -math.sin(angle_delta)],
-            [0, math.sin(angle_delta), math.cos(angle_delta)]
-        ], 
-        dtype=torch.float32)
-
-
-def _get_hsv_saturation_matrix(saturations: int) -> torch.Tensor:
-    """
-    Returns a [saturations, 1, 1] saturation matrix.
-    Saturation assumed to be in [0,1].
-
-    Args:
-      saturations: int, number of saturation shifts
-    """
-
-    assert saturations > 0, "Number of saturation shifts must be positive."
-
-    # Scalar to add each saturation value in image by
-    neg_sats = saturations // 2
-    pos_sats = neg_sats - 1 + saturations % 2
-
-    # In case of even saturations, consider 0 to be positive
-    saturation_scales = torch.concat((torch.linspace(-1, 0, neg_sats + 1)[:-1],
-                                      torch.tensor([0]),
-                                      torch.linspace(0, 1, pos_sats + 1)[1:])).type(torch.float32)
-
-    return saturation_scales[:, None, None]
+            [0, math.sin(angle_delta), math.cos(angle_delta)],
+        ],
+        dtype=torch.float32,
+    )
 
 
 def _trans_input_filter(weights, rotations, rotation_matrix) -> torch.Tensor:
@@ -251,20 +173,14 @@ class CEConv2d(nn.Conv2d):
         separable: bool = True,
         lab_space: bool = False,
         hsv_space: bool = False,
-        shift_img: bool = True,
-        sat_shift: bool = False,
-        hue_shift: bool = True,
+        shift_img: bool = False,
         **kwargs
     ) -> None:
         self.in_rotations = in_rotations
         self.out_rotations = out_rotations
         self.separable = separable
-        self.lab_space = lab_space
         self.hsv_space = hsv_space
-        self.shift_img = shift_img
-        self.sat_shift = sat_shift
-        self.hue_shift = hue_shift
-        super().__init__(in_channels, out_channels, kernel_size, **kwargs)      
+        super().__init__(in_channels, out_channels, kernel_size, **kwargs)
 
         # Initialize transformation matrix and weights.
         if in_rotations == 1:
@@ -323,22 +239,24 @@ class CEConv2d(nn.Conv2d):
         """Forward pass."""
         # Compute full filter weights.
         if self.in_rotations == 1:
-            
+            # Apply rotation to input layer filters HSV
             if self.hsv_space:
-                # Apply hue shift to input image HSV
-                if self.shift_img:
-                    tw = _trans_input_filter_repeat(self.weight, self.out_rotations)
-                # Apply rotation to input layer filters HSV
-                else:
-                    tw = _trans_input_filter_hsv(self.weight, self.out_rotations)
+                tw = _trans_input_filter_hsv(self.weight, self.out_rotations)
             # Apply rotation to input layer filter. (RGB)
             else:
+                print("bob")
+                print(self.weight.shape)
                 tw = _trans_input_filter(
                     self.weight, self.out_rotations, self.transformation_matrix
                 )
+                print(tw.shape)
+                print("finished")
+                exit()
         else:
             # Apply cyclic permutation to hidden layer filter.
             if self.separable:
+                # print("jan")
+                # print(self.weight.shape)
                 weight = torch.mul(self.pointwise_weight, self.weight)
             else:
                 weight = self.weight
@@ -360,20 +278,24 @@ class CEConv2d(nn.Conv2d):
             input_shape[-1],
         )
         input=input.float() 
+        # print("xxx")
+        # print(self.in_rotations)
+        # print(input.shape)
+        # print(tw.shape)
 
-        if self.hsv_space and self.in_rotations == 1:
-            if self.shift_img:
-                # Since we use an image stack of # out_rotations 
-                # -> Repeat the kernel on the in_channel dimension with out_rotations
-                # This ensures that the HSV channels all line up with their corresponding weights.
-                tw = tw.repeat(1,self.out_rotations,1,1)
-
-                # Create image stack of Hue or Sat shifted images
-                input = _shifted_img_stack(input, self.out_rotations, self.hue_shift, self.sat_shift)
+        # print("@@@@@@@")
+        # input = input.repeat(1,4,1,1)
+        # print(input.shape)
+        # tw = tw.repeat(1,4,1,1)
+        # print(tw.shape)
+        # print("@@@@@@@")
 
         y = F.conv2d(
             input, weight=tw, bias=None, stride=self.stride, padding=self.padding
         )
+
+        # print(y.shape)
+        # print("xxx")
 
         batch_size, _, ny_out, nx_out = y.size()
         y = y.view(batch_size, self.out_channels, self.out_rotations, ny_out, nx_out)

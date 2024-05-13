@@ -45,12 +45,18 @@ print("XXXXXXXXXXXXXXXXXXXXXXX")
 kernel = torch.tensor([[[1,1,1],[1,1,1],[1,1,1]],
                        [[2,2,2],[2,2,2],[2,2,2]],
                        [[3,3,3],[3,3,3],[3,3,3]]]).unsqueeze(0).unsqueeze(2)
+
+#Lets say we want 5 output channels
+kernel = kernel.repeat(5,1,1,1,1)
+
 print(kernel.shape)
 
 
 # convolution_3d = torch.nn.Conv3d(in_channels=3, out_channels=1, kernel_size=(3,3,3), stride=(1,1,1))
 # y = convolution_3d()
 
+# Batch, Channels_out, time Dimension (# of rotations / image stack), H_out, W_out
+# without padding -> the 5x5 input image becomes 3x3 for this 3x3 kernel
 y = F.conv3d(img, kernel, stride=[1,1,1])
 
 print("XXXXXXXXXXXXXXXXXXXXXXX")
@@ -66,3 +72,12 @@ print("Feature Map")
 print(y.shape)
 print(y)
 print("XXXXXXXXXXXXXXXXXXXXXXX")
+
+
+
+
+# in_channels = 3
+# out_channels = 5 
+# in_rotations = 1
+# out_rotations = 4
+# 3 x 3 kernel
