@@ -153,6 +153,8 @@ Similar to the original paper’s results, the color selective dataset seems to 
 
 ### Color Equivariance in Image Classification and impact of hyperparameters
 
+We will now explore the reproduction of a variation on the main results along with a small insight into the hyperparameters. These results are all limited to the Flowers102 dataset since it has the largest color discreptency and the ResNet18 model, aligning with the original paper. The results were placed in the appendix of the original paper. However, we decided that the reproduction of the figure on one dataset is more insightful than an enormous table. The final experiment is an ablation study investigating the impact of varying the number of rotations. This aspect is altered across different experiments, highlighting its importance and deserving notice.
+
 #### Image Classification
 
 TODO: color equivariant cnns versus vanilla cnns (table 1 but then figure 9)
