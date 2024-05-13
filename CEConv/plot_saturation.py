@@ -190,5 +190,26 @@ checkpoints = [
     "/home/sabbring/CEConvDL2/CEConv/output/color_equivariance/classification/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1.pth.tar.ckpt"
 ]
 
-plot_figure_9(checkpoints, hsv_test=True)
+# plot_figure_9(checkpoints, hsv_test=True)
+
+test_np = [
+    # "/home/sabbring/CEConvDL2/CEConv/output/test_results/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-lab_space-sat_jitter_1_1.npz",
+    # "/home/sabbring/CEConvDL2/CEConv/output/test_results/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-sat_jitter_1_1.npz",
+    # "/home/sabbring/CEConvDL2/CEConv/output/test_results/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_shift-sat_jitter_1_1.npz",
+    "/home/sabbring/CEConvDL2/CEConv/output/test_results/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1.npz" # broke the code (if u know u know)
+]
+
+
+fig, ax = plt.subplots(figsize=(12, 6))
+
+for i in test_np:
+    file = np.load(i)
+
+    if torch.is_tensor(file["hue"][0]):
+        file["hue"] = [i.item() for i in file["hue"]]
+        
+    plt.plot(file["hue"], file["acc"])
+
+plt.savefig(f"test_4.png")
+
 
