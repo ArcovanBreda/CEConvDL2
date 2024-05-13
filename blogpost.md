@@ -33,15 +33,11 @@ $$\begin{align}
 where $T_g$ and $T'_g$ can be equivalent.
 We utilise the equation from \[5\] to show that G-CNNs are equivariant. Instead of shifting a filter, correlation in the first layer can be described more generally by replacing it with some transformation from group $G$, whereby $f$ is the input image and $\psi$ is the filter:
 
-$$ 
-[f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_k f_k(y)\psi_k(g^{-1}y) \qquad \qquad (\text{Equation 2})
-$$
-
-$$[f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_k f_k(y)\psi_k(g^{-1}y) \qquad \qquad (\text{Equation 2})$$
-
+```
 $$\begin{align} 
 [f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_k f_k(y)\psi_k(g^{-1}y) & & \qquad \qquad \text{(Equation 4)}\\ 
 \end{align}$$
+```
 
 Since the feature map $f \star \psi$ is a function on G, the filters are functions on G for all layers after the first. The correlation then becomes:
 
@@ -63,8 +59,10 @@ Mss zijn deze formules allemaal net iets teveel overgenomen van [2]
 --->
 
 ## Color Equivariance
-
+<!---
 TODO: explain specifically for color equivariance (technical)
+--->
+The original paper exploits the concept of group equivariant convolutions to achieve color equivariance, defined as equivariance to hue shifts. In the HSV (Hue-Saturation-Value) color space, hue is represented as an angular scalar value. The hue value is shifted by adding an offset after which the modulo is taken to ensure a valid range. The HSV space is reprojected to the RGB (Red-Green-Blue) color space such that the hue shifts correspond to a rotation along the diagonal vector [1, 1, 1]. 
 
 ## (Maybe Architecture/Evaluation/Dataset(s) explanation or Something)
 
