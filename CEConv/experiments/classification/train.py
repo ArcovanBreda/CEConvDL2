@@ -156,6 +156,7 @@ class PL_model(pl.LightningModule):
             "hsv_space": args.hsv,
             "sat_shift": args.sat_shift,
             "hue_shift": args.hue_shift,
+            "img_shift": args.img_shift,
         }
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
         self.model = architectures[args.architecture](**kwargs)
@@ -337,7 +338,7 @@ class PL_model(pl.LightningModule):
         print(table["acc"])
 
         os.makedirs("output/test_results", exist_ok=True)
-        np.savez(f"output/test_results/{self.args.run_name}", hue=table["hue"], acc=table["acc"])
+        np.savez(f"output/test_results/maintest_{self.args.run_name}", hue=table["hue"], acc=table["acc"])
 
         # Log test table with wandb.
         self.logger.experiment.log({"test_table": test_table})  # type: ignore
@@ -392,6 +393,8 @@ def main(args) -> None:
         run_name += "-hue_and_sat_shift"
     if args.sat_jitter:
         run_name += f"-sat_jitter_{args.sat_jitter[0]}_{args.sat_jitter[1]}"
+    if args.img_shift:
+        run_name += "-img_shift"
     if args.grayscale:
         run_name += "-grayscale"
     if not args.normalize:
@@ -401,6 +404,7 @@ def main(args) -> None:
     if args.run_name is not None:
         run_name += "-" + args.run_name
     mylogger = pl_loggers.WandbLogger(  # type: ignore
+        entity="rens-uva-org",
         project="DL2 CEConv",
         config=vars(args),
         name=run_name,
@@ -522,6 +526,8 @@ if __name__ == "__main__":
     parser.add_argument("--sat_shift", dest="sat_shift", action="store_true", help="test set should get saturation shifts.")
     parser.add_argument("--hsv_test", dest="hsv_test", action="store_true", help="Apply test time saturation shift directly in HSV space")
     parser.add_argument("--lab_test", dest="lab_test", action="store_true", help="Apply test time hue shift in LAB space")
+    parser.add_argument("--img_shift", dest="img_shift", action="store_true", 
+                        help="Apply the lifting convolution by performing the hue shift on the input image instead of the input layer kernels")
 
     parser = PL_model.add_model_specific_args(parser)
 
