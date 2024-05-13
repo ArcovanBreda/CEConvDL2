@@ -243,7 +243,7 @@ class PL_model(pl.LightningModule):
                 matrix = torch.matrix_power(self.lab_angle_matrix, int(times)).repeat(x.shape[0],1,1)
                 x = torch.bmm(matrix.cuda(), x.reshape((x.shape[0], 3, -1))).reshape((x.shape[0], 3, w, h))
             elif self.hue_shift and not self.sat_shift:
-                # Apply hue shift with pytorch's function; image must be in RGB so provide --hsv.
+                # Apply hue shift with pytorch's function; image must be in RGB so provide either --hsv or --lab.
                 x = adjust_hue(x, i)
             elif self.sat_shift and not self.hue_shift:
                 # Apply saturation shift.
