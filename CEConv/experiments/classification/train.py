@@ -382,7 +382,7 @@ class PL_model(pl.LightningModule):
             print(table["hue"], "\n\n")
             print(table["sat"], "\n\n")
             print(table["acc"])
-            np.savez(f"output/test_results/{self.args.run_name}", hue=table["hue"], sat=table["sat"], acc=table["acc"])
+            np.savez(f"output/test_results/maintest_{self.args.run_name}", hue=table["hue"], sat=table["sat"], acc=table["acc"])
         else:
             table = {"hue": [],
                     "acc": []}
@@ -399,7 +399,7 @@ class PL_model(pl.LightningModule):
 
             print(table["hue"], "\n\n")
             print(table["acc"])
-            np.savez(f"output/test_results/{self.args.run_name}", hue=table["hue"], acc=table["acc"])
+            np.savez(f"output/test_results/maintest_{self.args.run_name}", hue=table["hue"], acc=table["acc"])
 
         # Log test table with wandb.
         self.logger.experiment.log({"test_table": test_table})  # type: ignore
