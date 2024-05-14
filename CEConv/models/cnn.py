@@ -67,6 +67,11 @@ class CECNN(nn.Module):
         groupcosetmaxpool: bool = False,
         num_classes: int = 10,
         separable: bool = True,
+        lab_space: bool = False,
+        hsv_space: bool = False,
+        img_shift: bool = False,
+        sat_shift: bool = False,
+        hue_shift: bool = False,
     ) -> None:
         super().__init__()
 
@@ -77,7 +82,10 @@ class CECNN(nn.Module):
         kernels = [3, 3, 3, 3, 3, 3, 4]
         do = [True, False, True, True, True, False, False]
         mp = GroupMaxPool2d(2) if ce_layers >= 2 else nn.MaxPool2d(2)
-        planes_ce = rotations * planes if not groupcosetmaxpool else planes
+        if hue_shift and sat_shift:
+            planes_ce = rotations * rotations * planes if not groupcosetmaxpool else planes
+        else:
+            planes_ce = rotations * planes if not groupcosetmaxpool else planes
 
         self.ceconv_list = nn.ModuleList(
             [
@@ -89,6 +97,11 @@ class CECNN(nn.Module):
                         planes,
                         kernel_size=kernels[i],
                         separable=separable,
+                        lab_space = lab_space,
+                        hsv_space = hsv_space,
+                        img_shift = img_shift,
+                        sat_shift = sat_shift,
+                        hue_shift = hue_shift,
                     ),
                     nn.BatchNorm3d(planes),
                     nn.ReLU(inplace=True),

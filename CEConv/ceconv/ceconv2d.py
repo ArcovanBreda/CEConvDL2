@@ -20,12 +20,6 @@ def _trans_input_filter_hsv(weights, out_rotations, hue_shift, sat_shift) -> tor
     """
     if not hue_shift and not sat_shift:
         raise ValueError("Flag hue_shift, sat_shift or both -> Cant be left empty in hsv_space")
-    if sat_shift:
-        neg_sats = out_rotations // 2
-        pos_sats = neg_sats - 1 + out_rotations % 2
-        saturation_scales = torch.concat((torch.linspace(-1, 0, neg_sats + 1)[:-1],
-                                    torch.tensor([0]),
-                                    torch.linspace(0, 1, pos_sats + 1)[1:])).type(torch.float32)
 
     # [c_out, 1, c_in (3), in_rot (1), k, k]
     # Where dim=1 is added for stacking every hue_shift / sat_shift combination
@@ -49,6 +43,13 @@ def _trans_input_filter_hsv(weights, out_rotations, hue_shift, sat_shift) -> tor
         hue_shifted_filters.append(weights_reshaped.clone())
 
     if sat_shift:
+        # Create shifts between -1 and +1 depending on # of rotations
+        neg_sats = out_rotations // 2
+        pos_sats = neg_sats - 1 + out_rotations % 2
+        saturation_scales = torch.concat((torch.linspace(-1, 0, neg_sats + 1)[:-1],
+                                    torch.tensor([0]),
+                                    torch.linspace(0, 1, pos_sats + 1)[1:])).type(torch.float32)
+        
         for filter in hue_shifted_filters:
             for i in range(out_rotations):
                 transformed_weights = filter.clone()
@@ -77,14 +78,14 @@ def _trans_input_filter_repeat(weights, out_rotations, hue_shift, sat_shift) -> 
       hue_shift: Bool, signaling whether or not to perform a hue shift 
       sat_shift: Bool, signaling whether or not to perform a saturation shift
     """
-    # If either hue shift or sat shift is required
-    # stack only out_rotation time the input filer
+    # If either hue shift or sat shift is requested
+    # stack only # out_rotation time the input filer
     if hue_shift != sat_shift:
         # Reshape to [c_out, 1, 3 (c_in), 1, k, k]
         weights = weights.unsqueeze(1)
         # [c_out, rotations, c_in (3), 1, k, k]
         tw = weights.repeat(1,out_rotations,1,1,1,1)
-    # If both hue and sat shift are required
+    # If both hue and sat shift are requested
     # then we need out_rotations * out_rotations number of filters
     elif hue_shift and sat_shift:
         # Reshape to [c_out, 1, 3 (c_in), 1, k, k]
@@ -107,36 +108,44 @@ def _shifted_img_stack(imgs, out_rotations, hue_shift, sat_shift):
       sat_shift: Bool, signaling whether or not to perform a saturation shift  
     """
     imgs_stacked = []
+    hue_shifted_imgs = []
 
-    # Create sat shifts between -1 and 1 depending on number of "out_rotations" (shifts)
-    if sat_shift:
-        neg_sats = out_rotations // 2
-        pos_sats = neg_sats - 1 + out_rotations % 2
-        sat_shifts = np.append(np.linspace(-1, 0, neg_sats+1)[:-1], np.linspace(0, 1, pos_sats+1))
-
-    for i in range(out_rotations):
-        imgs_cloned = imgs.clone()
-
-        if hue_shift:
+    if hue_shift:
+        for i in range(out_rotations):
+            imgs_cloned = imgs.clone()
             # For rotation i of the group -> with an angle: i/out_rotations * 2 pi
             # Add this hue angle to the input image
             temp = imgs[:, 0:1, :, :] + (i / out_rotations * 2*np.pi)
             # Restrict the values between 0 - 2pi for the hue using modulo
-            temp = torch.remainder(temp, 2*np.pi)
-            imgs_cloned[:, 0:1, :, :] = temp
-        if sat_shift:
-            # Add the corresponding sat shift to the input image
-            temp = imgs[:, 1:2, :, :] + sat_shifts[i]
-            # Restrict the sat channel to fall within the required 0-1 range
-            temp = torch.clip(temp, min=0, max=1)
-            imgs_cloned[:, 1:2, :, :] = temp
+            imgs_cloned[:, 0:1, :, :] = torch.remainder(temp, 2*np.pi)
+            hue_shifted_imgs.append(imgs_cloned)
+    else:
+        # Didn't hue shift images
+        hue_shifted_imgs.append(imgs.clone())
 
-        imgs_stacked.append(imgs_cloned)
+    if sat_shift:
+        # Create sat shifts between -1 and 1 depending on number of "out_rotations" (shifts)
+        if sat_shift:
+            neg_sats = out_rotations // 2
+            pos_sats = neg_sats - 1 + out_rotations % 2
+            sat_shifts = np.append(np.linspace(-1, 0, neg_sats+1)[:-1], np.linspace(0, 1, pos_sats+1))
+        
+        for batch_imgs in hue_shifted_imgs:
+            for i in range(out_rotations):
+                imgs_cloned = batch_imgs.clone()
+                # Add the corresponding sat shift to the input image
+                temp = imgs_cloned[:, 1:2, :, :] + sat_shifts[i]
+                # Restrict the sat channel to fall within the required 0-1 range
+                imgs_cloned[:, 1:2, :, :] = torch.clip(temp, min=0, max=1)
+                imgs_stacked.append(imgs_cloned)
+    else:
+        # Didn't Sat shift images
+        imgs_stacked = hue_shifted_imgs
 
     # Concatenate the hue / sat shifted images to create the final image stack
-    hue_shifted_img_stack = torch.cat(imgs_stacked, dim=1)
+    shifted_img_stack = torch.cat(imgs_stacked, dim=1)
 
-    return hue_shifted_img_stack
+    return shifted_img_stack
 
 
 def _get_hue_rotation_matrix(rotations: int) -> torch.Tensor:
@@ -193,30 +202,6 @@ def _get_lab_rotation_matrix(rotations: int) -> torch.Tensor:
         dtype=torch.float32)
 
 
-#TODO WEG
-def _get_hsv_saturation_matrix(saturations: int) -> torch.Tensor:
-    """
-    Returns a [saturations, 1, 1] saturation matrix.
-    Saturation assumed to be in [0,1].
-
-    Args:
-      saturations: int, number of saturation shifts
-    """
-
-    assert saturations > 0, "Number of saturation shifts must be positive."
-
-    # Scalar to add each saturation value in image by
-    neg_sats = saturations // 2
-    pos_sats = neg_sats - 1 + saturations % 2
-
-    # In case of even saturations, consider 0 to be positive
-    saturation_scales = torch.concat((torch.linspace(-1, 0, neg_sats + 1)[:-1],
-                                      torch.tensor([0]),
-                                      torch.linspace(0, 1, pos_sats + 1)[1:])).type(torch.float32)
-
-    return saturation_scales[:, None, None]
-
-
 def _trans_input_filter(weights, rotations, rotation_matrix) -> torch.Tensor:
     """Apply linear transformation to filter.
 
@@ -249,6 +234,7 @@ def _trans_input_filter(weights, rotations, rotation_matrix) -> torch.Tensor:
 
 def _trans_hidden_filter(weights: torch.Tensor, rotations: int, hue_shift, sat_shift) -> torch.Tensor:
     """Perform cyclic permutation on hidden layer filter parameters."""
+    # weights = [out_channels, in_channels, in_rotations (in_rots^2 for hue+sat), k, k]
 
     if hue_shift and sat_shift:
         # Apply rotations * rotations rolls (for hue and sat shifts respectively)
@@ -265,13 +251,13 @@ def _trans_hidden_filter(weights: torch.Tensor, rotations: int, hue_shift, sat_s
             transformed_weights[:, i, :, :, :, :] = torch.roll(weights, shifts=i, dims=2)
     else:
         # Only apply a single shift = # rotations amount of rolls
-
         # Create placeholder for output tensor
         w_shape = weights.shape
         transformed_weights = torch.zeros(
             ((w_shape[0],) + (rotations,) + w_shape[1:]), device=weights.device
         )
 
+        # [Out_channels, Rotations, in_channels, rotations, k, k]
         # Apply cyclic permutation on output tensor
         for i in range(rotations):
             transformed_weights[:, i, :, :, :, :] = torch.roll(weights, shifts=i, dims=2)
@@ -332,7 +318,6 @@ class CEConv2d(nn.Conv2d):
 
         # Turn off seperable when dealing with 2 shifts
         if hue_shift and sat_shift:
-            raise ValueError("SORRY BOBS 2 SHIFT NOT IMPLEMENTED YET!")
             separable = False
             self.separable = separable
 
@@ -358,7 +343,13 @@ class CEConv2d(nn.Conv2d):
                     torch.Tensor(out_channels, in_channels, 1, *self.kernel_size)
                 )
         else:
-            if separable:
+            if hue_shift and sat_shift:
+                self.weight = Parameter(
+                    torch.Tensor(
+                        out_channels, in_channels, self.in_rotations*self.in_rotations, *self.kernel_size
+                    )
+                )
+            elif separable:
                 if in_rotations > 1:
                     self.weight = Parameter(
                         # torch.Tensor(out_channels, 1, 1, *self.kernel_size)
@@ -394,7 +385,7 @@ class CEConv2d(nn.Conv2d):
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass."""
-        # Compute full filter weights.
+        # Compute full filter weights. -> For the lifting convolution
         if self.in_rotations == 1:
             
             if self.hsv_space:
@@ -409,6 +400,7 @@ class CEConv2d(nn.Conv2d):
                 tw = _trans_input_filter(
                     self.weight, self.out_rotations, self.transformation_matrix
                 )
+        # Filters for the group convolutions
         else:
             # Apply cyclic permutation to hidden layer filter.
             if self.separable:
@@ -417,14 +409,22 @@ class CEConv2d(nn.Conv2d):
                 weight = self.weight
             tw = _trans_hidden_filter(weight, self.out_rotations, self.hue_shift, self.sat_shift)
 
-        # if performing 2 shifts
+        # If performing 2 shifts
         if self.hue_shift and self.sat_shift:
-            tw_shape = (
-                self.out_channels * self.out_rotations * self.out_rotations,
-                self.in_channels * self.in_rotations,
-                *self.kernel_size,
-            )
-            tw = tw.view(tw_shape)
+            if self.in_rotations > 1:
+                tw_shape = (
+                    self.out_channels * self.out_rotations * self.out_rotations,
+                    self.in_channels * self.in_rotations * self.in_rotations,
+                    *self.kernel_size,
+                )
+                tw = tw.view(tw_shape)
+            else:
+                tw_shape = (
+                    self.out_channels * self.out_rotations * self.out_rotations,
+                    self.in_channels * self.in_rotations,
+                    *self.kernel_size,
+                )
+                tw = tw.view(tw_shape)
         else:
             tw_shape = (
                 self.out_channels * self.out_rotations,
@@ -434,24 +434,34 @@ class CEConv2d(nn.Conv2d):
             tw = tw.view(tw_shape)
 
         # Apply convolution.
-        input_shape = input.size()
-        input = input.view(
-            input_shape[0],
-            self.in_channels * self.in_rotations,
-            input_shape[-2],
-            input_shape[-1],
-        )
-        input=input.float() 
+        if self.hue_shift and self.sat_shift:
+            input_shape = input.size()
+            input = input.view(
+                input_shape[0],
+                self.in_channels * self.in_rotations * self.in_rotations,
+                input_shape[-2],
+                input_shape[-1],
+            )
+        else:
+            input_shape = input.size()
+            input = input.view(
+                input_shape[0],
+                self.in_channels * self.in_rotations,
+                input_shape[-2],
+                input_shape[-1],
+            )
 
         if self.hsv_space and self.in_rotations == 1:
             if self.img_shift:
-                # Since we use an image stack of # out_rotations 
-                # -> Repeat the kernel on the in_channel dimension with out_rotations
-                # This ensures that the HSV channels all line up with their corresponding weights.
-                tw = tw.repeat(1,self.out_rotations,1,1)
+                if self.hue_shift and self.sat_shift:
+                    # Since we use an image stack of # out_rotations 
+                    # -> Repeat the kernel on the in_channel dimension with out_rotations
+                    # This ensures that the HSV channels all line up with their corresponding weights.
+                    tw = tw.repeat(1,self.out_rotations*self.out_rotations,1,1)
+                else:
+                    tw = tw.repeat(1,self.out_rotations,1,1)
 
                 # Create image stack of Hue or Sat shifted images
-                # TODO FIX DAT DIT out_rot * out_rot image stack maakt ipv out_rot voor hue en sat shift (nu combineerd hij "zonder double loop")
                 input = _shifted_img_stack(input, self.out_rotations, self.hue_shift, self.sat_shift)
 
         y = F.conv2d(
