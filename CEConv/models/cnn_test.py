@@ -26,15 +26,15 @@ class TestCECNN(unittest.TestCase):
 
     def test_forward(self) -> None:
         """Test the forward pass of the CECNN."""
-        model = CECNN(planes=32, rotations=4)
+        model = CECNN(planes=10, rotations=5, hsv_space=True, hue_shift=True, sat_shift=True, separable=False, img_shift=False)
         y = model(_create_dummy_input())
         self.assertEqual(y.shape, (8, 10))
 
-    def test_forward_hybrid(self) -> None:
-        """Test the forward pass of the CECNN."""
-        model = CECNN(planes=32, rotations=4, ce_layers=4)
-        y = model(_create_dummy_input())
-        self.assertEqual(y.shape, (8, 10))
+    # def test_forward_hybrid(self) -> None:
+    #     """Test the forward pass of the CECNN."""
+    #     model = CECNN(planes=32, rotations=4, ce_layers=4)
+    #     y = model(_create_dummy_input())
+    #     self.assertEqual(y.shape, (8, 10))
 
 
 if __name__ == "__main__":

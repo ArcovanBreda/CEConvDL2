@@ -56,12 +56,15 @@ class PL_model(pl.LightningModule):
 
         # Store accuracy metrics for testing.
         self.test_acc_dict = {}
-        self.test_rotations = 111#37
+        self.test_rotations = 37
         self.test_jitter = np.linspace(-0.5, 0.5, self.test_rotations)
+        self.hue_shift, self.sat_shift = False, False
         if hasattr(self.args, 'lab_test'):
             self.lab_test = args.lab_test
         else:
             self.lab_test = False
+
+        # Hue shift in lab space
         if self.lab_test:
             angle_delta =  2 * math.pi / self.test_rotations
             self.lab_angle_matrix = torch.tensor(
@@ -338,7 +341,7 @@ class PL_model(pl.LightningModule):
         print(table["acc"])
 
         os.makedirs("output/test_results", exist_ok=True)
-        np.savez(f"output/test_results/maintest_{self.args.run_name}", hue=table["hue"], acc=table["acc"])
+        np.savez(f"output/test_results/{self.args.run_name}", hue=table["hue"], acc=table["acc"])
 
         # Log test table with wandb.
         self.logger.experiment.log({"test_table": test_table})  # type: ignore

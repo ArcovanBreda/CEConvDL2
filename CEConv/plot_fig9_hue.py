@@ -2,18 +2,18 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-x = np.load("")["hue"]
-y_norm = np.load("")["acc"]
-y_norm_jitter = np.load("")["acc"]
-y_nonorm = np.load("")["acc"]
-y_nonorm_jitter = np.load("")["acc"]
+x = np.load("output/test_results/maintest_flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_shift-sat_jitter_1_1.npz")["hue"]
+y_norm = np.load("output/test_results/maintest_flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_shift-sat_jitter_1_1.npz")["acc"]
+# y_norm_jitter = np.load("")["acc"]
+# y_nonorm = np.load("")["acc"]
+# y_nonorm_jitter = np.load("")["acc"]
 # y_norm_remainder1 = np.load("outputs/test_results/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-2024-05-10_11:36:12_norm_imagehueshift.npz")["acc"]
 
 fig, ax = plt.subplots(figsize=(12, 6))
 plt.plot(x, y_norm, label="RGB norm")
-plt.plot(x, y_nonorm, label="No norm")
-plt.plot(x, y_norm_jitter, label="RGB norm + Jitter", ls="--")
-plt.plot(x, y_nonorm_jitter, label="No norm + Jitter", ls="--")
+# plt.plot(x, y_nonorm, label="No norm")
+# plt.plot(x, y_norm_jitter, label="RGB norm + Jitter", ls="--")
+# plt.plot(x, y_nonorm_jitter, label="No norm + Jitter", ls="--")
 # plt.plot(x, y_norm_remainder1, label="RGB norm + remained 1", ls="dotted")
 
 plt.title("Hue equivaraiant network trainend in HSV color space\nFlowers-102 dataset [Hue-shift on Image - 120 degree rotations]", fontsize=22)
