@@ -57,6 +57,7 @@ class PL_model(pl.LightningModule):
         # Store accuracy metrics for testing.
         self.test_acc_dict = {}
         self.test_rotations = 37
+        self.test_saturations = 50
         self.test_jitter = np.linspace(-0.5, 0.5, self.test_rotations)
         self.hue_shift, self.sat_shift = False, False
         if hasattr(self.args, 'lab_test'):
@@ -103,7 +104,7 @@ class PL_model(pl.LightningModule):
 
             # In HSV space
             if self.hsv_test:
-                saturations = 50
+                saturations = self.test_saturations
                 neg_sats = saturations // 2
                 pos_sats = neg_sats - 1 + saturations % 2
 
@@ -126,8 +127,37 @@ class PL_model(pl.LightningModule):
                     raise NotImplementedError
         elif args.sat_shift and args.hue_shift:
             self.hue_shift, self.sat_shift = True, True
-            raise NotImplementedError #TODO jitter for combinations of saturation and hue shifts
-            #TODO keep hsv_test in mind here as well, because for saturation we cannot convert HSV -> RGB -> HSV
+
+            hue_jitter = torch.from_numpy(np.linspace(-0.5, 0.5, self.test_rotations)).type(torch.float32).to(self._device)
+
+            if self.hsv_test:
+                saturations = self.test_saturations
+                neg_sats = saturations // 2
+                pos_sats = neg_sats - 1 + saturations % 2
+
+                # In case of even saturations, consider 0 to be positive
+                sat_jitter = torch.concat((torch.linspace(-1, 0, neg_sats + 1)[:-1],
+                                                torch.tensor([0]),
+                                                torch.linspace(0, 1, pos_sats + 1)[1:])).type(torch.float32).to(self._device)
+            else:
+                sat_jitter = torch.from_numpy(np.append(np.linspace(0, 1, 25, endpoint=False),
+                                                        np.arange(1, 10, 1, dtype=int))).type(torch.float32).to(self._device)
+            
+            x, y = torch.meshgrid(hue_jitter, sat_jitter, indexing='ij')
+            self.test_jitter = torch.stack((x, y), dim=-1).view(-1, 2)
+
+            for i, j in self.test_jitter: #TODO remove the loop if using double dict struct
+                if args.dataset == "cifar10":
+                    self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                    # self.test_acc_dict = {f"{hue:.4f}": {f"{sat:.4f}": torchmetrics.Accuracy(task="multiclass", num_classes=10) for sat in sat_jitter} for hue in hue_jitter}
+                elif args.dataset == "flowers102":
+                    self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+                    # self.test_acc_dict = {f"{hue:.4f}": {f"{sat:.4f}": torchmetrics.Accuracy(task="multiclass", num_classes=102) for sat in sat_jitter} for hue in hue_jitter}
+                elif args.dataset == "stl10":
+                    self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                    # self.test_acc_dict = {f"{hue:.4f}": {f"{sat:.4f}": torchmetrics.Accuracy(task="multiclass", num_classes=10) for sat in sat_jitter} for hue in hue_jitter}
+                else:
+                    raise NotImplementedError
         else:
             for i in self.test_jitter:
                 if args.dataset == "cifar10":
@@ -293,6 +323,7 @@ class PL_model(pl.LightningModule):
                     # Img in RGB space
                     x = adjust_saturation(x, i)
             elif self.sat_shift and self.hue_shift:
+                hue_val, sat_val = i[0], i[1]
                 raise NotImplementedError #TODO test_jitter for combinations of hue and saturation perhaps make it a tuple in this case
                 #TODO keep hsv_test in mind here
             else:
@@ -306,15 +337,23 @@ class PL_model(pl.LightningModule):
                 
             # Normalize images.
             if self.args.normalize:
-                x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=True if self.lab else False) #TODO convert to hsv around here
+                x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv)
 
             # Forward pass and compute loss.
             y_pred = self.model(x)
 
             # Logging.
-            self.test_acc_dict["test_acc_{:.4f}".format(i)].update(
+            if self.hue_shift and self.sat_shift:
+                self.test_acc_dict[f"test_acc_{i[0]:.4f}_{i[1]:.4f}"].update(
                 y_pred.detach().cpu(), y.cpu()
-            )
+            ) #TODO change depending on using double dict struct
+            #     self.test_acc_dict[f"{i[0]:.4f}"][f"{i[1]:.4f}"].update(
+            #     y_pred.detach().cpu(), y.cpu()
+            # )
+            else:
+                self.test_acc_dict["test_acc_{:.4f}".format(i)].update(
+                    y_pred.detach().cpu(), y.cpu()
+                )
 
             # If no hue shift, log predictions and ground truth.
             if int(i) == 0:
@@ -325,6 +364,9 @@ class PL_model(pl.LightningModule):
         
     def test_epoch_end(self, outputs):
         # Log metrics and predictions, and reset metrics. #TODO adjust this func for sat possibly and both hue and sat?
+        if self.sat_shift and self.hue_shift:
+            raise NotImplementedError
+
         table = {"hue": [],
                  "acc": []}
         columns = ["hue", "acc"]
