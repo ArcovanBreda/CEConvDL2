@@ -90,7 +90,7 @@ $$\begin{align}
 [f \star \psi^i](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{c=1}^{C^l}f_c(y) \cdot H_n(k)\psi_c^i(y - x) & \qquad \qquad (\text{Equation 6})\\ 
 \end{align}$$
 
-For the derivation of the equivariance of the CEConv layer, we refer to the original paper BRON.
+For the derivation of the equivariance of the CEConv layer, we refer to the original paper \[6\].
 
 For the hidden layers, the feature map $[f \star \psi]$ is a function on $G$ parameterized by x,k. The CEConv hidden layers are defined as:
 
@@ -131,9 +131,9 @@ Two models were tested. The Z2CNN, a vanilla CNN model, consists of 25,990 train
 <!-- ![Longtailed dataset results](blogpost_imgs/Longtailed.png) -->
 <div align="center">
   <img src="blogpost_imgs/Longtailed.png" alt="Longtailed dataset results" width="600">
-</div>
 
-*Figure 1: ...*
+  *Figure 1: ...*
+</div>
 
 The figure is ordered in the availability of training samples for every class. Performance of the shape-sharing CECNN consistently outperforms the baseline Z2CNN, where the average performance of the Z2CNN is 68.8% $\pm$ 0.6% and for the CECNN is 85.2 $\pm$ 1.2%. Most performance increase is seen in classes where little training data is provided thus confirming the hypothesis that the CECNN is able to share shape weight information effectively. These results are in line with the findings of the original authors which also describe a large performance increase. A difference in findings is the std of the CECNN which is larger than that of the Z2CNN however, this could be due to the randomness in data generation* which resulted in a different data distribution for our experiment.
 
@@ -144,16 +144,16 @@ The figure is ordered in the availability of training samples for every class. P
 <!---
 TODO: in which stages is color equivariance useful (figure 3 about color selective datasets)
 --->
-Color selectivity is defined as: “Color selectivity is the property of a neuron that activates highly when a particular color appears in the input image and, in contrast, shows low activation when this color is not present.” BRON. The authors of the original paper utilize this notion to define color selectivity of a dataset. Namely, they computed the color selectivity as an average of all neurons in the baseline CNN trained on the respective dataset. We reproduced the experiment to investigate the influence of using color equivariance up to late stages. Due to computational constraints, only two of the four datasets were explored; flowers102 with the highest color selectivity (0.70) and STL10 with the lowest color selectivity (0.38). While we did not explore the remaining datasets extensively, their color selectivity was comparable to STL10, suggesting that our findings are inclusive for the additional datasets.
+Color selectivity is defined as: “Color selectivity is the property of a neuron that activates highly when a particular color appears in the input image and, in contrast, shows low activation when this color is not present.” \[7\]. The authors of the original paper utilize this notion to define color selectivity of a dataset. Namely, they computed the color selectivity as an average of all neurons in the baseline CNN trained on the respective dataset. We reproduced the experiment to investigate the influence of using color equivariance up to late stages. Due to computational constraints, only two of the four datasets were explored; flowers102 with the highest color selectivity (0.70) and STL10 with the lowest color selectivity (0.38). While we did not explore the remaining datasets extensively, their color selectivity was comparable to STL10, suggesting that our findings are inclusive for the additional datasets.
 
 In Figure 2, the accuracy improvement of color equivariance up to later stages in the network are displayed for both mentioned datasets. The baseline is the ResNet18 model with one rotation (equivariance up to 0 stages). For the other values, HybridResNet18 models are trained with 3 rotations, max pooling, separable kernels and the number of color equivariant stages as shown in the figure. Additionally, the graph on the right shows the result with color-jitter augmentation.
 
 <!-- ![Color selectivity results](blogpost_imgs/color_selectivity.png) -->
 <div align="center">
   <img src="blogpost_imgs/color_selectivity.png" alt="Color selectivity results" width="600">
-</div>
 
-*Figure 2: Influence of color equivariance embedded up to late stages in the network on datasets with high and low color selectivity.*
+  *Figure 2: Influence of color equivariance embedded up to late stages in the network on datasets with high and low color selectivity.*
+</div>
 
 Similar to the original paper’s results, the color selective dataset seems to benefit from color equivariance up to later stages in the network, in contrast to the less color selective dataset. This is especially clear for the graph with color-jitter augmentation. However, the color selectivity seems detrimental at the earlier stages without color-jitter augmentation for the color selective dataset. In general, the accuracy improvements/deteriorations are less extreme compared to the original results. The differences might be explained by the fact that we trained the model on the full datasets instead of on a subset. By our results, we suspect that color equivariance is solely significantly beneficial for color selective datasets in combination with color-jitter augmentation. Otherwise, the differences are negligible. 
 
@@ -169,6 +169,8 @@ In our evaluation of image classification performance, we utilized the flowers-1
 
 <div align="center">
   <img src="blogpost_imgs/Test-time_Hue_Shifts.png" alt="Classification Test-time Hue Shifts" width="600">
+
+  *Figure 3: ...*
 </div>
 
 In the figure presented, both the baseline ResNet and the CE-ResNet demonstrate good performance when no hue shift is applied (Test-time hue shift = 0). The CE-ResNet displays optimal performance in three specific hue areas, which reflects the orientations it is trained on. Moreover, the CE-ResNet consistently maintains performance levels above or equal to the original ResNet across almost all hue shifts, indicating its dominance across distributional changes.
@@ -179,7 +181,32 @@ Comparing training and testing times, the baseline model completes its training 
 
 #### Number of Rotations
 
+<!---
 TODO: the impact of the number of hue rotations (figure 13)
+--->
+The main implementation of the color-equivariance consists of adding three rotations of 120 degrees and the baseline model (not-equivariant) can be expressed as having 1 rotation. In Figure 4, we reproduced the experiments examining what happens with additional rotations. In order to save computational power, we limited the experiments to 1, 5 and 10 rotations (instead of 1-10 in the original paper). Nonetheless, the trends are the same.
+
+<div align="center">
+  <img src="blogpost_imgs/rotations.png" alt="Hue rotations" width="600">
+
+  *Figure 4: Accuracy with varying rotations.*
+</div>
+
+The lines in the plot are not smooth because it has only been evaluated on 37 points. Nonetheless, the trends are similar to the original paper’s findings. The number of peaks aligns with the number rotations, additionally the height of the peaks decreases as the number of rotations increases. However, the peaks have different heights which might be attributed to the reprojection into the RGB cube range. Based on these results it seems that more rotations lead to higher equivariance. These results lead to a trade-off between the amount of equivariance, the maximum accuracy and the number of parameters as displayed in Table 1.
+
+<center>
+
+| Number of Rotations        | Number of Parameters     | Max. Accuracy    |
+|--------------|-----------|-----------|
+| 1 | 11.2 M  | 70.3%  |
+| 5 | 11.6 M  | 72.4%  |
+| 10 | 11.8 M  | 74.6%  |
+
+*Table 1: Parameter and maximum accuracy increase based on number of rotations.*
+</center>
+
+#### Jitter
+
 
 ## Further Research
 
@@ -211,5 +238,12 @@ W. Rawat and Z. Wang, "Deep Convolutional Neural Networks for Image Classificati
 
 <a id="1">[5]</a>
 Cohen, T. &amp; Welling, M.. (2016). Group Equivariant Convolutional Networks. <i>Proceedings of The 33rd International Conference on Machine Learning</i>, in <i>Proceedings of Machine Learning Research</i> 48:2990-2999 Available from https://proceedings.mlr.press/v48/cohenc16.html.
+
+<a id="1">[6]</a>
+Lengyel, A., Strafforello, O., Bruintjes, R. J., Gielisse, A., & van Gemert, J. (2024). Color Equivariant Convolutional Networks. Advances in Neural Information Processing Systems, 36.
+
+<a id="1">[7]</a>
+Ivet Rafegas and Maria Vanrell. Color encoding in biologically-inspired convolutional neural  networks. Vision Research, 151:7–17, 2018. Color: cone opponency and beyond.
+
 
 
