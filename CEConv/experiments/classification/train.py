@@ -56,8 +56,8 @@ class PL_model(pl.LightningModule):
 
         # Store accuracy metrics for testing.
         self.test_acc_dict = {}
-        self.test_rotations = 37
-        self.test_saturations = 50
+        self.test_rotations = 25 #TODO originally 37 but takes really long when both hue and saturation equivariance
+        self.test_saturations = 25 #TODO originally 50 but takes really long when both hue and saturation equivariance
         self.test_jitter = np.linspace(-0.5, 0.5, self.test_rotations)
         self.hue_shift, self.sat_shift = False, False
 
@@ -121,16 +121,13 @@ class PL_model(pl.LightningModule):
 
         # Create test dict
         if args.sat_shift and args.hue_shift:
-            for i, j in self.test_jitter: #TODO remove the loop if using double dict struct
+            for i, j in self.test_jitter:
                 if args.dataset == "cifar10":
                     self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
-                    # self.test_acc_dict = {f"{hue:.4f}": {f"{sat:.4f}": torchmetrics.Accuracy(task="multiclass", num_classes=10) for sat in sat_jitter} for hue in hue_jitter}
                 elif args.dataset == "flowers102":
                     self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
-                    # self.test_acc_dict = {f"{hue:.4f}": {f"{sat:.4f}": torchmetrics.Accuracy(task="multiclass", num_classes=102) for sat in sat_jitter} for hue in hue_jitter}
                 elif args.dataset == "stl10":
                     self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
-                    # self.test_acc_dict = {f"{hue:.4f}": {f"{sat:.4f}": torchmetrics.Accuracy(task="multiclass", num_classes=10) for sat in sat_jitter} for hue in hue_jitter}
                 else:
                     raise NotImplementedError
         else:
@@ -337,10 +334,8 @@ class PL_model(pl.LightningModule):
             if self.hue_shift and self.sat_shift:
                 self.test_acc_dict[f"test_acc_{i[0]:.4f}_{i[1]:.4f}"].update(
                 y_pred.detach().cpu(), y.cpu()
-            ) #TODO change depending on using double dict struct
-            #     self.test_acc_dict[f"{i[0]:.4f}"][f"{i[1]:.4f}"].update(
-            #     y_pred.detach().cpu(), y.cpu()
-            # )
+            )
+
                 # If no hue shift or sat shift, log predictions and ground truth. #TODO check this one and the one below
                 if (int(i[0]) == 0 and int(i[1]) == 0 and self.hsv_test) or (int(i[0]) == 0 and int(i[1]) == 1):
                     self.preds = torch.cat(
