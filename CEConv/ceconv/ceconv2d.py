@@ -18,8 +18,8 @@ def _trans_input_filter_hsv(weights, out_rotations, hue_shift, sat_shift) -> tor
         hue_shift: Bool, signaling whether or not to perform a hue shift on the filter
         sat_shift: Bool, signaling whether or not to perform a saturation shift on the filter
     """
-    if not hue_shift and not sat_shift:
-        raise ValueError("Flag hue_shift, sat_shift or both -> Cant be left empty in hsv_space")
+    if not hue_shift and not sat_shift and out_rotations < 2:
+        raise ValueError("Flag hue_shift, sat_shift or both -> Cant be left empty in hsv_space with more than identity rotation")
     if sat_shift:
         neg_sats = out_rotations // 2
         pos_sats = neg_sats - 1 + out_rotations % 2
@@ -429,7 +429,6 @@ class CEConv2d(nn.Conv2d):
         square = sum([self.hue_shift, self.sat_shift, self.val_shift])
         if square == 0 :
             square = 1
-
         tw_shape = (
             self.out_channels * (self.out_rotations ** square),
             self.in_channels * self.in_rotations,

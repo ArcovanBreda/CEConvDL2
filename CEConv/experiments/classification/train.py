@@ -143,7 +143,8 @@ class PL_model(pl.LightningModule):
             raise Exception("Can only work in one of HSV and lab space!")
         if args.lab and (args.hue_shift or args.sat_shift or args.val_shift):
             raise Exception("Lab space only does hue equivariance. No need to provide a type of shift.")
-        if args.hsv and not args.hue_shift and not args.sat_shift and not args.val_shift:
+        # Baseline HSV is allowed
+        if args.hsv and not args.hue_shift and not args.sat_shift and not args.val_shift and args.rotations > 1:
             raise Exception("Please provide either --hue_shift, --sat_shift, --val_shift or combination when working in HSV.")
         if (args.hue_shift or args.sat_shift or args.val_shift) and not args.hsv:
             raise Exception("Please provide --hsv when providing --hue/sat/value_shift!")
