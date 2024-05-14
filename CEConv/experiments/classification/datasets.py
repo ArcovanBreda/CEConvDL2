@@ -76,7 +76,6 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
 
     # Fix seed
     torch.manual_seed(args.seed)
-
     # Define transformations
     if "cifar" in args.dataset:
         # Small size images.

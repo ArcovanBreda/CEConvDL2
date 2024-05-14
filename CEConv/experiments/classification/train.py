@@ -377,7 +377,7 @@ def main(args) -> None:
         run_name += "-" + args.run_name
     mylogger = pl_loggers.WandbLogger(  # type: ignore
         entity="rens-uva-org",
-        project="DL2 CEConv-test",
+        project="DL2 CEConv",
         config=vars(args),
         name=run_name,
         save_dir=os.environ["WANDB_DIR"],

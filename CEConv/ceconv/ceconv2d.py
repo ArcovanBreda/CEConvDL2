@@ -112,11 +112,10 @@ def _shifted_img_stack(imgs, out_rotations, hue_shift, sat_shift, val_shift):
     if val_shift:
         neg_sats = out_rotations // 2
         pos_sats = neg_sats - 1 + out_rotations % 2
-        val_shifts = np.append(np.linspace(-1, 0, neg_sats+1)[:-1], np.linspace(0, 1, pos_sats+1))
+        val_shifts = np.append(np.linspace(-0.5, 0, neg_sats+1)[:-1], np.linspace(0, 1, pos_sats+1))
 
     for i in range(out_rotations):
         imgs_cloned = imgs.clone()
-
         if hue_shift:
             # For rotation i of the group -> with an angle: i/out_rotations * 2 pi
             # Add this hue angle to the input image
@@ -130,15 +129,13 @@ def _shifted_img_stack(imgs, out_rotations, hue_shift, sat_shift, val_shift):
             # Restrict the sat channel to fall within the required 0-1 range
             temp = torch.clip(temp, min=0, max=1)
             imgs_cloned[:, 1:2, :, :] = temp
-        if sat_shift:
+        if val_shift:
             # Add the corresponding sat shift to the input image
-            temp = imgs[:, 2:3, :, :] + sat_shifts[i]
+            temp = imgs[:, 2:3, :, :] + val_shifts[i]
             # Restrict the sat channel to fall within the required 0-1 range
             temp = torch.clip(temp, min=0, max=1)
             imgs_cloned[:, 2:3, :, :] = temp
-
         imgs_stacked.append(imgs_cloned)
-
     # Concatenate the hue / sat shifted images to create the final image stack
     hue_shifted_img_stack = torch.cat(imgs_stacked, dim=1)
 
