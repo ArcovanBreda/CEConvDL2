@@ -12,3 +12,6 @@ scipy
 # For lab colour space
 scikit-image
 kornia
+# For saturation shift in HSV
+einops
+pytz
