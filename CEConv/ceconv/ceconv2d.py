@@ -459,7 +459,7 @@ class CEConv2d(nn.Conv2d):
 
                 # Create image stack of Hue or Sat shifted images
                 # TODO FIX DAT DIT out_rot * out_rot image stack maakt ipv out_rot voor hue en sat shift (nu combineerd hij "zonder double loop")
-                input = _shifted_img_stack(input, self.out_rotations, self.hue_shift, self.sat_shift)
+                input = _shifted_img_stack(input, self.out_rotations, self.hue_shift, self.sat_shift, self.val_shift)
 
         y = F.conv2d(
             input, weight=tw, bias=None, stride=self.stride, padding=self.padding

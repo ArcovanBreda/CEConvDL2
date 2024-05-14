@@ -83,7 +83,7 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
         tr_train = T.Compose(
             [
                 T.ColorJitter(
-                    brightness=0,
+                    brightness=args.value_jitter,
                     contrast=0,
                     saturation=args.sat_jitter,
                     hue=args.jitter,
@@ -99,7 +99,7 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
         tr_train = T.Compose(
             [
                 T.ColorJitter(
-                    brightness=0,
+                    brightness=args.value_jitter,
                     contrast=0,
                     saturation=args.sat_jitter,
                     hue=args.jitter,

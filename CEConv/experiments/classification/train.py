@@ -363,6 +363,8 @@ def main(args) -> None:
         run_name += "-value_shift"  
     if args.sat_jitter:
         run_name += f"-sat_jitter_{args.sat_jitter[0]}_{args.sat_jitter[1]}"
+    if args.value_jitter:
+        run_name += f"-sat_jitter_{args.value_jitter[0]}_{args.value_jitter[1]}"
     if args.img_shift:
         run_name += "-img_shift"
     if args.grayscale:
@@ -375,7 +377,7 @@ def main(args) -> None:
         run_name += "-" + args.run_name
     mylogger = pl_loggers.WandbLogger(  # type: ignore
         entity="rens-uva-org",
-        project="DL2 CEConv",
+        project="DL2 CEConv-test",
         config=vars(args),
         name=run_name,
         save_dir=os.environ["WANDB_DIR"],
@@ -463,7 +465,10 @@ if __name__ == "__main__":
         "--jitter", type=float, default=0.0, help="color jitter strength"
     )
     parser.add_argument(
-        "--sat_jitter", type=int, nargs=2, default=(1, 1), help="saturation jitter factor chosen uniformly on [i, j]. Default is identity saturation"
+        "--sat_jitter", type=int, nargs=2, default=(1, 1), help="Saturation jitter factor chosen uniformly on [i, j]. Default is identity saturation"
+    )
+    parser.add_argument(
+        "--value_jitter", type=int, nargs=2, default=(1, 1), help="Value jitter factor chosen uniformly on [i, j]. Default is identity saturation"
     )
     parser.add_argument(
         "--nonorm", dest="normalize", action="store_false", help="no input norm."
