@@ -16,7 +16,7 @@ plt.plot(x, y_norm_jitter, label="RGB norm + Jitter", ls="--")
 plt.plot(x, y_nonorm_jitter, label="No norm + Jitter", ls="--")
 # plt.plot(x, y_norm_remainder1, label="RGB norm + remained 1", ls="dotted")
 
-plt.title("Hue equivaraiant network trainend in HSV color space\nFlowers-102 dataset [Hue-shift on Image - 120 degree rotations]", fontsize=22)
+plt.title("Hue equivariant network trainend in HSV color space\nFlowers-102 dataset [Hue-shift on Image - 120 degree rotations]", fontsize=22)
 plt.ylabel("Test accuracy (%)", fontsize=18)
 plt.yticks(fontsize=16,)
 plt.xlabel("Test-time hue shift (°)", fontsize=18)
