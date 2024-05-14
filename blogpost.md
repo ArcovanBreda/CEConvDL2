@@ -157,7 +157,16 @@ We will now explore the reproduction of a variation on the main results along wi
 
 #### Image Classification
 
-TODO: color equivariant cnns versus vanilla cnns (table 1 but then figure 9)
+In our evaluation of image classification performance, we utilized the flowers-102 dataset due to its most prominent color dependency across the datasets evaluated by the original authors. Our study involved training a baseline ResNet-18 model comprising approximately 11,390,000 parameters, alongside the novel color equivariant CE-ResNet trained with three rotations. Both models underwent training with and without jitter, augmenting the training data with varying hue-intensity images. Subsequently, we assessed their performance on test sets subjected to gradual hue shifts ranging from -180° to 180°.
+
+![Classification Test-time Hue Shifts](blogpost_imgs/Test-time_Hue_Shifts.png)
+
+
+In the figure presented, both the baseline ResNet and the CE-ResNet demonstrate good performance when no hue shift is applied (Test-time hue shift = 0). The CE-ResNet displays optimal performance in three specific hue areas, which reflects the orientations it is trained on. Moreover, the CE-ResNet consistently maintains performance levels above or equal to the original ResNet across almost all hue shifts, indicating its dominance across distributional changes.
+
+When trained with jitter, both models exhibit robustness against distributional shifts, in line with the original authors findings, with the CE-ResNet-18 showing slightly better performance. This advantage is attributed to more efficiency in weight sharing, entailing more information can possibly be stored about other features. These models did take around 6 times as long to train than the non-jittered models. The extended training duration of these models can be attributed to the convoluted sampling process involved in generating jittered images.
+
+Comparing training and testing times, the baseline model completes its training approximately 50% faster than the CEConv model. Testing time took around 2.3 times as long for the novel CEConv model. This indicates a significant speed advantage for production with the baseline model, albeit with a slight sacrifice in performance due to the non-utilization of CEConv.
 
 #### Number of Rotations
 
