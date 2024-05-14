@@ -214,7 +214,9 @@ def evaluate_classify(path="/home/arco/Downloads/Master AI/CEConvDL2/output/clas
                     resume=True,
                     normalize = not no_norm,
                     separable=seperable,
-                    width=width
+                    width=width,
+                    lab_test=False,
+                    lab=False,
     )
 
     run_name = "{}-{}_{}-{}-jitter_{}-split_{}-seed_{}".format(
@@ -255,3 +257,5 @@ def evaluate_classify(path="/home/arco/Downloads/Master AI/CEConvDL2/output/clas
     _, testloader = get_dataset(args)
     trainer.test(model, dataloaders=testloader, verbose=False)
     return model.results
+
+print(evaluate_classify("/home/arco/Downloads/Master AI/CEConvDL2/CEConv/output/flowers102-resnet18_10-true-jitter_0_0-split_1_0-seed_0.pth.tar.ckpt"))

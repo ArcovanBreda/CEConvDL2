@@ -128,7 +128,10 @@ To verify that color equivariance can share shape information across classes, we
 
 Two models were tested. The Z2CNN, a vanilla CNN model, consists of 25,990 trainable parameters whereas the CECNN model consists of 25,207 trainable parameters, This is because the width of the CECNN is smaller. This is to ensure that the same amount of GPU memory is required to train the models, which was a priority of the original authors to have a level comparison. However, the training time of the two models differed significantly with the Z2CNN model training 59% $\pm$ 4 faster than the CECNN network. The exact training method and performance can be seen in the provided notebook. 
 
-![Longtailed dataset results](blogpost_imgs/Longtailed.png)
+<!-- ![Longtailed dataset results](blogpost_imgs/Longtailed.png) -->
+<div align="center">
+  <img src="blogpost_imgs/Longtailed.png" alt="Longtailed dataset results" width="600">
+</div>
 
 *Figure 1: ...*
 
@@ -145,7 +148,10 @@ Color selectivity is defined as: “Color selectivity is the property of a neuro
 
 In Figure 2, the accuracy improvement of color equivariance up to later stages in the network are displayed for both mentioned datasets. The baseline is the ResNet18 model with one rotation (equivariance up to 0 stages). For the other values, HybridResNet18 models are trained with 3 rotations, max pooling, separable kernels and the number of color equivariant stages as shown in the figure. Additionally, the graph on the right shows the result with color-jitter augmentation.
 
-![Color selectivity results](blogpost_imgs/color_selectivity.png)
+<!-- ![Color selectivity results](blogpost_imgs/color_selectivity.png) -->
+<div align="center">
+  <img src="blogpost_imgs/color_selectivity.png" alt="Color selectivity results" width="600">
+</div>
 
 *Figure 2: Influence of color equivariance embedded up to late stages in the network on datasets with high and low color selectivity.*
 
@@ -157,7 +163,19 @@ We will now explore the reproduction of a variation on the main results along wi
 
 #### Image Classification
 
-TODO: color equivariant cnns versus vanilla cnns (table 1 but then figure 9)
+In our evaluation of image classification performance, we utilized the flowers-102 dataset due to its most prominent color dependency across the datasets evaluated by the original authors. Our study involved training a baseline ResNet-18 model comprising approximately 11,390,000 parameters, alongside the novel color equivariant CE-ResNet trained with three rotations. Both models underwent training with and without jitter, augmenting the training data with varying hue-intensity images. Subsequently, we assessed their performance on test sets subjected to gradual hue shifts ranging from -180° to 180°.
+
+<!-- ![Classification Test-time Hue Shifts](blogpost_imgs/Test-time_Hue_Shifts.png) -->
+
+<div align="center">
+  <img src="blogpost_imgs/Test-time_Hue_Shifts.png" alt="Classification Test-time Hue Shifts" width="600">
+</div>
+
+In the figure presented, both the baseline ResNet and the CE-ResNet demonstrate good performance when no hue shift is applied (Test-time hue shift = 0). The CE-ResNet displays optimal performance in three specific hue areas, which reflects the orientations it is trained on. Moreover, the CE-ResNet consistently maintains performance levels above or equal to the original ResNet across almost all hue shifts, indicating its dominance across distributional changes.
+
+When trained with jitter, both models exhibit robustness against distributional shifts, in line with the original authors findings, with the CE-ResNet-18 showing slightly better performance. This advantage is attributed to more efficiency in weight sharing, entailing more information can possibly be stored about other features. These models did take around 6 times as long to train than the non-jittered models. The extended training duration of these models can be attributed to the convoluted sampling process involved in generating jittered images.
+
+Comparing training and testing times, the baseline model completes its training approximately 50% faster than the CEConv model. Testing time took around 2.3 times as long for the novel CEConv model. This indicates a significant speed advantage for production with the baseline model, albeit with a slight sacrifice in performance due to the non-utilization of CEConv.
 
 #### Number of Rotations
 

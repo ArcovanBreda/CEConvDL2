@@ -56,12 +56,12 @@ class PL_model(pl.LightningModule):
 
         # Store accuracy metrics for testing.
         self.test_acc_dict = {}
-        self.test_rotations = 37
+        self.test_rotations = 111#37
         self.test_jitter = np.linspace(-0.5, 0.5, self.test_rotations)
-        self.hue_shift, self.sat_shift = False, False
-        self.lab_test = args.lab_test
-
-        # Hue shift in lab space
+        if hasattr(self.args, 'lab_test'):
+            self.lab_test = args.lab_test
+        else:
+            self.lab_test = False
         if self.lab_test:
             angle_delta =  2 * math.pi / self.test_rotations
             self.lab_angle_matrix = torch.tensor(
@@ -302,8 +302,8 @@ class PL_model(pl.LightningModule):
                 x = rgb2hsv.forward(None, x)
                 
             # Normalize images.
-            if self.normalize:
-                x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv)
+            if self.args.normalize:
+                x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=True if self.lab else False) #TODO convert to hsv around here
 
             # Forward pass and compute loss.
             y_pred = self.model(x)
