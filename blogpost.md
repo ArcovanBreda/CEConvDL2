@@ -4,25 +4,37 @@
 
 ---
 
+<!--
 TODO: Introduction text
+--->
+In this blogpost, we discuss, analyze and extend upon the findings of the paper titled *Color Equivariant Convolutional Networks*\[main\]. The paper introduces Color Equivariant Convolutions (CEConvs) by leveraging parameter sharing over hue-shifts. The authors demonstrate the benefits of the novel model in terms of robustness to color alterations and accuracy performance.
+The objectives of this blogpost are to:
+
+1. Discuss the methods introduced in the paper
+1. Verify the authors' claims
+1. Extend the notion of color equivariance to other dimensions beyond hue
 
 ---
 
-## Color for Classification
+## Introduction
 
 <!---
 TODO: Text about the influence of color on classification (related work: color invariance)
 --->
-Color is an important feature for recognition/classification by humans. One example is investiged by \[1\], who found that color facilitates expert bird-watchers in faster and more accurate recognition at both high (family) and low (specimen) levels of bird recognition. The convolutional layers in a Convolutional Neural Network (CNN) exhibit color representation similar to the human vision system \[2\]: all layers contain color selective neurons. Color representations are present at three different levels: in single neurons, in double neurons for edge detection and in combination with shape at all levels in the network. 
+Color is a crucial feature for recognition and classification by humans. For example, a study by \[bird\] found that color facilitates expert bird-watchers in faster and more accurate recognition at both high (family) and low (specimen) levels of bird identification. Similarly, the convolutional layers in a Convolutional Neural Network (CNN) exhibit color representation akin to the human vision system \[human_vision\] with all layers containing color selective neurons. These color representations are present at three different levels: in single neurons, in double neurons for edge detection and in combination with shape at all levels in the network.
 
-Although color invariance has been achieved in various research, such as in facial recognition to mitigate the influence of lightning conditions \[3\], some classification problems might be color dependent. Therefore, instead of training CNNs to classify images despite their color (invariance), classifying images because of their color (equivariance) might be more beneficial. Color equivariance can be achieved through group convolutions. 
+Although color invariance has been achieved in various research areas, such as in facial recognition to mitigate the influence of lightning conditions \[color_invariance\], some classification problems are color dependent. Therefore, instead of training CNNs to classify images regardless of their color (invariance), it might be more beneficial to classify images based on their color (equivariance). 
+
+The Color Equivariant Convolutions (CEConvs) introduced in \[main\] achieve this through equivariance to discrete hue shifts. The hue is represented in RGB space such that it can be expressed as a 3D rotation around the [1, 1, 1] axis. This approach utilizes group convolutions as introduced by \[group_convs\] which can be equivariant to 3D rotations. We reproduce the results showing the effects of the CEConvs on color-imbalanced and color-selective datasets, as well as their impact on image classification. We examine the ablation studies to understand the impact of data-augmentation and rotation on the CEConvs. Finally, we extend the notion of color equivariance beyond hue shifts.
+
+The most significant limitation of the CEConvs is that color equivariance is modeled as solely equivariance to hue shifts. By extending the notion to other dimensions, such as saturation equivariance, the CNN could achieve a higher level of equivariance, as saturation can handle a greater variety of changes in illumination. Additionally, by modeling hue shifts as 2D rotations compared to 3D rotations for the RGB space, we circumvent the limitation described in \[main\]. This limitation involves pixel values falling outside the RGB cube, requiring a reprojection operation and consequently only allowing for an approximation of hue equivariance for pixels near the border of the RGB cube.
 
 ## Recap on Group Equivariant Convolutions
 
 <!---
 TODO: Explain Group Equivariant Convolutions (technical)
 --->
-Deep Convolutional Neural Networks have been around since the late 1980s and over the years proven to be highly effective for image classification \[4\]. Empirical evidence shows the importance of depth for good performance and convolutional weight-sharing for parameter reduction. The latter is effective due to the translation symmetry inherent in most image data, whereby the data is roughly invariant to shifts, such that the same weights can be utilised to convolve different parts of the image \[5\]. Convolution layers are translation equivariant in a deep network: the output shifts relative to shifts in the input. This notion of symmetry can be extended to larger groups, including rotation.
+Deep Convolutional Neural Networks have been around since the late 1980s and over the years proven to be highly effective for image classification \[DCNN\]. Empirical evidence shows the importance of depth for good performance and convolutional weight-sharing for parameter reduction. The latter is effective due to the translation symmetry inherent in most image data, whereby the data is roughly invariant to shifts, such that the same weights can be utilised to convolve different parts of the image \[group_convs\]. Convolution layers are translation equivariant in a deep network: the output shifts relative to shifts in the input. This notion of symmetry can be extended to larger groups, including rotation.
 
 The generalization of translation equivariance is achieved through Group Convolutional Neural Networks (G-CNN). A CNN layer is equivariant to a group if for all transformations $g \in G$, doing the transformation $T_g$ on the input and then the feature mapping $\Phi (x)$ is similar to doing the feature mapping on the input and the transformation $T'_g$ thereafter: 
 
@@ -31,7 +43,7 @@ $$\begin{align*}
 \end{align*}$$
 
 where $T_g$ and $T'_g$ can be equivalent.
-We utilise the equation from \[5\] to show that G-CNNs are equivariant. Instead of shifting a filter, correlation in the first layer can be described more generally by replacing it with some transformation from group $G$, whereby $f$ is the input image and $\psi$ is the filter:
+We utilise the equation from \[group_convs\] to show that G-CNNs are equivariant. Instead of shifting a filter, correlation in the first layer can be described more generally by replacing it with some transformation from group $G$, whereby $f$ is the input image and $\psi$ is the filter:
 
 $$\begin{align*} 
 [f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_{k} f_k(y) \psi_{k}(g^{-1}y) & \qquad \qquad (\text{Equation 4})
@@ -90,7 +102,7 @@ $$\begin{align}
 [f \star \psi^i](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{c=1}^{C^l}f_c(y) \cdot H_n(k)\psi_c^i(y - x) & \qquad \qquad (\text{Equation 6})\\ 
 \end{align}$$
 
-For the derivation of the equivariance of the CEConv layer, we refer to the original paper \[6\].
+For the derivation of the equivariance of the CEConv layer, we refer to the original paper \[main\].
 
 For the hidden layers, the feature map $[f \star \psi]$ is a function on $G$ parameterized by x,k. The CEConv hidden layers are defined as:
 
@@ -144,7 +156,7 @@ The figure is ordered in the availability of training samples for every class. P
 <!---
 TODO: in which stages is color equivariance useful (figure 3 about color selective datasets)
 --->
-Color selectivity is defined as: “Color selectivity is the property of a neuron that activates highly when a particular color appears in the input image and, in contrast, shows low activation when this color is not present.” \[7\]. The authors of the original paper utilize this notion to define color selectivity of a dataset. Namely, they computed the color selectivity as an average of all neurons in the baseline CNN trained on the respective dataset. We reproduced the experiment to investigate the influence of using color equivariance up to late stages. Due to computational constraints, only two of the four datasets were explored; flowers102 with the highest color selectivity (0.70) and STL10 with the lowest color selectivity (0.38). While we did not explore the remaining datasets extensively, their color selectivity was comparable to STL10, suggesting that our findings are inclusive for the additional datasets.
+Color selectivity is defined as: “Color selectivity is the property of a neuron that activates highly when a particular color appears in the input image and, in contrast, shows low activation when this color is not present.” \[color_selectivity\]. The authors of the original paper utilize this notion to define color selectivity of a dataset. Namely, they computed the color selectivity as an average of all neurons in the baseline CNN trained on the respective dataset. We reproduced the experiment to investigate the influence of using color equivariance up to late stages. Due to computational constraints, only two of the four datasets were explored; flowers102 with the highest color selectivity (0.70) and STL10 with the lowest color selectivity (0.38). While we did not explore the remaining datasets extensively, their color selectivity was comparable to STL10, suggesting that our findings are inclusive for the additional datasets.
 
 In Figure 2, the accuracy improvement of color equivariance up to later stages in the network are displayed for both mentioned datasets. The baseline is the ResNet18 model with one rotation (equivariance up to 0 stages). For the other values, HybridResNet18 models are trained with 3 rotations, max pooling, separable kernels and the number of color equivariant stages as shown in the figure. Additionally, the graph on the right shows the result with color-jitter augmentation.
 
@@ -223,26 +235,26 @@ TODO: create a nice narrative with these three
 ## Authors' Contributions
 
 ## References
-<a id="1">[1]</a> 
+<a id="1">[bird]</a> 
 Simen Hagen, Quoc C. Vuong, Lisa S. Scott, Tim Curran, James W. Tanaka; The role of color in expert object recognition. Journal of Vision 2014;14(9):9. https://doi.org/10.1167/14.9.9.
 
-<a id="1">[2]</a> 
+<a id="1">[human_vision]</a> 
 Ivet Rafegas, Maria Vanrell; Proceedings of the IEEE International Conference on Computer Vision (ICCV), 2017, pp. 2697-2705 
 
-<a id="1">[3]</a> 
+<a id="1">[color_invariance]</a> 
 R. Rama Varior, G. Wang, J. Lu and T. Liu, "Learning Invariant Color Features for Person Reidentification," in IEEE Transactions on Image Processing, vol. 25, no. 7, pp. 3395-3410, July 2016, doi: 10.1109/TIP.2016.2531280.
 keywords: {Image color analysis;Lighting;Cameras;Histograms;Shape;Dictionaries;Robustness;Person re-identification;Illumination invariance;Photometric invariance;Color features;Joint learning;Person re-identification;illumination invariance;photometric invariance;color features;joint learning},
 
-<a id="1">[4]</a>
+<a id="1">[DCNN]</a>
 W. Rawat and Z. Wang, "Deep Convolutional Neural Networks for Image Classification: A Comprehensive Review," in Neural Computation, vol. 29, no. 9, pp. 2352-2449, Sept. 2017, doi: 10.1162/neco_a_00990. 
 
-<a id="1">[5]</a>
+<a id="1">[group_convs]</a>
 Cohen, T. &amp; Welling, M.. (2016). Group Equivariant Convolutional Networks. <i>Proceedings of The 33rd International Conference on Machine Learning</i>, in <i>Proceedings of Machine Learning Research</i> 48:2990-2999 Available from https://proceedings.mlr.press/v48/cohenc16.html.
 
-<a id="1">[6]</a>
+<a id="1">[main]</a>
 Lengyel, A., Strafforello, O., Bruintjes, R. J., Gielisse, A., & van Gemert, J. (2024). Color Equivariant Convolutional Networks. Advances in Neural Information Processing Systems, 36.
 
-<a id="1">[7]</a>
+<a id="1">[color_selectivity]</a>
 Ivet Rafegas and Maria Vanrell. Color encoding in biologically-inspired convolutional neural  networks. Vision Research, 151:7–17, 2018. Color: cone opponency and beyond.
 
 
