@@ -26,12 +26,42 @@ import time
 class PL_model(pl.LightningModule):
     def __init__(self, args) -> None:
         super(PL_model, self).__init__()
+        self.args = args
+        if hasattr(self.args, 'lab_test'):
+            self.lab_test = args.lab_test
+        else:
+            self.lab_test = False
+            args.lab_test = False
+
+        if hasattr(self.args, 'hue_shift'):
+            self.hue_shift = args.hue_shift
+        else:
+            self.hue_shift = False
+            args.hue_shift = False
+            args.hsv_test = False
+            args.hsv = False
+            args.lab = False
+            args.img_shift = False
+            args.value_jitter = False
+
+        if hasattr(self.args, 'sat_shift'):
+            self.sat_shift = args.sat_shift
+        else:
+            self.sat_shift = False
+            args.sat_shift = False
+
+        if hasattr(self.args, 'val_shift'):
+            self.val_shift = args.val_shift
+        else:
+            self.val_shift = False
+            args.val_shift = False
+
+        self.args = args
         self._check_input(args)
 
         # Logging.
         self.save_hyperparameters()
         self.lab = args.lab
-        self.args = args
         self.hsv = args.hsv
         self.hsv_test = args.hsv_test
         self.normalize = args.normalize
@@ -56,30 +86,10 @@ class PL_model(pl.LightningModule):
 
         # Store accuracy metrics for testing.
         self.test_acc_dict = {}
-        self.test_rotations = 25 #TODO originally 37 but takes really long when both hue and saturation equivariance
+        self.test_rotations = 37 #TODO originally 37 but takes really long when both hue and saturation equivariance
         self.test_saturations = 25 #TODO originally 50 but takes really long when both hue and saturation equivariance
         self.test_jitter = np.linspace(-0.5, 0.5, self.test_rotations)
         
-        if hasattr(self.args, 'lab_test'):
-            self.lab_test = args.lab_test
-        else:
-            self.lab_test = False
-
-        if hasattr(self.args, 'hue_shift'):
-            self.hue_shift = args.hue_shift
-        else:
-            self.hue_shift = False
-
-        if hasattr(self.args, 'sat_shift'):
-            self.sat_shift = args.sat_shift
-        else:
-            self.sat_shift = False
-
-        if hasattr(self.args, 'val_shift'):
-            self.val_shift = args.val_shift
-        else:
-            self.val_shift = False
-
         # Hue shift in lab space
         if self.lab_test:
             angle_delta =  2 * math.pi / self.test_rotations
@@ -183,7 +193,7 @@ class PL_model(pl.LightningModule):
         # Print model summary.
         resolution = 32 if args.architecture == "resnet44" else 224
         summary(self.model, (2, 3, resolution, resolution), device="cpu")
-    
+
     def _check_input(self, args):
         """
         Certain combinations of commandline arguments are not allowed.
@@ -346,7 +356,7 @@ class PL_model(pl.LightningModule):
                 x = rgb2lab.forward(None, x)
             elif self.hsv and not self.hsv_test:
                 x = rgb2hsv.forward(None, x)
-                
+
             # Normalize images.
             if self.args.normalize:
                 x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv)
@@ -377,7 +387,7 @@ class PL_model(pl.LightningModule):
                         (self.preds, F.softmax(y_pred, 1).detach().cpu()), 0
                     )
                     self.gts = torch.cat((self.gts, y.cpu()), 0)
-        
+
     def test_epoch_end(self, outputs):
         # Log metrics and predictions, and reset metrics.
         os.makedirs("output/test_results", exist_ok=True)

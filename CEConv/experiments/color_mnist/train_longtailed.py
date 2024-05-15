@@ -274,6 +274,8 @@ def main(args) -> None:
     model = PL_model(args)
     model.load_model()
     
+    np.savez(f"./CEConv/output/longtailed/{model_args.model_name}", class_acc=model.class_acc)
+    
     print("Best epoch:", model.best_epoch)
     print("Class accuracy:", model.class_acc)
 

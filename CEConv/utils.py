@@ -24,7 +24,8 @@ def plot_figure_2(data_dir, print_stats=False):
                   separable=False, 
                   ce_layers=7, 
                   steps_per_epoch=5, 
-                  model_name='longtailed-seed_0-rotations_1'),
+                  model_name='longtailed-seed_0-rotations_1',
+                  lab_test=False),
         Namespace(bs=256, 
                   test_bs=256, 
                   grayscale=False, 
@@ -39,7 +40,8 @@ def plot_figure_2(data_dir, print_stats=False):
                   separable=True, 
                   ce_layers=7, 
                   steps_per_epoch=5, 
-                  model_name='longtailed-seed_0-rotations_3'),
+                  model_name='longtailed-seed_0-rotations_3',
+                  lab_test=False),
     ]
 
     train = CustomDataset(
@@ -67,27 +69,24 @@ def plot_figure_2(data_dir, print_stats=False):
             model_args.model_name = f"longtailed-seed_{seed}-rotations_{model_args.rotations}"
 
             # Load the model
-            model = PL_model(model_args)
-            model.load_model()
+            class_acc = np.load(f"{data_dir}/output/longtailed/npz/{model_args.model_name}.npz")["class_acc"]
 
             # Append class accuracy to class_accs
             if model_args.rotations == 1:
-                class_accs[0].append(model.class_acc)
+                class_accs[0].append(class_acc)
             elif model_args.rotations == 3:
-                class_accs[1].append(model.class_acc)
+                class_accs[1].append(class_acc)
             else:
-                class_accs[2].append(model.class_acc)
+                class_accs[2].append(class_acc)
 
     # Compute the average class accuracy and standard deviation
     avg_class_acc = np.mean(class_accs, axis=1)
     std_dev = np.std(class_accs, axis=1)
-    
+
     avg_model_acc = np.mean(class_accs, axis=(1,2))
     std_dev_model = np.std(np.mean(class_accs, axis=2), axis=1)
-    
-    # print(np.array(class_accs).shape)
+
     print(f"model performances:\n\tZ2CNN: {avg_model_acc[0]:.3f}+/-{std_dev_model[0]:.3f}\n\tCECNN: {avg_model_acc[1]:.3f}+/-{std_dev_model[1]:.3f}")
-    # print(f"stds: {std_dev_model}")
 
     avg_class_acc = avg_class_acc[:, sort_idx]
     std_dev = std_dev[:, sort_idx]
@@ -101,7 +100,6 @@ def plot_figure_2(data_dir, print_stats=False):
 
     ax1.plot(labels, avg_class_acc[1, :], label='CECNN', color='forestgreen')
     ax1.fill_between(labels, avg_class_acc[1, :] - std_dev[1, :], avg_class_acc[1, :] + std_dev[1, :], color='forestgreen', alpha=0.2)
-
 
     # Plot samples per class
     ax1.grid(axis='both')
@@ -138,37 +136,24 @@ def plot_figure_2(data_dir, print_stats=False):
     return
 
 
-def plot_figure_9():
+def plot_figure_9(data_dir,verbose=False):
     from experiments.color_mnist.train_longtailed import PL_model, CustomDataset
 
-    hue_values = [
-    -0.5, -0.472222222222222, -0.444444444444444, -0.416666666666667, -0.388888888888889,
-    -0.361111111111111, -0.333333333333333, -0.305555555555556, -0.277777777777778, -0.25,
-    -0.222222222222222, -0.194444444444444, -0.166666666666667, -0.138888888888889, -0.111111111111111,
-    -0.0833333333333334, -0.0555555555555556, -0.0277777777777778, 0, 0.0277777777777778,
-    0.0555555555555556, 0.0833333333333333, 0.111111111111111, 0.138888888888889, 0.166666666666667,
-    0.194444444444444, 0.222222222222222, 0.25, 0.277777777777778, 0.305555555555555, 0.333333333333333,
-    0.361111111111111, 0.388888888888889, 0.416666666666667, 0.444444444444444, 0.472222222222222, 0.5
-    ]
-
-    checkpoints = ["/home/arco/Downloads/Master AI/CEConvDL2/output/classification/flowers102-resnet18_1-false-jitter_0_0-split_1_0-seed_0.pth.tar.ckpt",
-                   "/home/arco/Downloads/Master AI/CEConvDL2/output/classification/flowers102-resnet18_1-false-jitter_0_5-split_1_0-seed_0.pth.tar.ckpt",
-                   "/home/arco/Downloads/Master AI/CEConvDL2/output/classification/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0.pth.tar.ckpt",
-                   "/home/arco/Downloads/Master AI/CEConvDL2/output/classification/flowers102-resnet18_3-true-jitter_0_5-split_1_0-seed_0.pth.tar.ckpt"]
+    checkpoints = [f"{data_dir}/output/classification/flowers102-resnet18_1-false-jitter_0_0-split_1_0-seed_0.pth.tar.ckpt",
+                   f"{data_dir}/output/classification/flowers102-resnet18_1-false-jitter_0_5-split_1_0-seed_0.pth.tar.ckpt",
+                   f"{data_dir}/output/classification/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0.pth.tar.ckpt",
+                   f"{data_dir}/output/classification/flowers102-resnet18_3-true-jitter_0_5-split_1_0-seed_0.pth.tar.ckpt"]
     
-#     checkpoints = [[0.04602374508976936, 0.045047976076602936, 0.043584324419498444, 0.04651162773370743, 0.04586111381649971, 0.04228329658508301, 0.036916572600603104, 0.032037731260061264, 0.028947796672582626, 0.030248820781707764, 0.034802407026290894, 0.04683688282966614, 0.07058057934045792, 0.12701252102851868, 0.21092860400676727, 0.3407058119773865, 0.5132541656494141, 0.6563668847084045, 0.7025532722473145, 0.6407545804977417, 0.4532444179058075, 0.2693120837211609, 0.1771019697189331, 0.12408521771430969, 0.09773947298526764, 0.07513416558504105, 0.06017238646745682, 0.04976418986916542, 0.043584324419498444, 0.03984387591481209, 0.04212066903710365, 0.04521060362458229, 0.045373231172561646, 0.04439746215939522, 0.042933810502290726, 0.042933810502290726, 0.04602374508976936],
-#                    [0.7154008746147156, 0.714913010597229, 0.7142624855041504, 0.7163766622543335, 0.7180029153823853, 0.7186534404754639, 0.7199544906616211, 0.720767617225647, 0.7241827845573425, 0.7212554812431335, 0.7219060063362122, 0.7210928797721863, 0.7160513997077942, 0.7168645262718201, 0.714913010597229, 0.7142624855041504, 0.7201170921325684, 0.7217433452606201, 0.7248333096504211, 0.7243454456329346, 0.7232069969177246, 0.7219060063362122, 0.7222312688827515, 0.7209302186965942, 0.7175150513648987, 0.7158887386322021, 0.7152382731437683, 0.7163766622543335, 0.717677652835846, 0.7189787030220032, 0.7225565314292908, 0.7204423546791077, 0.7209302186965942, 0.7202796936035156, 0.7204423546791077, 0.7163766622543335, 0.7154008746147156],
-#                    [0.10765977948904037, 0.11709220707416534, 0.17645145952701569, 0.30818018317222595, 0.491136759519577, 0.6527890563011169, 0.70108962059021, 0.6319726705551147, 0.45373231172561646, 0.27402830123901367, 0.17726460099220276, 0.1279882937669754, 0.10765977948904037, 0.11709220707416534, 0.17645145952701569, 0.30818018317222595, 0.491136759519577, 0.6527890563011169, 0.70108962059021, 0.6319726705551147, 0.45373231172561646, 0.2741909325122833, 0.17726460099220276, 0.1279882937669754, 0.10765977948904037, 0.11709220707416534, 0.17645145952701569, 0.30818018317222595, 0.491136759519577, 0.6527890563011169, 0.70108962059021, 0.6319726705551147, 0.45373231172561646, 0.27402830123901367, 0.17726460099220276, 0.1279882937669754, 0.10765977948904037],
-#                    [0.7536184787750244, 0.7528053522109985, 0.751341700553894, 0.7550821304321289, 0.7557326555252075, 0.7606114745140076, 0.7612619996070862, 0.760123610496521, 0.7584972977638245, 0.7575215697288513, 0.75703364610672, 0.7544316053390503, 0.7536184787750244, 0.7528053522109985, 0.751341700553894, 0.7550821304321289, 0.7557326555252075, 0.7609367370605469, 0.7612619996070862, 0.759960949420929, 0.7584972977638245, 0.7575215697288513, 0.75703364610672, 0.754269003868103, 0.7536184787750244, 0.7528053522109985, 0.7515043020248413, 0.7550821304321289, 0.7557326555252075, 0.7607741355895996, 0.7612619996070862, 0.760123610496521, 0.7584972977638245, 0.7575215697288513, 0.75703364610672, 0.7544316053390503, 0.7536184787750244]
-# ]
     model_names = ["ResNet-18", "ResNet-18 + jitter",
                    "CE-ResNet-18 [Novel]", "CE-ResNet-18 + jitter [Novel]"]
     colors = [['mediumblue', "-"], ['mediumblue', "--"], ['darkorange', "-"], ['darkorange', "--"]]
     
 
     fig, ax = plt.subplots(figsize=(12, 6))
+    print("model performances:")
     for (checkpoint, name, color) in zip(checkpoints, model_names, colors):
-        results = evaluate_classify(checkpoint)
+        results = evaluate_classify(checkpoint, verbose=False)
+        print(f"\t\t {name}: {np.mean(results['acc']):.3f}")
         plt.plot(results["hue"], results["acc"], color[1], label=name, color=color[0], linewidth=3)
         # plt.plot(hue_values, checkpoint, color[1], label=name, color=color[0], linewidth=3)
 
@@ -185,7 +170,9 @@ def plot_figure_9():
     plt.show()
 
 
-def evaluate_classify(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classification/flowers102-resnet18_1-false-jitter_0_0-split_1_0-seed_0.pth.tar.ckpt", ce_stages=None, seperable=True, width=None):
+def evaluate_classify(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classification/flowers102-resnet18_1-false-jitter_0_0-split_1_0-seed_0.pth.tar.ckpt", 
+                      ce_stages=None, seperable=True, width=None, verbose=True,
+                      save_npz=True):
     import pytorch_lightning as pl
     from experiments.classification.datasets import get_dataset
     from pytorch_lightning import loggers as pl_loggers
@@ -194,6 +181,7 @@ def evaluate_classify(path="/home/arco/Downloads/Master AI/CEConvDL2/output/clas
     splitted = path.split("/")[-1].split("-")
     arch_rot = splitted[1].split("_")
     seed = splitted[5].split("_")[1]
+
     if len(seed.split(".")) != 1:
         seed = int(seed.split(".")[0])
     else:
@@ -217,6 +205,9 @@ def evaluate_classify(path="/home/arco/Downloads/Master AI/CEConvDL2/output/clas
                     width=width,
                     lab_test=False,
                     lab=False,
+                    value_jitter=(1,1),
+                    sat_jitter=(1,1),
+                    hsv=False
     )
 
     run_name = "{}-{}_{}-{}-jitter_{}-split_{}-seed_{}".format(
@@ -235,7 +226,18 @@ def evaluate_classify(path="/home/arco/Downloads/Master AI/CEConvDL2/output/clas
     if args.ce_stages is not None:
         run_name += "-{}_stages".format(args.ce_stages)
 
-    args.model_name=run_name    
+    args.model_name=run_name
+    
+    if save_npz:
+        try:
+            model = np.load(f'{"/".join(path.split("/")[:-1])}/npz/{run_name}.npz')
+            if verbose:
+                print("model already evaluated...")
+            return model
+        except Exception:
+            if verbose:
+                print("Could not find path, evaluating...")
+    
     mylogger = pl_loggers.WandbLogger(  # type: ignore
         project="DL2 CEConv",
         config=vars(args),
@@ -256,6 +258,8 @@ def evaluate_classify(path="/home/arco/Downloads/Master AI/CEConvDL2/output/clas
 
     _, testloader = get_dataset(args)
     trainer.test(model, dataloaders=testloader, verbose=False)
+    os.makedirs(f'{"/".join(path.split("/")[:-1])}/npz/', exist_ok=True)   
+    np.savez(file=f'{"/".join(path.split("/")[:-1])}/npz/{run_name}', hue=model.results["hue"], acc=model.results["acc"])
     return model.results
 
-print(evaluate_classify("/home/arco/Downloads/Master AI/CEConvDL2/CEConv/output/flowers102-resnet18_10-true-jitter_0_0-split_1_0-seed_0.pth.tar.ckpt"))
+# print(evaluate_classify("/home/arco/Downloads/Master AI/CEConvDL2/CEConv/output/flowers102-resnet18_10-true-jitter_0_0-split_1_0-seed_0.pth.tar.ckpt"))
