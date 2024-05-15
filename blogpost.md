@@ -49,26 +49,22 @@ $$\begin{align*}
 \[ f \star \psi \](g) = \sum_{y \in \mathbb{Z}^2}\sum_{k} f_k(y) \psi_{k}(g^{-1}y) & \qquad \qquad (\text{Equation 2})
 \end{align*}$$
 
-$$\begin{align*} 
-[f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_{k} f_k(y) \psi_{k}(g^{-1}y) & \qquad \qquad (\text{Equation 4})
-\end{align*}$$
-
 Since the feature map $f \star \psi$ is a function on G, the filters are functions on G for all layers after the first. The correlation then becomes:
 
 $$\begin{align} 
-[f \star \psi](g) = \sum_{h \in G}\sum_{k}f_k(h)\psi_{k}(g^{-1}h) & \qquad \qquad (\text{Equation 3})\\ 
+\[ f \star \psi \](g) = \sum_{h \in G}\sum_{k}f_k(h)\psi_{k}(g^{-1}h) & \qquad \qquad (\text{Equation 3})\\ 
 \end{align}$$
 
 Using the substition $h \rightarrow uh$ and the notation:
-$$\begin{align} [L_gf](x) = [f \circ g^{-1}](x) = f(g^{-1}x) & \qquad \qquad (\text{Equation 4})\end{align} $$
+$$\begin{align} \[ L_gf \](x) = [f \circ g^{-1}](x) = f(g^{-1}x) & \qquad \qquad (\text{Equation 4})\end{align} $$
 
 , the equivariance of the correlation can be derived such that a translation followed by a correlation is equivalent to a correlation followed by a translation:
 
 $$\begin{align} 
-[[L_uf] \star \psi](g) &= \sum_{h \in G}\sum_k f_k(u^{-1}h)\psi(g^{-1}h)\\ 
+\[\[L_uf\] \star \psi\](g) &= \sum_{h \in G}\sum_k f_k(u^{-1}h)\psi(g^{-1}h)\\ 
 &= \sum_{h \in G}\sum_kf(h)\psi(g^{-1}uh)\\
 &= \sum_{h \in G}\sum_kf(h)\psi((u^{-1}g)^{-1}h)\\
-&= [L_u[f \star \psi]](g) & \qquad \qquad (\text{Equation 5})\\
+&= \[L_u\[f \star \psi\]\](g) & \qquad \qquad (\text{Equation 5})\\
 \end{align}$$
 
 <!---
@@ -103,7 +99,7 @@ $$
 The group of discrete hue shifts is combined with the group of discrete 2D translations into the group $G = \mathbb{Z}^2 \times H_n$. Now Color Equivariant Convolution (CEConv) in the first layer is defined:
 
 $$\begin{align} 
-[f \star \psi^i](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{c=1}^{C^l}f_c(y) \cdot H_n(k)\psi_c^i(y - x) & \qquad \qquad (\text{Equation 6})\\ 
+\[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{c=1}^{C^l}f_c(y) \cdot H_n(k)\psi_c^i(y - x) & \qquad \qquad (\text{Equation 6})\\ 
 \end{align}$$
 
 For the derivation of the equivariance of the CEConv layer, we refer to the original paper \[main\].
@@ -111,7 +107,7 @@ For the derivation of the equivariance of the CEConv layer, we refer to the orig
 For the hidden layers, the feature map $[f \star \psi]$ is a function on $G$ parameterized by x,k. The CEConv hidden layers are defined as:
 
 $$\begin{align} 
-[f \star \psi^i](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{r=1}^n\sum_{c=1}^{C^l}f_c(y,r) \cdot \psi_c^i(y - x, (r-k)\%n) & \qquad \qquad (\text{Equation 7})\\ 
+\[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{r=1}^n\sum_{c=1}^{C^l}f_c(y,r) \cdot \psi_c^i(y - x, (r-k)\%n) & \qquad \qquad (\text{Equation 7})\\ 
 \end{align}$$
 
 <!---
