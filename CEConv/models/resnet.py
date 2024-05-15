@@ -98,7 +98,7 @@ class BasicBlock(nn.Module):
                 hsv_space=hsv_space,
                 sat_shift=sat_shift,
                 hue_shift=hue_shift,
-                val_shift=val_shift
+                val_shift=val_shift,
                 img_shift=img_shift,
             )
             self.conv2 = CEConv2d(
@@ -115,7 +115,7 @@ class BasicBlock(nn.Module):
                 hsv_space=hsv_space,
                 sat_shift=sat_shift,
                 hue_shift=hue_shift,
-                val_shift=val_shift
+                val_shift=val_shift,
                 img_shift=img_shift,
             )
             if stride != 1 or in_planes != self.expansion * planes:
@@ -133,7 +133,7 @@ class BasicBlock(nn.Module):
                         hsv_space=hsv_space,
                         sat_shift=sat_shift,
                         hue_shift=hue_shift,
-                        val_shift=val_shift
+                        val_shift=val_shift,
                         img_shift=img_shift,
                     ),
                     bnlayer(self.expansion * planes),
@@ -193,7 +193,7 @@ class Bottleneck(nn.Module):
                 hsv_space=hsv_space,
                 sat_shift=sat_shift,
                 hue_shift=hue_shift,
-                val_shift=val_shift
+                val_shift=val_shift,
                 img_shift=img_shift,
             )
             self.conv2 = CEConv2d(
@@ -210,7 +210,7 @@ class Bottleneck(nn.Module):
                 hsv_space=hsv_space,
                 sat_shift=sat_shift,
                 hue_shift=hue_shift,
-                val_shift=val_shift
+                val_shift=val_shift,
                 img_shift=img_shift,
             )
             self.conv3 = CEConv2d(
@@ -225,7 +225,7 @@ class Bottleneck(nn.Module):
                 hsv_space=hsv_space,
                 sat_shift=sat_shift,
                 hue_shift=hue_shift,
-                val_shift=val_shift
+                val_shift=val_shift,
                 img_shift=img_shift,
             )
 
@@ -244,7 +244,7 @@ class Bottleneck(nn.Module):
                         hsv_space=hsv_space,
                         sat_shift=sat_shift,
                         hue_shift=hue_shift,
-                        val_shift=val_shift
+                        val_shift=val_shift,
                         img_shift=img_shift,
                     ),
                     bnlayer(self.expansion * planes),
@@ -320,7 +320,7 @@ class ResNet(nn.Module):
                 hsv_space=hsv_space,
                 sat_shift=sat_shift,
                 hue_shift=hue_shift,
-                val_shift=val_shift
+                val_shift=val_shift,
                 img_shift=img_shift,
             )
             self.bn1 = nn.BatchNorm3d(channels[0])
@@ -355,7 +355,7 @@ class ResNet(nn.Module):
                     hsv_space=hsv_space,
                     sat_shift=sat_shift,
                     hue_shift=hue_shift,
-                    val_shift=val_shift
+                    val_shift=val_shift,
                     img_shift=img_shift,
                 )
             )

@@ -467,7 +467,7 @@ class CEConv2d(nn.Conv2d):
                     tw = tw.repeat(1,self.out_rotations,1,1)
 
                 # Create image stack of Hue or Sat shifted images
-                input = _shifted_img_stack(input, self.out_rotations, self.hue_shift, self.sat_shift)
+                input = _shifted_img_stack(input, self.out_rotations, self.hue_shift, self.sat_shift, self.val_shift)
 
         y = F.conv2d(
             input, weight=tw, bias=None, stride=self.stride, padding=self.padding
