@@ -1,4 +1,4 @@
-# Title
+# A deep dive into colorspace equivariant networks
 
 **Authors:** *S.R. Abbring, H.C. van den Bos, R. den Braber, A.J. van Breda, D. Zegveld*
 
