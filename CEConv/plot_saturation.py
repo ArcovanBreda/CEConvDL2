@@ -258,24 +258,27 @@ def plot_3d(paths_3d, saturations=50, rotations=37, filename="HueSat_HSV_shiftke
     original_shape = (rotations, saturations)
 
     # assuming these arrays are 1D of shape 1850
-    X = np.load(paths_3d[0])["hue"].view(original_shape)
-    Y = np.load(paths_3d[0])["sat"].view(original_shape)
-    Z = np.load(paths_3d[0])["acc"] #should you be reshaped? #TODO
+    X = np.load(paths_3d[0])["hue"].reshape(original_shape)
+    Y = np.load(paths_3d[0])["sat"].reshape(original_shape)
+    Z = np.load(paths_3d[0])["acc"].reshape(original_shape)
 
-    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"}, figsize=(9,5))
 
     # Plot the surface.
     surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,
                         linewidth=0, antialiased=False)
 
+    ax.set_title("Hue and Saturation Equivariant Network trained in HSV Space\nFlowers-102 dataset [3 Hue and Sat Shifts on Kernel]}", fontsize=15)
+    ax.set_xlabel("Hue shift (°)", labelpad=10, fontsize=11)
+    ax.set_xticks(ticks=[-0.45, -0.3, -0.15, 0, 0.15, 0.3, 0.45],labels=["-150", "-100", "-50", "0", "50", "100", "150" ])
+    ax.set_ylabel("Saturation shift", labelpad=10, fontsize=11)
+    ax.set_zlabel("Test accuracy", labelpad=10, fontsize=11)
+
     # Customize the z axis.
-    ax.set_zlim(0., 1.)
-    ax.zaxis.set_major_locator(LinearLocator(10))
-    # A StrMethodFormatter is used automatically
-    ax.zaxis.set_major_formatter('{x:.02f}')
+    ax.set_zlim(0, 1)
 
     # Add a color bar which maps values to colors.
-    # fig.colorbar(surf, shrink=0.5, aspect=5)
+    fig.colorbar(surf, shrink=0.5, aspect=5, pad=0.15)
 
     plt.savefig(filename)
 
@@ -306,8 +309,10 @@ paths_jit = [
 ]
 
 paths_3d = [
-    ""
+    # "CEConv/output/test_results/maintest_flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_and_sat_shift-sat_jitter_1_1-img_shift.npz"
+    "CEConv/output/test_results/maintest_flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_and_sat_shift-sat_jitter_1_1_test-rot=25_test-sat=25.npz"
 ]
 
 
 # plot_figure_9_sat(checkpoints, hsv_test=True)
+plot_3d(paths_3d, saturations=25, rotations=25)
