@@ -19,7 +19,7 @@ from torchvision.transforms.functional import adjust_hue, adjust_saturation, adj
 from experiments.classification.datasets import get_dataset, normalize, lab2rgb, rgb2lab, hsv2rgb, rgb2hsv
 from models.resnet import ResNet18, ResNet44
 from models.resnet_hybrid import HybridResNet18, HybridResNet44
-import matplotlib.pyplot as pltimport 
+import matplotlib.pyplot as plt
 import time
 
 
@@ -250,8 +250,9 @@ class PL_model(pl.LightningModule):
                 matrix = torch.matrix_power(self.lab_angle_matrix, int(times)).repeat(x.shape[0],1,1)
                 x = torch.bmm(matrix.cuda(), x.reshape((x.shape[0], 3, -1))).reshape((x.shape[0], 3, w, h))
             elif self.hue_shift and not self.sat_shift and not self.val_shift:
-                # Apply hue shift with pytorch's function
-                x = adjust_hue(x, i)
+                if not self.hsv_test:
+                    # Apply hue shift with pytorch's function
+                    x = adjust_hue(x, i)
             elif (self.sat_shift or self.val_shift) and not self.hue_shift:
                 # Apply saturation shift.
                 if self.hsv_test:
@@ -269,8 +270,8 @@ class PL_model(pl.LightningModule):
                         w = x.shape[2]
                         h = x.shape[3]
                         x = x.reshape((x.shape[0], 3, -1)) # B, C, H*W
-                        x[:, 2:3, :] += add_val # add to saturation channel
-                        x[:, 2:3, :] = torch.clip(x[:, 1:2, :], min=0, max=1) # clip saturation channel 0-1
+                        x[:, 2:3, :] += add_val # add to value channel
+                        x[:, 2:3, :] = torch.clip(x[:, 2:3, :], min=0, max=1) # clip value channel 0-1
                         x = x.reshape((x.shape[0], 3, w, h)) # B, C, W, H
                 else:   
                     # Img in RGB space
@@ -292,7 +293,7 @@ class PL_model(pl.LightningModule):
                 
             # Normalize images.
             if self.args.normalize:
-                x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=True if self.lab else False) #TODO convert to hsv around here
+                x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv)
 
             # Forward pass and compute loss.
             y_pred = self.model(x)
@@ -308,7 +309,7 @@ class PL_model(pl.LightningModule):
                     (self.preds, F.softmax(y_pred, 1).detach().cpu()), 0
                 )
                 self.gts = torch.cat((self.gts, y.cpu()), 0)
-        
+        e
     def test_epoch_end(self, outputs):
         # Log metrics and predictions, and reset metrics. #TODO adjust this func for sat possibly and both hue and sat?
         table = {"hue": [],
