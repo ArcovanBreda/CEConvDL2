@@ -12,7 +12,7 @@ The objectives of this blogpost are to:
 
 1. Discuss the methods introduced in the paper
 1. Verify the authors' claims
-1. Extend the notion of color equivariance to other dimensions beyond hue
+1. Extend the notion of color equivariance to other dimensions beyond hue by leveraging different colorspaces than RGB
 
 ---
 
