@@ -92,14 +92,14 @@ def plot_figure_2(data_dir, print_stats=False):
     std_dev = std_dev[:, sort_idx]
 
     # Create figure and axis
-    fig, ax1 = plt.subplots(figsize=(12, 6))
+    fig, ax1 = plt.subplots(figsize=(14, 7))
 
     # Plot average accuracy with standard deviation as error bars
-    ax1.plot(labels, avg_class_acc[0, :], label='Z2CNN', color='mediumblue')
-    ax1.fill_between(labels, avg_class_acc[0, :] - std_dev[0, :], avg_class_acc[0, :] + std_dev[0, :], color='mediumblue', alpha=0.2)
+    ax1.plot(labels, avg_class_acc[0, :]*100, label=f'Z2CNN ({np.mean(avg_class_acc[0, :])*100:.1f}%)', color='mediumblue', linewidth=3)
+    ax1.fill_between(labels, (avg_class_acc[0, :] - std_dev[0, :])*100, (avg_class_acc[0, :] + std_dev[0, :])*100, color='mediumblue', alpha=0.2)
 
-    ax1.plot(labels, avg_class_acc[1, :], label='CECNN', color='forestgreen')
-    ax1.fill_between(labels, avg_class_acc[1, :] - std_dev[1, :], avg_class_acc[1, :] + std_dev[1, :], color='forestgreen', alpha=0.2)
+    ax1.plot(labels, avg_class_acc[1, :]*100, label=f'CECNN ({np.mean(avg_class_acc[1, :])*100:.1f}%)', color='forestgreen', linewidth=3)
+    ax1.fill_between(labels, (avg_class_acc[1, :] - std_dev[1, :])*100, (avg_class_acc[1, :] + std_dev[1, :])*100, color='forestgreen', alpha=0.2)
 
     # Plot samples per class
     ax1.grid(axis='both')
@@ -109,8 +109,8 @@ def plot_figure_2(data_dir, print_stats=False):
     ax2.set_ylabel('Class frequency', fontsize=18)
 
     ax1.set_xlabel('Class', fontsize=18)
-    ax1.set_ylabel('Test Accuracy', fontsize=18)
-    ax1.set_ylim(-0.05, 1.15)
+    ax1.set_ylabel('Test Accuracy (%)', fontsize=18)
+    ax1.set_ylim(-0.05, 115)
     ax1.grid(axis='y')
     ax1.bar(0, 0, color="gray", alpha=0.3, label="Class frequency")
     ax1.legend(fontsize=18, loc='upper center',bbox_to_anchor=(0.5, 0.99), 
@@ -149,18 +149,18 @@ def plot_figure_9(data_dir,verbose=False):
     colors = [['mediumblue', "-"], ['mediumblue', "--"], ['darkorange', "-"], ['darkorange', "--"]]
     
 
-    fig, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(14, 7))
     print("model performances:")
     for (checkpoint, name, color) in zip(checkpoints, model_names, colors):
         results = evaluate_classify(checkpoint, verbose=False)
         print(f"\t\t {name}: {np.mean(results['acc']):.3f}")
-        plt.plot(results["hue"], results["acc"], color[1], label=name, color=color[0], linewidth=3)
+        plt.plot(results["hue"], results["acc"]*100, color[1], label=f"{name} ({np.mean(results['acc'])*100:.1f}%)", color=color[0], linewidth=3)
         # plt.plot(hue_values, checkpoint, color[1], label=name, color=color[0], linewidth=3)
 
     plt.title("Flowers-102", fontsize=22)
     plt.ylabel("Test accuracy (%)", fontsize=18)
     plt.yticks(fontsize=16,)
-    plt.ylim(top=0.99)
+    plt.ylim(top=99)
     plt.xlabel("Test-time hue shift (°)", fontsize=18)
     plt.xticks(fontsize=16,ticks=[-0.45, -0.3, -0.15, 0, 0.15, 0.3, 0.45],labels=["-150", "-100", "-50", "0", "50", "100", "150" ])
     plt.legend(fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 0.99),
