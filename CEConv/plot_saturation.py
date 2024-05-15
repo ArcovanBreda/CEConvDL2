@@ -181,6 +181,7 @@ def evaluate_classify(path, ce_stages=None, seperable=True, width=None, hsv_test
         save_dir=os.environ["WANDB_DIR"],
     )
 
+    # trainer = pl.Trainer(accelerator='gpu', gpus=1, logger=None)
     trainer = pl.Trainer(accelerator='gpu', gpus=1, logger=mylogger)
 
     _, testloader = get_dataset(args)
@@ -258,9 +259,9 @@ def plot_3d(paths_3d, saturations=50, rotations=37, filename="HueSat_HSV_shiftke
     original_shape = (rotations, saturations)
 
     # assuming these arrays are 1D of shape 1850
-    X = np.load(paths_3d[0])["hue"].reshape(original_shape)
-    Y = np.load(paths_3d[0])["sat"].reshape(original_shape)
-    Z = np.load(paths_3d[0])["acc"].reshape(original_shape)
+    X = np.load(paths_3d)["hue"].reshape(original_shape)
+    Y = np.load(paths_3d)["sat"].reshape(original_shape)
+    Z = np.load(paths_3d)["acc"].reshape(original_shape)
 
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"}, figsize=(9,5))
 
@@ -268,7 +269,7 @@ def plot_3d(paths_3d, saturations=50, rotations=37, filename="HueSat_HSV_shiftke
     surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,
                         linewidth=0, antialiased=False)
 
-    ax.set_title("Hue and Saturation Equivariant Network trained in HSV Space\nFlowers-102 dataset [3 Hue and Sat Shifts on Kernel]}", fontsize=15)
+    ax.set_title("Hue and Saturation Equivariant Network trained in HSV Space\nFlowers-102 dataset [3 Hue and Sat Shifts on Image]", fontsize=15)
     ax.set_xlabel("Hue shift (°)", labelpad=10, fontsize=11)
     ax.set_xticks(ticks=[-0.45, -0.3, -0.15, 0, 0.15, 0.3, 0.45],labels=["-150", "-100", "-50", "0", "50", "100", "150" ])
     ax.set_ylabel("Saturation shift", labelpad=10, fontsize=11)
@@ -284,35 +285,41 @@ def plot_3d(paths_3d, saturations=50, rotations=37, filename="HueSat_HSV_shiftke
 
 
 # Check if order matches with function
-checkpoints = [
-    "CEConv/output/color_equivariance/classification/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_100-no_norm.pth.tar.ckpt",
-    "CEConv/output/color_equivariance/classification/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_100.pth.tar.ckpt",
-    "CEConv/output/color_equivariance/classification/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.pth.tar.ckpt",
-    "CEConv/output/color_equivariance/classification/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1.pth.tar.ckpt"
-]
-
-paths = [
-    "CEConv/output/test_results/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
-    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
-    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_2.npz"
-]
+paths_sat_shifts = []
 
 paths_jit = [
     "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
     "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_2-no_norm.npz",
-    
+    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-no_norm.npz",
     "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_100-no_norm.npz",
     "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1.npz",
     "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_2.npz",
-
+    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20.npz",
     "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_100.npz"
 ]
 
 paths_3d = [
-    # "CEConv/output/test_results/maintest_flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_and_sat_shift-sat_jitter_1_1-img_shift.npz"
+    "CEConv/output/test_results/maintest_flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_and_sat_shift-sat_jitter_1_1-img_shift.npz",
     "CEConv/output/test_results/maintest_flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_and_sat_shift-sat_jitter_1_1_test-rot=25_test-sat=25.npz"
 ]
 
 
 # plot_figure_9_sat(checkpoints, hsv_test=True)
-plot_3d(paths_3d, saturations=25, rotations=25)
+# plot_3d(paths_3d[1], saturations=25, rotations=25)
+# plot_3d(paths_3d[0], saturations=25, rotations=25, filename="HueSat_HSV_shiftimg.jpg")
+
+
+# norm files need to be reevaluated to be sure
+paths=[
+    "CEConv/output/sat/classification/flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1.pth.tar-v1.ckpt",
+    "CEConv/output/sat/classification/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1.pth.tar-v1.ckpt",
+    "CEConv/output/sat/classification/flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_2.pth.tar-v1.ckpt",
+    "CEConv/output/sat/classification/flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20.pth.tar-v2.ckpt",
+    "CEConv/output/sat/classification/flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_100.pth.tar-v1.ckpt",
+    "CEConv/output/sat/classification/flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1.pth.tar-v1.ckpt",
+    "CEConv/output/sat/classification/flowers102-resnet18_10-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1.pth.tar-v2.ckpt"
+]
+
+# for path in paths:
+    # print("working on...", path)
+    # evaluate_classify(path, ce_stages=None, seperable=True, width=None, hsv_test=True)
