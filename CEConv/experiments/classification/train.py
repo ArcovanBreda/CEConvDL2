@@ -140,16 +140,6 @@ class PL_model(pl.LightningModule):
                     self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
                 else:
                     raise NotImplementedError
-
-        for i in self.test_jitter:
-            if args.dataset == "cifar10":
-                self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
-            elif args.dataset == "flowers102":
-                self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
-            elif args.dataset == "stl10":
-                self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
-            else:
-                raise NotImplementedError
             
         # Loss function
         self.criterion = nn.CrossEntropyLoss()
