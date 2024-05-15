@@ -51,6 +51,7 @@ class BasicBlock(nn.Module):
         self, in_planes, planes, stride=1, rotations=1, separable=False, lab_space=False, hsv_space=False,
                 sat_shift=False,
                 hue_shift=False,
+                val_shift=False,
                 img_shift=False,
     ) -> None:
         super(BasicBlock, self).__init__()
@@ -97,6 +98,7 @@ class BasicBlock(nn.Module):
                 hsv_space=hsv_space,
                 sat_shift=sat_shift,
                 hue_shift=hue_shift,
+                val_shift=val_shift,
                 img_shift=img_shift,
             )
             self.conv2 = CEConv2d(
@@ -113,6 +115,7 @@ class BasicBlock(nn.Module):
                 hsv_space=hsv_space,
                 sat_shift=sat_shift,
                 hue_shift=hue_shift,
+                val_shift=val_shift,
                 img_shift=img_shift,
             )
             if stride != 1 or in_planes != self.expansion * planes:
@@ -130,6 +133,7 @@ class BasicBlock(nn.Module):
                         hsv_space=hsv_space,
                         sat_shift=sat_shift,
                         hue_shift=hue_shift,
+                        val_shift=val_shift,
                         img_shift=img_shift,
                     ),
                     bnlayer(self.expansion * planes),
@@ -147,7 +151,7 @@ class Bottleneck(nn.Module):
     expansion = 4
 
     def __init__(self, in_planes, planes, stride=1, rotations=1, separable=False, lab_space=False, hsv_space=False,
-                sat_shift=False, hue_shift=False, img_shift=False):
+                sat_shift=False, hue_shift=False, val_shift=False, img_shift=False):
         super(Bottleneck, self).__init__()
         bnlayer = nn.BatchNorm2d if rotations == 1 else nn.BatchNorm3d
         self.bn1 = bnlayer(planes)
@@ -189,6 +193,7 @@ class Bottleneck(nn.Module):
                 hsv_space=hsv_space,
                 sat_shift=sat_shift,
                 hue_shift=hue_shift,
+                val_shift=val_shift,
                 img_shift=img_shift,
             )
             self.conv2 = CEConv2d(
@@ -205,6 +210,7 @@ class Bottleneck(nn.Module):
                 hsv_space=hsv_space,
                 sat_shift=sat_shift,
                 hue_shift=hue_shift,
+                val_shift=val_shift,
                 img_shift=img_shift,
             )
             self.conv3 = CEConv2d(
@@ -219,6 +225,7 @@ class Bottleneck(nn.Module):
                 hsv_space=hsv_space,
                 sat_shift=sat_shift,
                 hue_shift=hue_shift,
+                val_shift=val_shift,
                 img_shift=img_shift,
             )
 
@@ -237,6 +244,7 @@ class Bottleneck(nn.Module):
                         hsv_space=hsv_space,
                         sat_shift=sat_shift,
                         hue_shift=hue_shift,
+                        val_shift=val_shift,
                         img_shift=img_shift,
                     ),
                     bnlayer(self.expansion * planes),
@@ -267,6 +275,7 @@ class ResNet(nn.Module):
         hsv_space=False,
         sat_shift=False,
         hue_shift=False,
+        val_shift=False,
         img_shift=False,
     ) -> None:
         super(ResNet, self).__init__()
@@ -311,6 +320,7 @@ class ResNet(nn.Module):
                 hsv_space=hsv_space,
                 sat_shift=sat_shift,
                 hue_shift=hue_shift,
+                val_shift=val_shift,
                 img_shift=img_shift,
             )
             self.bn1 = nn.BatchNorm3d(channels[0])
@@ -345,6 +355,7 @@ class ResNet(nn.Module):
                     hsv_space=hsv_space,
                     sat_shift=sat_shift,
                     hue_shift=hue_shift,
+                    val_shift=val_shift,
                     img_shift=img_shift,
                 )
             )
@@ -359,12 +370,12 @@ class ResNet(nn.Module):
                 channels[-1] * rotations * block.expansion, num_classes
             )
 
-    def _make_layer(self, block, planes, num_blocks, stride, rotations, separable, lab_space, hsv_space, sat_shift, hue_shift, img_shift):
+    def _make_layer(self, block, planes, num_blocks, stride, rotations, separable, lab_space, hsv_space, sat_shift, hue_shift, val_shift, img_shift):
         strides = [stride] + [1] * (num_blocks - 1)
         layers = []
         for stride in strides:
             layers.append(block(self.in_planes, planes, stride, rotations, separable, lab_space, hsv_space,
-                                sat_shift, hue_shift, img_shift))
+                                sat_shift, hue_shift, val_shift, img_shift))
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 
