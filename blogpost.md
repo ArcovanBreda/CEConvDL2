@@ -46,7 +46,7 @@ where $T_g$ and $T'_g$ can be equivalent.
 We utilise the equations from \[group_convs\] to show that G-CNNs are equivariant. Instead of shifting a filter, correlation in the first layer can be described more generally by replacing it with some transformation from group $G$, whereby $f$ is the input image and $\psi$ is the filter:
 
 $$\begin{align*} 
-\Phi (T_g x) = T'_g \Phi (x) & \qquad \qquad \forall g \in G, & \qquad \qquad (\text{Equation 1})
+[f \star \psi](g) = T'_g \Phi (x) & \qquad \qquad \forall g \in G, & \qquad \qquad (\text{Equation 1})
 \end{align*}$$
 
 $$\begin{align*} 
