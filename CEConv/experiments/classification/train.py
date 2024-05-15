@@ -56,7 +56,8 @@ class PL_model(pl.LightningModule):
 
         # Store accuracy metrics for testing.
         self.test_acc_dict = {}
-        self.test_rotations = 37
+        self.test_rotations = 25 #TODO originally 37 but takes really long when both hue and saturation equivariance
+        self.test_saturations = 25 #TODO originally 50 but takes really long when both hue and saturation equivariance
         self.test_jitter = np.linspace(-0.5, 0.5, self.test_rotations)
         self.hue_shift, self.sat_shift, self.val_shift = args.hue_shift, args.sat_shift, args.val_shift
         if hasattr(self.args, 'lab_test'):
@@ -80,7 +81,7 @@ class PL_model(pl.LightningModule):
             if self.hsv_test:
                 # In case of even saturations, consider 0 to be positive
                 if args.sat_shift:
-                    saturations = self.test_rotations
+                    saturations = self.test_saturations
                     neg_sats = saturations // 2
                     pos_sats = neg_sats - 1 + saturations % 2
                     self.test_jitter = torch.concat((torch.linspace(-1, 0, neg_sats + 1)[:-1],
@@ -96,11 +97,49 @@ class PL_model(pl.LightningModule):
             # In RGB Space
             else:
                 self.test_jitter = np.append(np.linspace(0, 1, 25, endpoint=False), np.arange(1, 10, 1, dtype=int))
-            
+        # Saturation and hue shift
         elif args.sat_shift and args.hue_shift:
             self.hue_shift, self.sat_shift = True, True
-            raise NotImplementedError #TODO jitter for combinations of saturation and hue shifts
-            #TODO keep hsv_test in mind here as well, because for saturation we cannot convert HSV -> RGB -> HSV
+
+            hue_jitter = torch.from_numpy(np.linspace(-0.5, 0.5, self.test_rotations)).type(torch.float32).to(self._device)
+
+            if self.hsv_test:
+                saturations = self.test_saturations
+                neg_sats = saturations // 2
+                pos_sats = neg_sats - 1 + saturations % 2
+
+                # In case of even saturations, consider 0 to be positive
+                sat_jitter = torch.concat((torch.linspace(-1, 0, neg_sats + 1)[:-1],
+                                                torch.tensor([0]),
+                                                torch.linspace(0, 1, pos_sats + 1)[1:])).type(torch.float32).to(self._device)
+            else:
+                sat_jitter = torch.from_numpy(np.append(np.linspace(0, 1, 25, endpoint=False),
+                                                        np.arange(1, 10, 1, dtype=int))).type(torch.float32).to(self._device)
+            
+            x, y = torch.meshgrid(hue_jitter, sat_jitter, indexing='ij')
+            self.test_jitter = torch.stack((x, y), dim=-1).view(-1, 2)
+
+        # Create test dict
+        if args.sat_shift and args.hue_shift:
+            for i, j in self.test_jitter:
+                if args.dataset == "cifar10":
+                    self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                elif args.dataset == "flowers102":
+                    self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+                elif args.dataset == "stl10":
+                    self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                else:
+                    raise NotImplementedError
+        else:
+            for i in self.test_jitter:
+                if args.dataset == "cifar10":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                elif args.dataset == "flowers102":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
+                elif args.dataset == "stl10":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                else:
+                    raise NotImplementedError
 
         for i in self.test_jitter:
             if args.dataset == "cifar10":
@@ -258,7 +297,7 @@ class PL_model(pl.LightningModule):
                 if self.hsv_test:
                     # Img in HSV space
                     if self.sat_shift:
-                        add_val = i.unsqueeze(0)[:, None,None] # 1, 1, 1
+                        add_val = i.unsqueeze(0)[:, None,None] # 1, 1, 1 #TODO this reshaping is probably redundant if version below works as well...
                         w = x.shape[2]
                         h = x.shape[3]
                         x = x.reshape((x.shape[0], 3, -1)) # B, C, H*W
@@ -273,15 +312,29 @@ class PL_model(pl.LightningModule):
                         x[:, 2:3, :] += add_val # add to value channel
                         x[:, 2:3, :] = torch.clip(x[:, 2:3, :], min=0, max=1) # clip value channel 0-1
                         x = x.reshape((x.shape[0], 3, w, h)) # B, C, W, H
-                else:   
-                    # Img in RGB space
-                    if self.sat_shift:
+                    else:
+                        # Img in RGB space
                         x = adjust_saturation(x, i)
-                    elif self.val_shift:
-                        x = adjust_brightness(x, i)
-            elif (self.sat_shift or self.val_shift) and self.hue_shift:
-                raise NotImplementedError #TODO test_jitter for combinations of hue and saturation perhaps make it a tuple in this case
-                #TODO keep hsv_test in mind here
+            elif self.sat_shift and self.hue_shift:
+                hue_val, sat_val = i[0], i[1]
+
+                # Determine which space working in
+                if self.hsv_test:
+                    # Sat shift
+                    w = x.shape[2]
+                    h = x.shape[3]
+                    x = x.reshape((x.shape[0], 3, -1)) # B, C, H*W
+                    x[:, 1:2, :] += sat_val # add to saturation channel
+                    x[:, 1:2, :] = torch.clip(x[:, 1:2, :], min=0, max=1) # clip saturation channel 0-1
+                    x = x.reshape((x.shape[0], 3, w, h)) # B, C, W, H
+
+                    # Hue shift
+                    x = hsv2rgb.forward(None, x)
+                    x = adjust_hue(x, hue_val) # works in RGB
+                    x = rgb2hsv.forward(None, x)
+                else:
+                    x = adjust_hue(x, hue_val)
+                    x = adjust_saturation(x, sat_val)
             else:
                 # Hue shift
                 x = adjust_hue(x, i)
@@ -299,36 +352,70 @@ class PL_model(pl.LightningModule):
             y_pred = self.model(x)
 
             # Logging.
-            self.test_acc_dict["test_acc_{:.4f}".format(i)].update(
+            if self.hue_shift and self.sat_shift:
+                self.test_acc_dict[f"test_acc_{i[0]:.4f}_{i[1]:.4f}"].update(
                 y_pred.detach().cpu(), y.cpu()
             )
 
-            # If no hue shift, log predictions and ground truth.
-            if int(i) == 0:
-                self.preds = torch.cat(
-                    (self.preds, F.softmax(y_pred, 1).detach().cpu()), 0
+                # If no hue shift or sat shift, log predictions and ground truth. #TODO check this one and the one below
+                if (int(i[0]) == 0 and int(i[1]) == 0 and self.hsv_test) or (int(i[0]) == 0 and int(i[1]) == 1):
+                    self.preds = torch.cat(
+                        (self.preds, F.softmax(y_pred, 1).detach().cpu()), 0
+                    )
+                    self.gts = torch.cat((self.gts, y.cpu()), 0)
+            else:
+                self.test_acc_dict["test_acc_{:.4f}".format(i)].update(
+                    y_pred.detach().cpu(), y.cpu()
                 )
-                self.gts = torch.cat((self.gts, y.cpu()), 0)
-        e
+
+                # If no hue shift, log predictions and ground truth.
+                if int(i) == 0:
+                    self.preds = torch.cat(
+                        (self.preds, F.softmax(y_pred, 1).detach().cpu()), 0
+                    )
+                    self.gts = torch.cat((self.gts, y.cpu()), 0)
+        
     def test_epoch_end(self, outputs):
-        # Log metrics and predictions, and reset metrics. #TODO adjust this func for sat possibly and both hue and sat?
-        table = {"hue": [],
-                 "acc": []}
-        columns = ["hue", "acc"]
-        test_table = wandb.Table(columns=columns)
-
-        for i in self.test_jitter:
-            test_table.add_data(
-                i, self.test_acc_dict["test_acc_{:.4f}".format(i)].compute().item()
-            )
-            table["acc"].append(self.test_acc_dict["test_acc_{:.4f}".format(i)].compute().item())
-            table["hue"].append(i.item())
-            self.test_acc_dict["test_acc_{:.4f}".format(i)].reset()
-        print(table["hue"], "\n\n")
-        print(table["acc"])
-
+        # Log metrics and predictions, and reset metrics.
         os.makedirs("output/test_results", exist_ok=True)
-        np.savez(f"output/test_results/{self.args.run_name}", hue=table["hue"], acc=table["acc"])
+
+        if self.sat_shift and self.hue_shift:
+            table = {"hue": [],
+                     "sat": [],
+                     "acc": []}
+            columns = ["hue", "sat", "acc"]
+            test_table = wandb.Table(columns=columns)
+
+            for i, j in self.test_jitter:
+                test_table.add_data(
+                    i, j, self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"].compute().item()
+                )
+                table["acc"].append(self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"].compute().item())
+                table["hue"].append(i.item())
+                table["sat"].append(j.item())
+                self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"].reset()
+
+            print(table["hue"], "\n\n")
+            print(table["sat"], "\n\n")
+            print(table["acc"])
+            np.savez(f"output/test_results/maintest_{self.args.run_name}", hue=table["hue"], sat=table["sat"], acc=table["acc"])
+        else:
+            table = {"hue": [],
+                    "acc": []}
+            columns = ["hue", "acc"]
+            test_table = wandb.Table(columns=columns)
+
+            for i in self.test_jitter:
+                test_table.add_data(
+                    i, self.test_acc_dict["test_acc_{:.4f}".format(i)].compute().item()
+                )
+                table["acc"].append(self.test_acc_dict["test_acc_{:.4f}".format(i)].compute().item())
+                table["hue"].append(i.item())
+                self.test_acc_dict["test_acc_{:.4f}".format(i)].reset()
+
+            print(table["hue"], "\n\n")
+            print(table["acc"])
+            np.savez(f"output/test_results/maintest_{self.args.run_name}", hue=table["hue"], acc=table["acc"])
 
         # Log test table with wandb.
         self.logger.experiment.log({"test_table": test_table})  # type: ignore
