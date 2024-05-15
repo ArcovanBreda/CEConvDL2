@@ -59,11 +59,26 @@ class PL_model(pl.LightningModule):
         self.test_rotations = 25 #TODO originally 37 but takes really long when both hue and saturation equivariance
         self.test_saturations = 25 #TODO originally 50 but takes really long when both hue and saturation equivariance
         self.test_jitter = np.linspace(-0.5, 0.5, self.test_rotations)
-        self.hue_shift, self.sat_shift, self.val_shift = args.hue_shift, args.sat_shift, args.val_shift
+        
         if hasattr(self.args, 'lab_test'):
             self.lab_test = args.lab_test
         else:
             self.lab_test = False
+
+        if hasattr(self.args, 'hue_shift'):
+            self.hue_shift = args.hue_shift
+        else:
+            self.hue_shift = False
+
+        if hasattr(self.args, 'sat_shift'):
+            self.sat_shift = args.sat_shift
+        else:
+            self.sat_shift = False
+
+        if hasattr(self.args, 'val_shift'):
+            self.val_shift = args.val_shift
+        else:
+            self.val_shift = False
 
         # Hue shift in lab space
         if self.lab_test:
@@ -76,18 +91,18 @@ class PL_model(pl.LightningModule):
             ]
         )    
         # Saturation shift
-        elif args.sat_shift or args.val_shift:
+        elif self.sat_shift or self.val_shift:
             # In HSV space
             if self.hsv_test:
                 # In case of even saturations, consider 0 to be positive
-                if args.sat_shift:
+                if self.sat_shift:
                     saturations = self.test_saturations
                     neg_sats = saturations // 2
                     pos_sats = neg_sats - 1 + saturations % 2
                     self.test_jitter = torch.concat((torch.linspace(-1, 0, neg_sats + 1)[:-1],
                                                     torch.tensor([0]),
                                                     torch.linspace(0, 1, pos_sats + 1)[1:])).type(torch.float32).to(self._device)
-                elif args.val_shift:
+                elif self.val_shift:
                     values = 49
                     neg_vals = values // 2
                     pos_vals = neg_vals - 1 + values % 2
@@ -98,9 +113,7 @@ class PL_model(pl.LightningModule):
             else:
                 self.test_jitter = np.append(np.linspace(0, 1, 25, endpoint=False), np.arange(1, 10, 1, dtype=int))
         # Saturation and hue shift
-        elif args.sat_shift and args.hue_shift:
-            self.hue_shift, self.sat_shift = True, True
-
+        elif self.sat_shift and self.hue_shift:
             hue_jitter = torch.from_numpy(np.linspace(-0.5, 0.5, self.test_rotations)).type(torch.float32).to(self._device)
 
             if self.hsv_test:
@@ -120,7 +133,7 @@ class PL_model(pl.LightningModule):
             self.test_jitter = torch.stack((x, y), dim=-1).view(-1, 2)
 
         # Create test dict
-        if args.sat_shift and args.hue_shift:
+        if self.sat_shift and self.hue_shift:
             for i, j in self.test_jitter:
                 if args.dataset == "cifar10":
                     self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
@@ -140,16 +153,6 @@ class PL_model(pl.LightningModule):
                     self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
                 else:
                     raise NotImplementedError
-
-        for i in self.test_jitter:
-            if args.dataset == "cifar10":
-                self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
-            elif args.dataset == "flowers102":
-                self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
-            elif args.dataset == "stl10":
-                self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
-            else:
-                raise NotImplementedError
             
         # Loss function
         self.criterion = nn.CrossEntropyLoss()
