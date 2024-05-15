@@ -25,7 +25,7 @@ Color is a crucial feature for recognition and classification by humans. For exa
 
 Although color invariance has been achieved in various research areas, such as in facial recognition to mitigate the influence of lightning conditions \[color_invariance\], some classification problems are color dependent. Therefore, instead of training CNNs to classify images regardless of their color (invariance), it might be more beneficial to classify images based on their color (equivariance). 
 
-The Color Equivariant Convolutions (CEConvs) introduced in \[main\] achieve this through equivariance to discrete hue shifts. The hue is represented in RGB space such that it can be expressed as a 3D rotation around the [1, 1, 1] axis. This approach utilizes group convolutions as introduced by \[group_convs\] which can be equivariant to 3D rotations. We reproduce the results showing the effects of the CEConvs on color-imbalanced and color-selective datasets, as well as their impact on image classification. We examine the ablation studies to understand the impact of data-augmentation and rotation on the CEConvs. Finally, we extend the notion of color equivariance beyond hue shifts.
+The Color Equivariant Convolutions (CEConvs) introduced in \[main\] achieve this through equivariance to discrete hue shifts. The hue is represented in RGB space such that it can be expressed as a 3D rotation around the [1, 1, 1] axis. This approach utilizes group convolutions as introduced by \[group_convs\] which can be equivariant to 3D rotations. We reproduce the results showing the effects of the CEConvs on color-imbalanced and color-selective datasets, as well as their impact on image classification. We examine the ablation studies to understand the impact of data-augmentation and rotation on the CEConvs, providing additional insights into computational requirements as well. Finally, we extend the notion of color equivariance beyond hue shifts.
 
 The most significant limitation of the CEConvs is that color equivariance is modeled as solely equivariance to hue shifts. By extending the notion to other dimensions, such as saturation equivariance, the CNN could achieve a higher level of equivariance, as saturation can handle a greater variety of changes in illumination. Additionally, by modeling hue shifts as 2D rotations compared to 3D rotations for the RGB space, we circumvent the limitation described in \[main\]. This limitation involves pixel values falling outside the RGB cube, requiring a reprojection operation and consequently only allowing for an approximation of hue equivariance for pixels near the border of the RGB cube.
 
@@ -36,14 +36,18 @@ TODO: Explain Group Equivariant Convolutions (technical)
 --->
 Deep Convolutional Neural Networks have been around since the late 1980s and over the years proven to be highly effective for image classification \[DCNN\]. Empirical evidence shows the importance of depth for good performance and convolutional weight-sharing for parameter reduction. The latter is effective due to the translation symmetry inherent in most image data, whereby the data is roughly invariant to shifts, such that the same weights can be utilised to convolve different parts of the image \[group_convs\]. Convolution layers are translation equivariant in a deep network: the output shifts relative to shifts in the input. This notion of symmetry can be extended to larger groups, including rotation.
 
-The generalization of translation equivariance is achieved through Group Convolutional Neural Networks (G-CNN). A CNN layer is equivariant to a group if for all transformations $g \in G$, doing the transformation $T_g$ on the input and then the feature mapping $\Phi (x)$ is similar to doing the feature mapping on the input and the transformation $T'_g$ thereafter: 
+This generalization of translation equivariance is achieved through Group Convolutional Neural Networks (G-CNN). A CNN layer is equivariant to a group if for all transformations $g \in G$, doing the transformation $T_g$ on the input and then the feature mapping $\Phi (x)$ is similar to doing the feature mapping on the input and the transformation $T'_g$ thereafter: 
 
 $$\begin{align*} 
 \Phi (T_g x) = T'_g \Phi (x) & \qquad \qquad \forall g \in G, & \qquad \qquad (\text{Equation 1})
 \end{align*}$$
 
 where $T_g$ and $T'_g$ can be equivalent.
-We utilise the equation from \[group_convs\] to show that G-CNNs are equivariant. Instead of shifting a filter, correlation in the first layer can be described more generally by replacing it with some transformation from group $G$, whereby $f$ is the input image and $\psi$ is the filter:
+We utilise the equations from \[group_convs\] to show that G-CNNs are equivariant. Instead of shifting a filter, correlation in the first layer can be described more generally by replacing it with some transformation from group $G$, whereby $f$ is the input image and $\psi$ is the filter:
+
+$$\begin{align*} 
+\Phi (T_g x) = T'_g \Phi (x) & \qquad \qquad \forall g \in G, & \qquad \qquad (\text{Equation 1})
+\end{align*}$$
 
 $$\begin{align*} 
 [f \star \psi](g) = \sum_{y \in \mathbb{Z}^2}\sum_{k} f_k(y) \psi_{k}(g^{-1}y) & \qquad \qquad (\text{Equation 4})
