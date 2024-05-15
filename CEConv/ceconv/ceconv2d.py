@@ -430,7 +430,6 @@ class CEConv2d(nn.Conv2d):
         square = sum([self.hue_shift, self.sat_shift, self.val_shift])
         if square == 0 :
             square = 1
-
         tw_shape = (
             self.out_channels * (self.out_rotations ** square),
             self.in_channels * self.in_rotations,
