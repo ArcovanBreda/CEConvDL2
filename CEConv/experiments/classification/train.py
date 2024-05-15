@@ -78,14 +78,21 @@ class PL_model(pl.LightningModule):
         elif args.sat_shift or args.val_shift:
             # In HSV space
             if self.hsv_test:
-                saturations = 50
-                neg_sats = saturations // 2
-                pos_sats = neg_sats - 1 + saturations % 2
-
                 # In case of even saturations, consider 0 to be positive
-                self.test_jitter = torch.concat((torch.linspace(-1, 0, neg_sats + 1)[:-1],
-                                                torch.tensor([0]),
-                                                torch.linspace(0, 1, pos_sats + 1)[1:])).type(torch.float32).to(self._device)
+                if args.sat_shift:
+                    saturations = self.test_rotations
+                    neg_sats = saturations // 2
+                    pos_sats = neg_sats - 1 + saturations % 2
+                    self.test_jitter = torch.concat((torch.linspace(-1, 0, neg_sats + 1)[:-1],
+                                                    torch.tensor([0]),
+                                                    torch.linspace(0, 1, pos_sats + 1)[1:])).type(torch.float32).to(self._device)
+                elif args.val_shift:
+                    values = 49
+                    neg_vals = values // 2
+                    pos_vals = neg_vals - 1 + values % 2
+                    self.test_jitter = torch.concat((torch.linspace(-1, 0, neg_vals + 1)[:-1],
+                                                    torch.tensor([0]),
+                                                    torch.linspace(0, 1, pos_vals + 1)[1:])).type(torch.float32).to(self._device)
             # In RGB Space
             else:
                 self.test_jitter = np.append(np.linspace(0, 1, 25, endpoint=False), np.arange(1, 10, 1, dtype=int))
@@ -146,8 +153,7 @@ class PL_model(pl.LightningModule):
             raise Exception("Can only work in one of HSV and lab space!")
         if args.lab and (args.hue_shift or args.sat_shift or args.val_shift):
             raise Exception("Lab space only does hue equivariance. No need to provide a type of shift.")
-        # Baseline HSV is allowed
-        if args.hsv and not args.hue_shift and not args.sat_shift and not args.val_shift and args.rotations > 1:
+        if args.hsv and not args.hue_shift and not args.sat_shift and not args.val_shift:
             raise Exception("Please provide either --hue_shift, --sat_shift, --val_shift or combination when working in HSV.")
         if (args.hue_shift or args.sat_shift or args.val_shift) and not args.hsv:
             raise Exception("Please provide --hsv when providing --hue/sat/value_shift!")
@@ -250,14 +256,23 @@ class PL_model(pl.LightningModule):
                 # Apply saturation shift.
                 if self.hsv_test:
                     # Img in HSV space
-                    add_val = i.unsqueeze(0)[:, None,None] # 1, 1, 1
-                    w = x.shape[2]
-                    h = x.shape[3]
-                    x = x.reshape((x.shape[0], 3, -1)) # B, C, H*W
-                    x[:, 1:2, :] += add_val # add to saturation channel
-                    x[:, 1:2, :] = torch.clip(x[:, 1:2, :], min=0, max=1) # clip saturation channel 0-1
-                    x = x.reshape((x.shape[0], 3, w, h)) # B, C, W, H
-                else:
+                    if self.sat_shift:
+                        add_val = i.unsqueeze(0)[:, None,None] # 1, 1, 1
+                        w = x.shape[2]
+                        h = x.shape[3]
+                        x = x.reshape((x.shape[0], 3, -1)) # B, C, H*W
+                        x[:, 1:2, :] += add_val # add to saturation channel
+                        x[:, 1:2, :] = torch.clip(x[:, 1:2, :], min=0, max=1) # clip saturation channel 0-1
+                        x = x.reshape((x.shape[0], 3, w, h)) # B, C, W, H
+                    elif self.val_shift:
+                        add_val = i.unsqueeze(0)[:, None,None] # 1, 1, 1
+                        w = x.shape[2]
+                        h = x.shape[3]
+                        x = x.reshape((x.shape[0], 3, -1)) # B, C, H*W
+                        x[:, 2:3, :] += add_val # add to saturation channel
+                        x[:, 2:3, :] = torch.clip(x[:, 1:2, :], min=0, max=1) # clip saturation channel 0-1
+                        x = x.reshape((x.shape[0], 3, w, h)) # B, C, W, H
+                else:   
                     # Img in RGB space
                     if self.sat_shift:
                         x = adjust_saturation(x, i)
@@ -368,7 +383,7 @@ def main(args) -> None:
     if args.sat_jitter:
         run_name += f"-sat_jitter_{args.sat_jitter[0]}_{args.sat_jitter[1]}"
     if args.value_jitter:
-        run_name += f"-sat_jitter_{args.value_jitter[0]}_{args.value_jitter[1]}"
+        run_name += f"-val_jitter_{args.value_jitter[0]}_{args.value_jitter[1]}"
     if args.img_shift:
         run_name += "-img_shift"
     if args.grayscale:

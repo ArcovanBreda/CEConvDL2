@@ -105,9 +105,25 @@ def _shifted_img_stack(imgs, out_rotations, hue_shift, sat_shift, val_shift):
     hue_shifted_imgs = []
     sat_shifted_imgs = []
 
+<<<<<<< HEAD
     if hue_shift:
         for i in range(out_rotations):
             imgs_cloned = imgs.clone()
+=======
+    # Create sat shifts between -1 and 1 depending on number of "out_rotations" (shifts)
+    if sat_shift:
+        neg_sats = out_rotations // 2
+        pos_sats = neg_sats - 1 + out_rotations % 2
+        sat_shifts = np.append(np.linspace(-1, 0, neg_sats+1)[:-1], np.linspace(0, 1, pos_sats+1))
+
+    if val_shift:
+        neg_sats = out_rotations // 2
+        pos_sats = neg_sats - 1 + out_rotations % 2
+        val_shifts = np.append(np.linspace(-0.5, 0, neg_sats+1)[:-1], np.linspace(0, 1, pos_sats+1))
+    for i in range(out_rotations):
+        imgs_cloned = imgs.clone()
+        if hue_shift:
+>>>>>>> 1ba5918 (Bugfixes)
             # For rotation i of the group -> with an angle: i/out_rotations * 2 pi
             # Add this hue angle to the input image
             temp = imgs[:, 0:1, :, :] + (i / out_rotations * 2*np.pi)
