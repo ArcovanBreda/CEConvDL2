@@ -242,13 +242,13 @@ However, there are some potential issues with this color space. Firstly, there i
 
 **LAB** - is a color space defined by the International Commission on Illumination (CIE) in 1976. Research by [color_net] and [color_segmentation] show that images converted to LAB color space achive around a two percentage point higher score on classifications and segmentations task as compared to other color models. The LAB model closely alligns with human vision encoding an image using three channels, the *L* channel encodes the perceptual lightness while *a* and *b* encode the color as a point on a 2D grid with the *a* axis modeling the red-green shift and *b* the yellow-blue shift corresponding to the four unique colors of human vision. Figure 5 shows this 2D grid in which a hue space shift can be modeled as a 2D rotation on this plane, suggesting that the full color space has a cylindrical form. However when visuialing the RGB gammut inside the 3D LAB space, on the right, it doesn't show this cylindar. This is a result of the nonlinear relations betweeen *L*, *a*, and *b* intended to model the mimic the nonlinear response of the visual system, which is absent in the RGB color model.     
 <div align="center">
-  <img src="blogpost_imgs/lab-color-space.png" alt="Hue rotations" width="100%">
+  <img src="blogpost_imgs/lab-color-space.png" alt="Visualization of the LAB color space" width="100%">
 
   *Figure 5: left: LAB color space visualized as a 2d color grid, right: sRGB color gammut shown in LAB space. ([source](https://www.xrite.com/blog/lab-color-space), [source](https://blogs.mathworks.com/steve/2015/04/03/displaying-a-color-gamut-surface/))*
 </div>
 Hue equivariance in LAB space would require a rotation matrix however due to the problems with converting between RGB/HSV as outligned below it could be difficult for a hue equivariant model trainend on LAB space hue equivariance to also become equivariant to hue space shifted images in RGB/HSV format which are thereafter converted to LAB format.
 <div align="center">
-  <img src="blogpost_imgs/hue_shift_comparison.jpg" alt="Hue rotations" width="100%">
+  <img src="blogpost_imgs/hue_shift_comparison.jpg" alt="Hue shift in different image spaces" width="100%">
 
   *Figure 6: An example image (original far left) hue space shited multiple times in HSV (angular addition), RGB (3D rotation) and LAB (2D rotation) space, thereafter converted to RGB space for visualization. ([source](CEConv/plot_hue_comparison.py))*
 </div>
@@ -258,11 +258,35 @@ Figure 6 clearly shows this difference with an image hue space shifted in RGB an
 This section will explain the implemntation of color equivariance networks in the HSV and LAB color space. Just like the original paper the implementation of the lifting layer and the group convolution will be discussed this layer can then replace the standard convoultion layers in different architectures like ResNet, in which the width is reduced resulting in a network with equivariant layers but with the same number of parameters.
 
 **LAB**
-For the LAB space only a hue shift equivariant model is implemented, as stated before a hue shift in LAB space can be modeled as a 2D rotation on the *a* and *b* channels. Sticking with the notation of the reproduced paper we can define the  
+For the LAB space only a hue shift equivariant model is implemented, as stated before a hue shift in LAB space can be modeled as a 2D rotation on the *a* and *b* channels. For this we can reuse almost all of the theory as explained in Section [Color Equivariance](#color-equivariance) with the only change being the parameterization of the group $H_n$ as 
+$$ 
+H_n = 
+\begin{bmatrix}
+1 & 0 & 0 \\
+0 & \cos(\frac{2k\pi}{n}) & -\sin(\frac{2k\pi}{n}) \\
+0 & \sin(\frac{2k\pi}{n}) & \cos (\frac{2k\pi}{n})\\
+\end{bmatrix}
+$$
+In which $n$ represents the number of discrete rotations in the group and k indexing the rotation to be applied. The group operation now is a matrix multiplication on the $\mathbb{R}^3$ space of LAB pixel values. The rest of the operations can be left the same.
+
 ### Dante
 ### Silvia
 
 TODO: create a nice narrative with these three
+### Experiments & Results
+In order to test the effectivity of our implementation several experiments where conducted, 
+in these experiments we aim to test our method on a real-world dataset (Flowers102) which is artificially shifted over a range of values on the property for which the network should be equivariant (hue/saturation/value). Equal to the setting in the section [Image Classification](#image-classification). Because equivariance is implemented on a discrete domain we expect to see peaks in network performance at the places in which the test time shift equals the shift in the group.
+
+**LAB**
+To test hue equivariance implemented in LAB space the convolution layers of a ResNet-18 network where replaced by a their equivariant counterpart. The equivariant layers are implemnted using three discrete shifts of 0, 120, and 240 (-120) degrees. The network is trainend with and without hue augmentations (jitter) on training images. The same can be said for the baseline which has the same Resnet-18 architecture, however now with only a zero degree rotation making it equal to a normal CNN. The width of these layers is increased to get an equal number of parameters.
+
+During test time different sets of hue space shifted images are evaluated on accuracy. This hue space shift is either done in RGB space aftwerwhich the RGB images are converted to LAB format, or directly in LAB space to test the impact of the difference out lined in the [color space](#color-spaces) section. The results of these experiments can be found in Figure 7
+
+<div align="center">
+  <img src="blogpost_imgs/lab_equivariance.jpg" alt="LAB space hue equivariance" width="100%">
+
+  *Figure 7: An example image (original far left) hue space shited multiple times in HSV (angular addition), RGB (3D rotation) and LAB (2D rotation) space, thereafter converted to RGB space for visualization. ([source](CEConv/plot_fig9_lab.py))* 
+</div>
 
 ## Concluding Remarks
 
