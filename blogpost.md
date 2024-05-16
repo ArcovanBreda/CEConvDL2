@@ -307,20 +307,33 @@ In order to test the effectivity of our implementation several experiments where
 in these experiments we aim to test our method on a real-world dataset (Flowers102) which is artificially shifted over a range of values on the property for which the network should be equivariant (hue/saturation/value). Equal to the setting in the section [Image Classification](#image-classification). Because equivariance is implemented on a discrete domain we expect to see peaks in network performance at the places in which the test time shift equals the shift in the group.
 #### HSV
 
-##### Hue
+##### Hue Shift Equivariance
 **Shifting the Kernel -** Our first experiment involved the naively hue shifted filters. For this experiment we took a ResNet-18 network and replaced the standard convolutional layers with our group convolutional layers. Here the first layer will perform the lifting operations that maps our input image to the group and the later layers perform the corresponding group convolutions. We use a 3 x 3 x 3 kernel and train the network for 3 discrete hue rotations (0, 120 and 240 degrees). We utilize the flowers 102 dataset and train the models for the task om image classification with a batch size of 64 for 200 epochs. We separate 2 cases where we train the equivariant network (CE-ResNet-18) with hue jitter, randomly applying a hue shift with a uniformly chosen hue factor between -0.5 and 0.5, and without any hue jitter. Additionally, for comparison we train 2 baseline models of a ResNet-18 network with and without hue jitter, where the width on the network is increased such that the number of parameters between the equivariant networks and baseline networks is equal.
 
 We evaluate our models based on the classification accuracy on the Flowers-102 dataset, where we shift all test images with 37 discrete hue shifts to verify whether the performance of the hue equivariant networks excels beyond the baseline models.
+
+<div align="center">
+  <img src="blogpost_imgs/hsv_hue_shift_kernel.jpg" alt="Results of HSV space hue equivariance, when lifting operation is performed by naively hue shifting the kernel" width="100%">
+
+  *Figure X: Accuracy over test-time value shift for hue equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (value) Equivariant networks, and jitter indicates training time hue augmentation. ([source](CEConv/plot_fig9_hue.py))* 
+</div>
 
 As expected, naively shifting the kernel does not work. In Fig X, there is a clear peak for the both the CE-ResNet 18 and the baseline model the 0° hue shift angle, and the further the hue is shifted from the image’s original values, the worse the models performance gets. Additionally, it can be seen that when training with a hue jitter data augmentation, the model is expressive enough to perform robustly over the entire hue spectrum. However, the performance of the CE-ResNet 18 still does not excel over its baseline counterpart.
 The fact that this doesn’t achieve hue shift equivariance is due to the fact that we can not simply utilize this kernel as though it were an image. This brings a host of inconsistencies with it, for example, applying the hue shift on the weights directly acts more as an added bias than a rotation of the hue. Moreover, weights that are negative get mapped to a high hue value after applying the modulus operation rather than a low one. Thus, while it was an interesting experiment it has no merits.
 
 **Shifting the Input Image -** The next experiment improves upon the naive hue shift of the kernel. For this experiment everything is identical to the previous one except for the fact the lifting convolution is now performed by creating an image stack of hue shifted image instead.
 
-##### Sat
+<div align="center">
+  <img src="blogpost_imgs/hsv_hue_shift_img.jpg" alt="Results of HSV space hue equivariance, when lifting operation is performed by hue shifting the input image" width="100%">
 
+  *Figure XX: Accuracy over test-time value shift for hue equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (value) Equivariant networks, and jitter indicates training time hue augmentation. ([source](CEConv/plot_fig9_hue.py))* 
+</div>
 
-#### HSV
+As can be seen in Fig XX, in the case of the CE-ResNet 18 network 3 clear peaks can be seen at the 0°, 120° and 240° (-120°) hue rotation angles. The network is able to exploit its hue shift equivariance to perform at an equal level across all 3 discrete hue rotations, whereas the baseline model is not. However, as we only train the network for 3 discrete rotations, we can still see that when training with hue jitter both the baseline and CE-ResNet 18 achieve better, more robust performance. If trained for more discrete rotations this difference can be negated but this comes at the cost of an increase in parameters for the CE-ResNet or a severe decrease in width if training to keep the number of parameters equal to that of the baseline model.
+Similarly, the ever so slight decrease in performance on the top end of the CE-ResNet 18 model without jitter compared to its baseline can be explained by this trade-off. In our test we try to keep the amount of parameters equal between the baseline models and the hue shift equivariant models, at around 11.2M parameters. In order to do this we must however reduce the width of the CE-ResNet 18 model as making the model equivariant comes at the cost of an increased amount of parameters. Due to this reduction in width the CE-ResNet 18 model is less expressive than its baseline counterparts explaining the slight decrease in peak performance.
+
+##### Saturation Equivariance
+
 ##### Value Equivariance
 For value equivariance, the same experiments as for saturation are performed. The only difference is a different negative shift range starting from minus a half instead of minus one as this would indicate a completely black image which would be all zeroes in RGB space meaning a complete loss of information. The results can be found in Figure 8
 
