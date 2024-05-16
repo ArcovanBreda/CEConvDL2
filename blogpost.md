@@ -241,17 +241,21 @@ Furthermore, due to these entangled color channels, it’s much harder to achiev
 However, there are some potential issues with this color space. Firstly, there is the concern of the discontinuity in the hue channel. Here the fact that the hue channel is encoded from $0$ to $2 \pi$ could pose issues for a network as while the values of $0$ and $2 \pi$ are as far apart as possible for an HSV image, these values encode the same exact color as the color space effectively loops around from $2\pi$ back to $0$. Secondly, there is the fact that the saturation and value channels are not cyclic and lie within a $0-1$ interval. Therefore, when shifting these channels we would need to clip shifts that fall outside this interval, causing a loss of information. Lastly, it is not straightforward how to transform a kernel under the regular representation of the group elementents for either the group of hue rotations, or saturation and value translations, in order to perform the lifting convolution.
 
 **LAB** - is a color space defined by the International Commission on Illumination (CIE) in 1976. Research by [color_net] and [color_segmentation] show that images converted to LAB color space achive around a two percentage point higher score on classifications and segmentations task as compared to other color models. The LAB model closely alligns with human vision encoding an image using three channels, the *L* channel encodes the perceptual lightness while *a* and *b* encode the color as a point on a 2D grid with the *a* axis modeling the red-green shift and *b* the yellow-blue shift corresponding to the four unique colors of human vision. Figure 5 shows this 2D grid in which a hue space shift can be modeled as a 2D rotation on this plane, suggesting that the full color space has a cylindrical form. However when visuialing the RGB gammut inside the 3D LAB space, on the right, it doesn't show this cylindar. This is a result of the nonlinear relations betweeen *L*, *a*, and *b* intended to model the mimic the nonlinear response of the visual system, which is absent in the RGB color model.     
+
 <div align="center">
   <img src="blogpost_imgs/lab-color-space.png" alt="Visualization of the LAB color space" width="100%">
 
   *Figure 5: left: LAB color space visualized as a 2d color grid, right: sRGB color gammut shown in LAB space. ([source](https://www.xrite.com/blog/lab-color-space), [source](https://blogs.mathworks.com/steve/2015/04/03/displaying-a-color-gamut-surface/))*
 </div>
+
 Hue equivariance in LAB space would require a rotation matrix however due to the problems with converting between RGB/HSV as outligned below it could be difficult for a hue equivariant model trainend on LAB space hue equivariance to also become equivariant to hue space shifted images in RGB/HSV format which are thereafter converted to LAB format.
+
 <div align="center">
   <img src="blogpost_imgs/hue_shift_comparison.jpg" alt="Hue shift in different image spaces" width="100%">
 
   *Figure 6: An example image (original far left) hue space shited multiple times in HSV (angular addition), RGB (3D rotation) and LAB (2D rotation) space, thereafter converted to RGB space for visualization. ([source](CEConv/plot_hue_comparison.py))*
 </div>
+
 Figure 6 clearly shows this difference with an image hue space shifted in RGB and HSV space resulting in the same image however performing the same shift in LAB space and thereafter converting back to RGB space results in a slightly different colored image.
 
 ### METHODOLOGY
@@ -283,6 +287,7 @@ $$ ((x_h + h_i)(mod 2\pi), x_s, x_v) $$
 
 #### LAB 
 For the LAB space only a hue shift equivariant model is implemented, as stated before a hue shift in LAB space can be modeled as a 2D rotation on the *a* and *b* channels. For this we can reuse almost all of the theory as explained in Section [Color Equivariance](#color-equivariance) with the only change being the parameterization of the group $H_n$ as 
+
 $$ 
 H_n = 
 \begin{bmatrix}
@@ -291,6 +296,7 @@ H_n =
 0 & \sin(\frac{2k\pi}{n}) & \cos (\frac{2k\pi}{n})\\
 \end{bmatrix}
 $$
+
 In which $n$ represents the number of discrete rotations in the group and k indexing the rotation to be applied. The group operation now is a matrix multiplication on the $\mathbb{R}^3$ space of LAB pixel values. The rest of the operations can be left the same.
 
 ### Dante
@@ -311,6 +317,7 @@ During test time different sets of hue space shifted images are evaluated on acc
 
   *Figure 8: Accuracy over test-time hue angle shift for hue equivariant networks trained using input images in LAB color space format. Resnet-18 indicates a baseline model, CE indicates Color (hue) Equivariant networks, jitter indicates training time hue augmentation, LAB shift indicates test-time hue shift is performed in LAB space instead of HSV/RGB space. The mean per model over all test-time hue shifts is indcated in the legend. ([source](CEConv/plot_fig9_lab.py))* 
 </div>
+
 Figure 8 shows some interesting observations. To start the Resnet-18 baseline only shows a peak around images which are not hue shifted (zero degrees). The hue equivariant network (CE) tested with hue space shifts in RGB/HSV space shows small bumps around ±120°, but still exhibits terrible performance. On the other hand the same CE model evaluated with Hue space shift applied in LAB space shows performance equal to the base line also around ±120°, meaning the model is LAB space Hue shift equivariant. This also means that there is a too large gap between Hue space shifts in LAB space compared to RGB/HSV space and the model isn't able to generalize to RGB/HSV space.
 
 Analyzing the jitter results shows that training with augmentations can be a way to implicitly encode equivariance into a network. With the baseline Resnet-18 model outperforming all non jitter models overall hue angles. Interestingly when training the CE-Resnet with jitter we can see a significant jump in performance over the baseline jitter model, on average gaining six percentage points. Getting the highest accuracy over all models, outperforming the reproduced CE-Resnet-18 + jitter model which only gains about four percentage points compared to the RGB baseline+jitter which has similiar performance to he LAB baseline+jitter model. This indicates that first of all training with jitter and a equivariant model combines the best of both worlds and results in a robust model, and that training in LAB space can indeed leed to a small performance increase inline with the findings of [color_net] and [color_segmentation]. 
