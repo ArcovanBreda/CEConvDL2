@@ -262,26 +262,65 @@ Figure 6 clearly shows this difference with an image hue space shifted in RGB an
 This section will explain the implementation of color equivariance networks in the HSV and LAB color space. Just like the original paper the implementation of the lifting layer and the group convolution will be discussed this layer can then replace the standard convolution layers in different architectures like ResNet, in which the width is reduced resulting in a network with equivariant layers but with the same number of parameters.
 
 #### HSV
-**Shifting the Kernel** We have described some of the potential issues surrounding the HSV color space. While aware of these challenges, we initially set out to explore how the network would perform if we naively shifted the hue or saturation of the input layer filters. 
+In HSV space hue is modeled as an angular value between zero and two pi, and can be changed by adding or substracting such an angle modulo two pi. Therefor we represent the group $H_n$ as a set of $\frac{2\pi}{n}$ rotations: $H_n = \{\frac{2\pi}{n} k | k \in \mathbb{Z}, 0 \leq k \lneq n \}$. In HSV space this can paramerized as the vector: 
+$$
+H_n(k) = \begin{bmatrix} \frac{2\pi}{n} k \\ 0 \\ 0 \end{bmatrix} $$
+In which n is the discrete number of rotations and k indicate the k'th rotation out of n. The group action is an addition on a HSV pixel value in $\mathbb{R}^3$ modulo $2\pi$:
+$$
+[H_n(k)f](x) = \begin{bmatrix} (f(x)_h + \frac{2\pi}{n} k) \% 2\pi \\ f(x)_s \\ f(x)_v \end{bmatrix}
+$$
+with $f(x)_{h,s,v}$ indicating the respecitve hue, saturation or value at pixel value $x$ in the input image $f$. Because the Hue value is defined on a cyclic interval the dot product between a hue shifted image ($f$) is the same as the dot product between an inverse hue shifted filter ($\psi$), in contrast to the reproduced paper in which they model hue shift as a 3D rotation meaning they can fall out of the RGB cube:
+$$
+[H_n(k)f](x) \cdot \psi(y) = f(x) \cdot [H_n(-k)\psi](y)
+$$
+
+We can now define the group $G = \mathbb{Z}^2 \times H_n $ as the product of the 2D intergers translation group and the HSV hue shift group. With the operator $ \lambda_{t, m} $ definin a translation and hue shift:
+$$
+[\lambda_{t, m}f](x) = [H_n(m)f](x-t) = \begin{bmatrix} (f(x - t)_h + \frac{2\pi}{n} m) \% 2\pi \\ f(x - t)_s \\ f(x - t)_v \end{bmatrix}
+$$
+
+We can then define the lifting layer outputting the ith output channel as:
+$$
+[f \star\psi^i](x, k) = \sum_{y \in \mathbb{Z}^2} f(y) \cdot [H_n(k)\psi^i](y-x)
+$$
+Here $f$ isthe input image and $\psi^i$ a set of corresponding filters.
+The equivariance can be shown as:
+$$
+[[\lambda_{t, m}f]\star\psi^i](x, k) = \sum_{y \in \mathbb{Z}^2} [H_n(m)f](y-t) \cdot [H_n(k)\psi^i](y-x)
+$$
+$$
+[[\lambda_{t, m}f]\star\psi^i](x, k) = \sum_{y \in \mathbb{Z}^2} f(y) \cdot [H_n(k-m)\psi^i](y-(x-t))
+$$
+$$
+[[\lambda_{t, m}f]\star\psi^i](x, k) = [f\star\psi^i](x-t, k-m)
+$$
+$$
+[[\lambda_{t, m}f]\star\psi^i](x, k) = [\lambda'_{t, m}[f\star\psi^i]](x, k)
+$$
+
+Since the input HSV image is now lifted to the group space all subsequent features and filters are function which need to be indexed using both a pixel location and a discerete rotation. The group convolution can then be defined as:
+$$
+[f \star\psi^i](x, k) = \sum_{y \in \mathbb{Z}^2} \sum_{r=1}^n f(y,r) \cdot psi^i(y-x, (r-k)\%n)
+$$
+
+**Shifting the Kernel** 
+We set out to explore how the network would perform if we naively shifted the hue or saturation of the input layer filters. 
 
 For equivariance to hue shifts this was implemented by creating a stack of 3 x 3 x 3 dimensional filters equal to the number $N$ of requested hue rotations. Here each filter in the stack had its corresponding hue channel shifted by a value of $\frac{i \cdot 2 \pi}{N}$ where $i$ indicates the current rotation, $i \in [0, N-1]$. Additionally, the remainder is calculated over the hue channel such that it is restricted to the interval of $0 - 2 \pi$ creating the cyclic nature of this channel where values larger than $2 \pi$ cycle back to 0.
-
-#TODO? MATH CONVOLUTION SHIT?  MAAR NO CLUE HOE
-
-#TODO SATURATION
-
-#TODO VAL?
 
 **Shifting the Input Image** In order to circumvent some of the issues mentioned above about the HSV color space we also investigated whether we could perform the lifting convolution by shifting the input image instead of the filters. This is more intuitive as opposed to naively shifting the filter. [lifting] show that transforming the signal instead of the filter is indeed possible and these operations are equivalent when restricting to the group and standard convolution. This then allows for more general transformations than when using the group correlation of [group_convs]. In our case this way of performing the lifting operation is required as it enables us to alter the values of pixels instead of only moving the pixel locations.
 Here we shift the channels of the input image while restricting the respective channel values to the domain of this color space, using again the modulus operation for the hue channel and a clipping operation for the saturation and value channels. The lifting convolution is then performed between the stack of N hue or saturation shifted images and a 3 x 3 x 3 filter repeated N times.
 
-#TODO THIS IS FROM THE UNRELEASED PAPER THEY BASHED
-
-$$ ((x_h + h_i)(mod 2\pi), x_s, x_v) $$
-
-#TODO EQUATIONS FOR SAT VAL ?
-
-#TODO MATH CONVOLUTION SHIT DIE HIJ LIET ZIEN?? 
+#TODO SATURATION
+#TODO VAL?
+#TODO redifine group set:
+$H_n = \{\frac{1}{n} k | -1 \leq k \leq n, k \% \frac{k}{n} = 0 \}$.?????? In HSV space this can paramerized as the vector: 
+$$
+H_n(k) = \begin{bmatrix} \frac{2\pi}{n} k \\ 0 \\ 0 \end{bmatrix} $$
+$$
+[H_n(k)f](x) = \begin{bmatrix} f(x)_h \\ \text{clip}(0, f(x)_s + group_elem(n,k), 1) \\ f(x)_v \end{bmatrix}
+$$
+Because the Hue value is defined on a cyclic interval the dot product between a hue shifted image ($f$) is the same as the dot product between an inverse hue shifted filter ($\psi$), in contrast to the reproduced paper in which they model hue shift as a 3D rotation meaning they can fall out of the RGB cube: Dit houodt dan niet meer dus breek equivariance we expect
 
 **Combining Multiple Shifts**
 
@@ -297,7 +336,7 @@ H_n =
 \end{bmatrix}
 $$
 
-In which $n$ represents the number of discrete rotations in the group and k indexing the rotation to be applied. The group operation now is a matrix multiplication on the $\mathbb{R}^3$ space of LAB pixel values. The rest of the operations can be left the same.
+In which $n$ represents the number of discrete rotations in the group and k indexing the rotation to be applied. The group operation now is a matrix multiplication on the $\mathbb{R}^3$ space of LAB pixel values. The rest of the operations can be left the same. Because we are rotating on a regtangular plane we can never fall out of the lab space thus there is again no need for reprojection. However as stated before issues arise when converting from LAB to RGB and back.
 
 ### Dante
 ### Silvia
