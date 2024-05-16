@@ -257,7 +257,31 @@ Figure 6 clearly shows this difference with an image hue space shifted in RGB an
 ### METHODOLOGY
 This section will explain the implemntation of color equivariance networks in the HSV and LAB color space. Just like the original paper the implementation of the lifting layer and the group convolution will be discussed this layer can then replace the standard convoultion layers in different architectures like ResNet, in which the width is reduced resulting in a network with equivariant layers but with the same number of parameters.
 
-**LAB**
+#### HSV
+**Shifting the Kernel** We have described some of the potential issues surrounding the HSV color space. While aware of these challenges, we initially set out to explore how the network would perform if we naively shifted the hue or saturation of the input layer filters. 
+
+For equivariance to hue shifts this was implemented by creating a stack of 3 x 3 x 3 dimensional filters equal to the number $N$ of requested hue rotations. Here each filter in the stack had its corresponding hue channel shifted by a value of $\frac{i \cdot 2 \pi}{N}$ where $i$ indicates the current rotation, $i \in [0, N-1]$. Additionally, the remainder is calculated over the hue channel such that it is restricted to the interval of $0 - 2 \pi$ creating the cyclic nature of this channel where values larger than $2 \pi$ cycle back to 0.
+
+#TODO? MATH CONVOLUTION SHIT?  MAAR NO CLUE HOE
+
+#TODO SATURATION
+
+#TODO VAL?
+
+**Shifting the Input Image** In order to circumvent some of the issues mentioned above about the HSV color space we also investigated whether we could perform the lifting convolution by shifting the input image instead of the filters. This is more intuitive as opposed to naively shifting the filter. [lifting] show that transforming the signal instead of the filter is indeed possible and these operations are equivalent when restricting to the group and standard convolution. This then allows for more general transformations than when using the group correlation of [group_convs]. In our case this way of performing the lifting operation is required as it enables us to alter the values of pixels instead of only moving the pixel locations.
+Here we shift the channels of the input image while restricting the respective channel values to the domain of this color space, using again the modulus operation for the hue channel and a clipping operation for the saturation and value channels. The lifting convolution is then performed between the stack of N hue or saturation shifted images and a 3 x 3 x 3 filter repeated N times.
+
+#TODO THIS IS FROM THE UNRELEASED PAPER THEY BASHED
+
+$$ ((x_h + h_i)(mod 2\pi), x_s, x_v) $$
+
+#TODO EQUATIONS FOR SAT VAL ?
+
+#TODO MATH CONVOLUTION SHIT DIE HIJ LIET ZIEN?? 
+
+**Combining Multiple Shifts**
+
+#### LAB 
 For the LAB space only a hue shift equivariant model is implemented, as stated before a hue shift in LAB space can be modeled as a 2D rotation on the *a* and *b* channels. Sticking with the notation of the reproduced paper we can define the  
 ### Dante
 ### Silvia
