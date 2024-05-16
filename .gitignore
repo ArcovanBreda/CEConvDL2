@@ -197,4 +197,6 @@ output/longtailed/longtailed-seed_9-rotations_1
 output/longtailed/longtailed-seed_9-rotations_3
 output/longtailed/longtailed-seed_10-rotations_1
 output/longtailed/longtailed-seed_10-rotations_3
+stl10_binary/
+stl10_binary.tar.gz
 *.ckpt

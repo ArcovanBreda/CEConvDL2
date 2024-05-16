@@ -522,6 +522,9 @@ def main(args) -> None:
                                           mode='max')
 
     args.run_name = run_name
+    
+    print("run name:", args.run_name)
+    exit()
 
     # Instantiate model.
     trainer = pl.Trainer.from_argparse_args(
