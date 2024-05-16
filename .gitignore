@@ -197,3 +197,4 @@ output/longtailed/longtailed-seed_9-rotations_1
 output/longtailed/longtailed-seed_9-rotations_3
 output/longtailed/longtailed-seed_10-rotations_1
 output/longtailed/longtailed-seed_10-rotations_3
+*.ckpt
