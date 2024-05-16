@@ -240,12 +240,25 @@ Furthermore, due to these entangled color channels, it’s much harder to achiev
 **HSV** - is an ideal color space for our purpose of extending the achieved hue equivariant CNN with saturation equivariance. With a separate channel encoding the hue of each pixel we can make a direct comparison to the methods employed by [main] in order to perform hue shifts in the RGB color space. Additionally, the separate saturation and value channels allow us to experiment if equivariance to saturation or value shifts are beneficial for the task of image classification.
 However, there are some potential issues with this color space. Firstly, there is the concern of the discontinuity in the hue channel. Here the fact that the hue channel is encoded from $0$ to $2 \pi$ could pose issues for a network as while the values of $0$ and $2 \pi$ are as far apart as possible for an HSV image, these values encode the same exact color as the color space effectively loops around from $2\pi$ back to $0$. Secondly, there is the fact that the saturation and value channels are not cyclic and lie within a $0-1$ interval. Therefore, when shifting these channels we would need to clip shifts that fall outside this interval, causing a loss of information. Lastly, it is not straightforward how to transform a kernel under the regular representation of the group elementents for either the group of hue rotations, or saturation and value translations, in order to perform the lifting convolution.
 
-**LAB** - #TODO
+**LAB** - is a color space defined by the International Commission on Illumination (CIE) in 1976. Research by [color_net] and [color_segmentation] show that images converted to LAB color space achive around a two percentage point higher score on classifications and segmentations task as compared to other color models. The LAB model closely alligns with human vision encoding an image using three channels, the *L* channel encodes the perceptual lightness while *a* and *b* encode the color as a point on a 2D grid with the *a* axis modeling the red-green shift and *b* the yellow-blue shift corresponding to the four unique colors of human vision. Figure 5 shows this 2D grid in which a hue space shift can be modeled as a 2D rotation on this plane, suggesting that the full color space has a cylindrical form. However when visuialing the RGB gammut inside the 3D LAB space, on the right, it doesn't show this cylindar. This is a result of the nonlinear relations betweeen *L*, *a*, and *b* intended to model the mimic the nonlinear response of the visual system, which is absent in the RGB color model.     
+<div align="center">
+  <img src="blogpost_imgs/lab-color-space.png" alt="Hue rotations" width="100%">
+
+  *Figure 5: left: LAB color space visualized as a 2d color grid, right: sRGB color gammut shown in LAB space. ([source](https://www.xrite.com/blog/lab-color-space), [source](https://blogs.mathworks.com/steve/2015/04/03/displaying-a-color-gamut-surface/))*
+</div>
+Hue equivariance in LAB space would require a rotation matrix however due to the problems with converting between RGB/HSV as outligned below it could be difficult for a hue equivariant model trainend on LAB space hue equivariance to also become equivariant to hue space shifted images in RGB/HSV format which are thereafter converted to LAB format.
+<div align="center">
+  <img src="blogpost_imgs/hue_shift_comparison.jpg" alt="Hue rotations" width="100%">
+
+  *Figure 6: An example image (original far left) hue space shited multiple times in HSV (angular addition), RGB (3D rotation) and LAB (2D rotation) space, thereafter converted to RGB space for visualization. ([source](CEConv/plot_hue_comparison.py))*
+</div>
+Figure 6 clearly shows this difference with an image hue space shifted in RGB and HSV space resulting in the same image however performing the same shift in LAB space and thereafter converting back to RGB space results in a slightly different colored image.
 
 ### METHODOLOGY
+This section will explain the implemntation of color equivariance networks in the HSV and LAB color space. Just like the original paper the implementation of the lifting layer and the group convolution will be discussed this layer can then replace the standard convoultion layers in different architectures like ResNet, in which the width is reduced resulting in a network with equivariant layers but with the same number of parameters.
 
-
-### Rens
+**LAB**
+For the LAB space only a hue shift equivariant model is implemented, as stated before a hue shift in LAB space can be modeled as a 2D rotation on the *a* and *b* channels. Sticking with the notation of the reproduced paper we can define the  
 ### Dante
 ### Silvia
 
