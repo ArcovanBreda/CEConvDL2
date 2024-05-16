@@ -411,7 +411,7 @@ class PL_model(pl.LightningModule):
             print(table["hue"], "\n\n")
             print(table["sat"], "\n\n")
             print(table["acc"])
-            np.savez(f"output/test_results/maintest_{self.args.run_name}", hue=table["hue"], sat=table["sat"], acc=table["acc"])
+            np.savez(f"output/test_results/{self.args.run_name}", hue=table["hue"], sat=table["sat"], acc=table["acc"])
         else:
             table = {"hue": [],
                     "acc": []}
@@ -428,7 +428,7 @@ class PL_model(pl.LightningModule):
 
             print(table["hue"], "\n\n")
             print(table["acc"])
-            np.savez(f"output/test_results/maintest_{self.args.run_name}", hue=table["hue"], acc=table["acc"])
+            np.savez(f"output/test_results/{self.args.run_name}", hue=table["hue"], acc=table["acc"])
 
         # Log test table with wandb.
         self.logger.experiment.log({"test_table": test_table})  # type: ignore
@@ -625,7 +625,7 @@ if __name__ == "__main__":
     parser.add_argument("--hsv_test", dest="hsv_test", action="store_true", help="Apply test time hue/saturation/value shift directly in HSV space")
     parser.add_argument("--lab_test", dest="lab_test", action="store_true", help="Apply test time hue shift in LAB space")
     parser.add_argument("--img_shift", dest="img_shift", action="store_true", 
-                        help="Apply the lifting convolution by performing the hue shift on the input image instead of the input layer kernels")
+                        help="Apply the lifting convolution by performing the hue / sat / val shift on the input image instead of the input layer kernels")
 
     parser = PL_model.add_model_specific_args(parser)
 

@@ -134,7 +134,7 @@ def _shifted_img_stack(imgs, out_rotations, hue_shift, sat_shift, val_shift):
                 sat_shifted_imgs.append(imgs_cloned)
     else:
         # Didn't Sat shift images
-        sat_shifted_imgs.append(imgs.clone())
+        sat_shifted_imgs = hue_shifted_imgs
 
     if val_shift:
         # Create value shifts between -1 and 1 depending on number of "out_rotations" (shifts)

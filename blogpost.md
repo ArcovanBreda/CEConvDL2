@@ -1,4 +1,4 @@
-# Title
+# A deep dive into colorspace equivariant networks
 
 **Authors:** *S.R. Abbring, H.C. van den Bos, R. den Braber, A.J. van Breda, D. Zegveld*
 
@@ -12,7 +12,7 @@ The objectives of this blogpost are to:
 
 1. Discuss the methods introduced in the paper
 1. Verify the authors' claims
-1. Extend the notion of color equivariance to other dimensions beyond hue
+1. Extend the notion of color equivariance to other dimensions beyond hue by leveraging different colorspaces than RGB
 
 ---
 
@@ -222,10 +222,31 @@ The lines in the plot are not smooth because it has only been evaluated on 37 po
 
 ## Further Research
 
+The reproduced results showcase that the notion of equivariance can be extended to photometric transformations by incorporating parameter sharing over hue shifts. 
+However, as opposed to what the title of the paper suggests, these networks are only equivariant to hue shifts and not fully color equivariant. We therefore set out to explore if we can move one step closer to achieving a fully color equivariant CNN by adding saturation or value shift equivariance in addition to hue shift equivariance. In order to disentangle these channels, we experiment with switching from the RGB color space to the HSV color space.
+Firstly, we investigate if the effect of modelling hue shifts in the HSV color space achieves similar results. Secondly, we look into modelling saturation and value shifts to achieve equivariance to these respective channels and investigate their results individually. Lastly, we take a combination between the different channels to explore whether the network performance will see a boost when being equivariant to a greater variety of changes in illumination due the the combination of hue and saturation or value shifts.
+
+Additionally, one noticeable flaw in the work of [main] is the fact that they model hue shifts with a 3D rotation in the RGB space along the diagonal vector [1,1,1]. This can cause pixels with values close to the edge of the RGB cube to fall outside the RGB cube when rotated for a certain hue shift. In order to stay within the RGB space, these pixels have to be reprojected back into the RGB cube, effectively clipping the values. This causes the artifacts that can be seen in Figure 4, where training the CECNN for an increasing number of hue rotations causes the peaks, corresponding to the trained hue shifts, to not be of equal height due to clipping effects near the boundaries of the RGB cube.
+We explore if we can circumvent these limitations by modelling the hue shift as a 2D rotation instead in the LAB color space.
+
+### Color Spaces
+
+While most CNNs are trained using RGB images, work by [color_net] and [color_segmentation] shows that different color spaces can be utilized to achieve similar performance for the task of image classification and segmentation respectively. 
+
+**RGB** - is the most frequently used color space in image datasets. Moreover, it is also the dominant format for most digital images and as such comes with a host of libraries and functions that work upon images presented in this color space.
+However, due to the red, green and blue channels all contributing to the hue of an image, a 3D rotation is required in order to perform a hue shift. This 3D rotation has to be performed along the [1,1,1] axis of the color space in order to achieve a hue shift but comes with the disadvantage of the above mentioned clipping effects near the boundaries of the RGB cube. 
+Furthermore, due to these entangled color channels, it’s much harder to achieve a saturation or value shift in this color space in comparison to other color spaces that encode the hue and saturation/value/lightness channels separately.
+
+**HSV** - is an ideal color space for our purpose of extending the achieved hue equivariant CNN with saturation equivariance. With a separate channel encoding the hue of each pixel we can make a direct comparison to the methods employed by [main] in order to perform hue shifts in the RGB color space. Additionally, the separate saturation and value channels allow us to experiment if equivariance to saturation or value shifts are beneficial for the task of image classification.
+However, there are some potential issues with this color space. Firstly, there is the concern of the discontinuity in the hue channel. Here the fact that the hue channel is encoded from $0$ to $2 \pi$ could pose issues for a network as while the values of $0$ and $2 \pi$ are as far apart as possible for an HSV image, these values encode the same exact color as the color space effectively loops around from $2\pi$ back to $0$. Secondly, there is the fact that the saturation and value channels are not cyclic and lie within a $0-1$ interval. Therefore, when shifting these channels we would need to clip shifts that fall outside this interval, causing a loss of information. Lastly, it is not straightforward how to transform a kernel under the regular representation of the group elementents for either the group of hue rotations, or saturation and value translations, in order to perform the lifting convolution.
+
+**LAB** - #TODO
+
+### METHODOLOGY
+
+
 ### Rens
-
 ### Dante
-
 ### Silvia
 
 TODO: create a nice narrative with these three
