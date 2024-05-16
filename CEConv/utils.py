@@ -142,8 +142,7 @@ def plot_figure_9(data_dir,verbose=False):
     checkpoints = [f"{data_dir}/output/classification/flowers102-resnet18_1-false-jitter_0_0-split_1_0-seed_0.pth.tar.ckpt",
                    f"{data_dir}/output/classification/flowers102-resnet18_1-false-jitter_0_5-split_1_0-seed_0.pth.tar.ckpt",
                    f"{data_dir}/output/classification/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0.pth.tar.ckpt",
-                   f"{data_dir}/output/classification/flowers102-resnet18_3-true-jitter_0_5-split_1_0-seed_0.pth.tar.ckpt"]
-    
+                   f"{data_dir}/output/classification/flowers102-resnet18_3-true-jitter_0_5-split_1_0-seed_0.pth.tar.ckpt"] # DIS NIET GOED
     model_names = ["ResNet-18", "ResNet-18 + jitter",
                    "CE-ResNet-18 [Novel]", "CE-ResNet-18 + jitter [Novel]"]
     colors = [['mediumblue', "-"], ['mediumblue', "--"], ['darkorange', "-"], ['darkorange', "--"]]
@@ -154,8 +153,6 @@ def plot_figure_9(data_dir,verbose=False):
     for (checkpoint, name, color) in zip(checkpoints, model_names, colors):
         results = evaluate_classify(checkpoint, verbose=False)
         print(f"\t\t {name}: {np.mean(results['acc']):.3f}")
-        print(list(results["hue"]))
-        exit()
         plt.plot(results["hue"], results["acc"]*100, color[1], label=f"{name} ({np.mean(results['acc'])*100:.1f}%)", color=color[0], linewidth=3)
         # plt.plot(hue_values, checkpoint, color[1], label=name, color=color[0], linewidth=3)
 
@@ -461,7 +458,7 @@ def color_selective_datasets_plot(path="/home/arco/Downloads/Master AI/CEConvDL2
             loc="lower center", borderaxespad=0., ncol=1, fancybox=True, shadow=True, 
                columnspacing=0.7, handletextpad=0.2, fontsize=18) 
 
-    f.suptitle("Color Equivariant statges vs accuracy improvement", fontsize=22)
+    f.suptitle("Color Equivariant stages vs accuracy improvement", fontsize=22)
 
     plt.show()
     
