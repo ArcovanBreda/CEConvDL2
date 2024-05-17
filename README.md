@@ -1,17 +1,22 @@
-# CEConv - Color Equivariant Convolutional Networks
+# A deep dive into colorspace equivariant networks
+This repository contains a reproduction and exstension on CEConv - Color Equivariant Convolutional Networks [[ArXiv](https://arxiv.org/abs/2310.19368)] - NeurIPS 2023, by Attila Lengyel, Ombretta Strafforello, Robert-Jan Bruintjes, Alexander Gielisse, and Jan van Gemert. This readme contains all commands in order to run the performed experiments, for an explanation about the project we refer you to our extensive [blogpost](./blogpost.md). We sincerely thank the original authors for providing the original [code](https://github.com/Attila94/CEConv).
 
-[[ArXiv](https://arxiv.org/abs/2310.19368)] - NeurIPS 2023, by Attila Lengyel, Ombretta Strafforello, Robert-Jan Bruintjes, Alexander Gielisse, and Jan van Gemert.
-
-## Abstract
-Color is a crucial visual cue readily exploited by Convolutional Neural Networks (CNNs) for object recognition. However, CNNs struggle if there is data imbalance between color variations introduced by accidental recording conditions. Color invariance addresses this issue but does so at the cost of removing all color information, which sacrifices discriminative power. In this paper, we propose Color Equivariant Convolutions (CEConvs), a novel deep learning building block that enables shape feature sharing across the color spectrum while retaining important color information. We extend the notion of equivariance from geometric to photometric transformations by incorporating parameter sharing over hue-shifts in a neural network. We demonstrate the benefits of CEConvs in terms of downstream performance to various tasks and improved robustness to color changes, including train-test distribution shifts. Our approach can be seamlessly integrated into existing architectures, such as ResNets, and offers a promising solution for addressing color-based domain shifts in CNNs.
+## Prerequisites
+* A machnine running Linux / WSL on windows also works
+* [Conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)
+* A CUDA enabled GPU with at least 10GB of VRAM, classification experiments may require 12GB or more (decreasing the batch size may help at the cost of training time).
 
 ## Setup
 
 Create a local clone of this repository:
 ```bash
-git clone https://github.com/Attila94/CEConv
+git clone https://github.com/ArcovanBreda/CEConvDL2.git
 ```
-
+Create and activate a conda environment:
+```bash
+conda create -n CEConv python=3.12 
+conda activate CEConv 
+```
 See `requirements.txt` for the required Python packages. You can install them using:
 ```bash
 pip install -r requirements.txt
@@ -24,9 +29,9 @@ python setup.py install
 
 Set the required environment variables:
 ```bash
-export WANDB_DIR=/home/rensdebee/CEConvDL2/WANDB  # Store wandb logs here.
-export DATA_DIR=/home/rensdebee/CEConvDL2/DATA  # Store datasets here.
-export OUT_DIR=/home/rensdebee/CEConvDL2/OUT  # Store datasets here.
+export WANDB_DIR=path_to_wandb_logs  # Store wandb logs here.
+export DATA_DIR=path_to_datasets  # Store datasets here.
+export OUT_DIR=path_to_model_checkpoints  # Store models here.
 ```
 
 ## How to use
@@ -43,8 +48,22 @@ class CNN(nn.Module):
         super(CNN, self).__init__()
 
         # Args: input rotations, output rotations, input channels, output channels, kernel size, padding.
-        self.conv1 = CEConv2d(1, 3, 3, 32, 3, padding=1)
-        self.conv2 = CEConv2d(3, 3, 32, 64, 3, padding=1)
+        self.conv1 = CEConv2d(1, 3, 3, 32, 3,
+        lab_space = False, # indicates input image is in LAB color space
+        hsv_space = False, # indicates input image is in LAB color space
+        img_shift = False, # indicates group action is applied on image instead of kernel
+        sat_shift = False, # indicates saturation equivariance in HSV space
+        hue_shift = False, # indicates hue equivariance in HSV space
+        val_shift = False, # indicates value equivariance in HSV space
+        padding=1)
+        self.conv2 = CEConv2d(3, 3, 32, 64, 3,
+        lab_space = False,
+        hsv_space = False,
+        img_shift = False,
+        sat_shift = False,
+        hue_shift = False,
+        val_shift = False,
+        padding=1)
         
         self.fc = nn.Linear(64, 10)
 
@@ -60,10 +79,9 @@ class CNN(nn.Module):
 ```
 
 ## Experiments
-
-The experiments from the paper can be reproduced by running the following commands.
-
-### ColorMNIST
+The experiments from our blog post can be reproduced by running the following commands.
+### Reproduction
+#### ColorMNIST
 **Generate ColorMNIST datasets**
 ```bash
 python -m experiments.color_mnist.colormnist_longtailed
@@ -108,52 +126,37 @@ python -m experiments.color_mnist.train_biased --std $2 --rotations 3 --planes 1
 python -m experiments.color_mnist.train_biased --std $2 --rotations 3 --planes 18 --ce_layers 4 --separable --groupcosetpool
 ```
 
-### Classification
-Only the commands for CIFAR10 are provided. The commands for other datasets are similar, where the dataset can be specified using the `--dataset 'cifar100'`. Optionally the `--architecture 'resnet18'` flag can be added to use a ResNet18 architecture instead of a ResNet44.
+### Extension
+#### HSV
+**Hue**
 
+**Saturation**
+
+**Value**
 ```bash
-# Baseline, grayscale and color jitter.
-python -m experiments.classification.train --rotations 1
-python -m experiments.classification.train --rotations 1 --grayscale
-python -m experiments.classification.train --rotations 1 --jitter 0.5
+# Baseline
+python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --img_shift --value_shift --epochs 200 --nonorm --hsv_test
+# Baseline + jitter
+python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --img_shift --value_shift --epochs 200 --nonorm --hsv_test --value_jitter 0 100
 
-# Color Equivariant with and without group coset pooling and color jitter.
-python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable
-python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --jitter 0.5
-
-# Hybrid Color Equivariant architectures.
-python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 1 --width 31
-python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 2 --width 30
+# Value equivariance
+python -m experiments.classification.train --rotations 5 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --img_shift --value_shift --epochs 200 --nonorm --hsv_test
+# Value equivariance + jitter
+python -m experiments.classification.train --rotations 5 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --img_shift --value_shift --epochs 200 --nonorm --hsv_test --value_jitter 0 100
 ```
-
-### ImageNet
-The ImageNet training script uses the [NVIDIA DALI](https://github.com/NVIDIA/DALI) library for accelerated data loading.
-
+#### LAB 
+**Hue**
 ```bash
-# Baseline.
-python -m experiments.imagenet.main --rotations 1 --jitter 0.0 --arch 'resnet18'
+# Baseline
+python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --lab --epochs 200 --nonorm
+# Baseline + jitter
+python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --lab --epochs 200 --nonorm --jitter 0.5
 
-# Color Equivariant.
-python -m experiments.imagenet.main --rotations 3 --batch-size 256 --jitter 0.0 --workers 4 --arch 'resnet18' --groupcosetmaxpool --separable
+# Hue lab space equivariance
+python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --lab --epochs 200 --nonorm
+# Hue lab space equivariance + jitter
+python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --lab --epochs 200 --nonorm --jitter 0.5
 
-# Hybrid Color Equivariant architectures.
-python -m experiments.imagenet.main --rotations 3 --batch-size 256 --jitter 0.0 --workers 4 --arch 'resnet18' --network_width 63 --run_name 'hybrid_1' --groupcosetmaxpool --separable --ce_stages 1
-python -m experiments.imagenet.main --rotations 3 --batch-size 256 --jitter 0.0 --workers 4 --arch 'resnet18' --network_width 63 --run_name 'hybrid_2' --groupcosetmaxpool --separable --ce_stages 2
-python -m experiments.imagenet.main --rotations 3 --batch-size 256 --jitter 0.0 --workers 4 --arch 'resnet18' --network_width 61 --run_name 'hybrid_3' --groupcosetmaxpool --separable --ce_stages 3
-```
-
-
-## Citation
-
-If you use this code in your research, please cite our paper:
-
-```
-@inproceedings{
-    lengyel2023color,
-    title={Color Equivariant Convolutional Networks},
-    author={Attila Lengyel and Ombretta Strafforello and Robert-Jan Bruintjes and Alexander Gielisse and Jan van Gemert},
-    booktitle={Thirty-seventh Conference on Neural Information Processing Systems},
-    year={2023},
-    url={https://openreview.net/forum?id=xz8j3r3oUA}
-}
+# Hue lab space equivariance + test images hue shifted in lab space
+python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --lab --epochs 200 --nonorm --lab_test
 ```
