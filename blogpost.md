@@ -96,18 +96,28 @@ a - b & a + b & \cos (\frac{2k\pi}{n}) + a \\
 \end{bmatrix}
 $$
 
-The group of discrete hue shifts is combined with the group of discrete 2D translations into the group $G = \mathbb{Z}^2 \times H_n$. Now Color Equivariant Convolution (CEConv) in the first layer is defined:
+The group of discrete hue shifts is combined with the group of discrete 2D translations into the group $G = \mathbb{Z}^2 \times H_n$. The Color Equivariant Convolution (CEConv) in the first layer is defined in \[main\] as:
 
-$$\begin{align} 
+$$
+\begin{align} 
 \[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{c=1}^{C^l}f_c(y) \cdot H_n(k)\psi_c^i(y - x) & \qquad \qquad (\text{Equation 6})\\ 
-\end{align}$$
+\end{align}
+$$
 
-For the derivation of the equivariance of the CEConv layer, we refer to the original paper \[main\].
+However, we think a small mistake is made here as the sum $\sum_{c=1}^{C^l}$ indicates that $f_c(y)$ and $\psi_c^i(y - x)$ are scalar values which does not make sense given the dot product and the matrix $H_n(k)$.
+Therefor the correct formula should be:
+$$
+\begin{align} 
+\[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}f(y) \cdot H_n(k)\psi^i(y - x) & \qquad \qquad (\text{Equation 7})\\ 
+\end{align}
+$$
+
+This change does not impact the derivation of the equivariance of the CEConv layer, for this we refer to the original paper \[main\].
 
 For the hidden layers, the feature map $[f \star \psi]$ is a function on $G$ parameterized by x,k. The CEConv hidden layers are defined as:
 
 $$\begin{align} 
-\[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{r=1}^n\sum_{c=1}^{C^l}f_c(y,r) \cdot \psi_c^i(y - x, (r-k)\%n) & \qquad \qquad (\text{Equation 7})\\ 
+\[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{r=1}^n\sum_{c=1}^{C^l}f_c(y,r) \cdot \psi_c^i(y - x, (r-k)\%n) & \qquad \qquad (\text{Equation 8})\\ 
 \end{align}$$
 
 <!---
@@ -322,18 +332,22 @@ mentioned above about the HSV color space we also investigated whether we could 
 
 Here we shift the channels of the input image while restricting the respective channel values to the domain of this color space, using again the modulus operation for the hue channel and a clipping operation for the saturation and value channels. The lifting convolution is then performed between the stack of N hue or saturation shifted images and a 3 x 3 x 3 filter repeated N times.
 
-#TODO SATURATION
-#TODO VAL?
-#TODO redifine group set:
-$H_n = \{\frac{1}{n} k | -1 \leq k \leq n, k \% \frac{k}{n} = 0 \}$.?????? In HSV space this can paramerized as the vector: 
+For **saturation** equivariance we need to redifine the group, because saturation is represented as a number between zero and one we need to create a group containing n elements equally spaced between minus and one to model bot an increase and decrease in saturation. This makes all group elements fall in the set:
+$H_n = \{-1 +k\frac{2}{n-1} | n \geq 2, k = 0,1,2,...,n-1 \}$. In HSV space this can paramerized as the vector: 
 $$
-H_n(k) = \begin{bmatrix} \frac{2\pi}{n} k \\ 0 \\ 0 \end{bmatrix} $$
+H_n(k) = \begin{bmatrix} -1 +k\frac{2}{n-1} \\ 0 \\ 0 \end{bmatrix} $$
+Because saturation is only definend between 0 and 1 and is not cyclic we need to clip the value after the group action:
 $$
-[H_n(k)f](x) = \begin{bmatrix} f(x)_h \\ \text{clip}(0, f(x)_s + group_elem(n,k), 1) \\ f(x)_v \end{bmatrix}
+[H_n(k)f](x) = \begin{bmatrix} f(x)_h \\ \text{clip}(0, f(x)_s + (-1 +k\frac{2}{n-1}), 1) \\ f(x)_v \end{bmatrix}
 $$
-Because the Hue value is defined on a cyclic interval the dot product between a hue shifted image ($f$) is the same as the dot product between an inverse hue shifted filter ($\psi$), in contrast to the reproduced paper in which they model hue shift as a 3D rotation meaning they can fall out of the RGB cube: Dit houodt dan niet meer dus breek equivariance we expect
+This clipping due to the non-cyclic nature of saturation might break equivariance, which will be tested with several experiments, apllying the group action on the kernel, the image and testing a different values for n.
 
 
+**Value** equivariance can be modelled in the same way as described for saturation the only thing different is that the group action now acts upon the value channel:
+$$
+[H_n(k)f](x) = \begin{bmatrix} f(x)_h \\ f(x)_s \\ \text{clip}(0, f(x)_v + \frac{1}{n} k, 1) \end{bmatrix}
+$$
+Due to our earlier experimenting with aplying the group element on the kernel or the image we decide to now only model the value shift the input images as described in **Shifting the Input Image**.
 **Combining Multiple Shifts**
 #TODO
 
@@ -384,8 +398,7 @@ Similarly, the ever so slight decrease in performance on the top end of the CE-R
 ##### Saturation Equivariance
 
 ##### Value Equivariance
-For value equivariance, the same experiments as for saturation are performed. The only difference is a different negative shift range starting from minus a half instead of minus one as this would indicate a completely black image which would be all zeroes in RGB space meaning a complete loss of information. The results can be found in Figure 8
-
+For value equivariance, we only tested shifting the input iamges with 5 shifts. Initialy we tested with a shift range starting at minus one however in RGB space this results in a totally black images with a complete loss of information therefor we decided to replace this minus one with minus a half. The results can be found in Figure 8/
 <div align="center">
   <img src="blogpost_imgs/value_equivariance.jpg" alt="HSV space value equivariance" width="100%">
 
