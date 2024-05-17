@@ -237,6 +237,15 @@ While most CNNs are trained using RGB images, work by [color_net] and [color_seg
 However, due to the red, green, and blue channels all contributing to the hue of an image, a 3D rotation is required in order to perform a hue shift. This 3D rotation has to be performed along the [1,1,1] axis of the color space in order to achieve a pure hue rotation in this space but comes with the disadvantage of the above-mentioned clipping effects near the boundaries of the RGB cube. 
 Furthermore, due to these entangled color channels, it’s much harder to achieve a saturation or value shift in this color space when compared to other color spaces that encode the hue and saturation/value/lightness channels separately.
 
+<p align="center">
+  <img alt="A visualization of the RGB color space" src="blogpost_imgs/RGB_CUBE_ROT_AXIS.png" width="38%"> 
+&nbsp; &nbsp; &nbsp; &nbsp;
+  <img alt="A visualization of the HSV color space" src="blogpost_imgs/HSV_COLOR_SPACE.png" width="45%">
+  <div align="center">
+  *Figure D: DESCRIPTION!.* 
+  </div>
+</p>
+
 **HSV** - is an ideal color space for our purpose of extending the achieved hue equivariant CNN with saturation equivariance. With a separate channel encoding the hue of each pixel, we can make a direct comparison to the methods employed by [main] in order to perform hue shifts in the RGB color space. Additionally, the separate saturation and value channels allow us to experiment if equivariance to saturation or value shifts are beneficial for the task of image classification.
 However, there are some potential issues with this color space. Firstly, there is the concern about the discontinuity in the hue channel. Here the fact that the hue channel, in our implementation, is encoded as an angle ranging from $0$ to $2 \pi$ could pose learning issues for a network. This is because the values of $0$ and $2 \pi$ are as far apart as possible for an HSV image but these values encode the same color, since the color space effectively loops around from $2\pi$ back to $0$ in a circular manner. Secondly, there is the fact that the saturation and value channels are not cyclic and lie within a $0-1$ interval. Therefore, when shifting these channels we would need to clip shifts that fall outside this interval, causing a loss of information. Lastly, it is not straightforward how to transform a kernel under the regular representation of the group elements for either the group of hue rotations, or saturation and value translations, in order to perform the lifting convolution.
 
