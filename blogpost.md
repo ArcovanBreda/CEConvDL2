@@ -281,43 +281,57 @@ Figure 6 clearly shows this difference with an image hue space shifted in RGB an
 This section will explain the implementation of color equivariance networks in the HSV and LAB color space. Just like the original paper the implementation of the lifting layer and the group convolution will be discussed this layer can then replace the standard convolution layers in different architectures like ResNet, in which the width is reduced resulting in a network with equivariant layers but with the same number of parameters.
 
 #### HSV
-In our implementation of the HSV space hue is modeled as an angular value between zero and two pi, and can be changed by adding or substracting such an angle modulo two pi. Therefor we represent the group $H_n$ as a set of $\frac{2\pi}{n}$ rotations: $H_n = \{\frac{2\pi}{n} k | k \in \mathbb{Z}, 0 \leq k \lneq n \}$. In HSV space this can paramerized as the vector: 
+In our implementation of the HSV space hue is modeled as an angular value between zero and two pi, and can be changed by adding or subtracting such an angle modulo two pi. Therefor we represent the group $H_n$ as a set of $\frac{2\pi}{n}$ rotations: $H_n = \{\frac{2\pi}{n} k | k \in \mathbb{Z}, 0 \leq k \lneq n \}$. In HSV space this can parameterized as the vector: 
+
 $$
-H_n(k) = \begin{bmatrix} \frac{2\pi}{n} k \\ 0 \\ 0 \end{bmatrix} $$
-In which n is the discrete number of rotations and k indicate the k-th rotation out of n. The group action is an addition on a HSV pixel value in $\mathbb{R}^3$ modulo $2\pi$:
-$$
-[H_n(k)f](x) = \begin{bmatrix} (f(x)_h + \frac{2\pi}{n} k) \% 2\pi \\ f(x)_s \\ f(x)_v \end{bmatrix}
-$$
-with $f(x)_{h,s,v}$ indicating the respecitve hue, saturation or value at pixel value $x$ in the input image $f$. Because the Hue value is defined on a cyclic interval the dot product between a hue shifted image ($f$) is the same as the dot product between an inverse hue shifted filter ($\psi$), in contrast to the reproduced paper in which they model hue shifts as a 3D rotation meaning they can fall out of the RGB cube:
-$$
-[H_n(k)f](x) \cdot \psi(y) = f(x) \cdot [H_n(-k)\psi](y)
+H_n (k) = \begin{bmatrix} \frac{2\pi}{n} k \\ 0 \\ 0 \end{bmatrix} 
 $$
 
-We can now define the group $G = \mathbb{Z}^2 \times H_n $ as the product of the 2D integers translation group and the HSV hue shift group. With the operator $ \lambda_{t, m} $ definin a translation and hue shift:
+In which n is the discrete number of rotations and k indicates the k-th rotation out of n. The group action is an addition on a HSV pixel value in $\mathbb{R}^3$ modulo $2\pi$:
+
 $$
-[\lambda_{t, m}f](x) = [H_n(m)f](x-t) = \begin{bmatrix} (f(x - t)_h + \frac{2\pi}{n} m) \% 2\pi \\ f(x - t)_s \\ f(x - t)_v \end{bmatrix}
+[H_n(k)f] (x) = \begin{bmatrix} (f(x)_h + \frac{2\pi}{n} k) \% 2\pi \\ f(x)_s \\ f(x)_v \end{bmatrix}
+$$
+
+with $f(x)_{h,s,v}$ indicating the respective hue, saturation, or value at pixel value $x$ in the input image $f$. Because the Hue value is defined on a cyclic interval the dot product between a hue-shifted image ($f$) is the same as the dot product between an inverse hue-shifted filter ($\psi$), in contrast to the reproduced paper in which they model hue shifts as a 3D rotation meaning they can fall out of the RGB cube:
+
+$$
+[H_n(k)f] (x) \cdot \psi(y) = f(x) \cdot [H_n(-k)\psi] (y)
+$$
+
+We can now define the group $G = \mathbb{Z}^2 \times H_n $ as the product of the 2D integers translation group and the HSV hue shift group. With the operator $ \lambda_{t, m} $ defining a translation and hue shift:
+
+$$
+[\lambda_{t, m}f] (x) = [H_n(m)f] (x-t) = \begin{bmatrix} (f(x - t)_h + \frac{2\pi}{n} m) \% 2\pi \\ f(x - t)_s \\ f(x - t)_v \end{bmatrix}
 $$
 
 We can then define the lifting layer outputting the i-th output channel as:
+
 $$
-[f \star\psi^i](x, k) = \sum_{y \in \mathbb{Z}^2} f(y) \cdot [H_n(k)\psi^i](y-x)
+[f \star\psi^i] (x, k) = \sum_{y \in \mathbb{Z}^2} f(y) \cdot [H_n(k)\psi^i] (y-x)
 $$
+
 Here $f$ is the input image and $\psi^i$ a set of corresponding filters.
 The equivariance can be shown as:
+
 $$
-[[\lambda_{t, m}f]\star\psi^i](x, k) = \sum_{y \in \mathbb{Z}^2} [H_n(m)f](y-t) \cdot [H_n(k)\psi^i](y-x)
+[[\lambda_{t, m}f]\star\psi^i] (x, k) = \sum_{y \in \mathbb{Z}^2} [H_n(m)f] (y-t) \cdot [H_n(k)\psi^i] (y-x)
 $$
+
 $$
-[[\lambda_{t, m}f]\star\psi^i](x, k) = \sum_{y \in \mathbb{Z}^2} f(y) \cdot [H_n(k-m)\psi^i](y-(x-t))
+[[\lambda_{t, m}f]\star\psi^i] (x, k) = \sum_{y \in \mathbb{Z}^2} f(y) \cdot [H_n(k-m)\psi^i] (y-(x-t))
 $$
+
 $$
 [[\lambda_{t, m}f]\star\psi^i](x, k) = [f\star\psi^i](x-t, k-m)
 $$
+
 $$
 [[\lambda_{t, m}f]\star\psi^i](x, k) = [\lambda'_{t, m}[f\star\psi^i]](x, k)
 $$
 
 Since the input HSV image is now lifted to the group space all subsequent features and filters are function which need to be indexed using both a pixel location and a discerete rotation. The group convolution can then be defined as:
+
 $$
 [f \star\psi^i](x, k) = \sum_{y \in \mathbb{Z}^2} \sum_{r=1}^n f(y,r) \cdot \psi^i(y-x, (r-k)\%n)
 $$
