@@ -104,8 +104,9 @@ $$
 \end{align}
 $$
 
-However, we think a small mistake is made here as the sum $\sum_{c=1}^{C^l}$ indicates that $f_c(y)$ and $\psi_c^i(y - x)$ are scalar values which does not make sense given the dot product and the matrix $H_n(k)$.
-Therefor the correct formula should be:
+However, we think a small mistake is made here as the sum $\sum_{c=1}^{C^l}$ indicates that $f_c(y)$ and $\psi_c^i(y - x)$ are scalar values which do not make sense given the dot product and the matrix $H_n(k)$.
+Therefore the correct formula should be:
+
 $$
 \begin{align} 
 \[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}f(y) \cdot H_n(k)\psi^i(y - x) & \qquad \qquad (\text{Equation 7})\\ 
@@ -277,91 +278,102 @@ Hue equivariance in LAB space would require a rotation matrix however due to the
 
 Figure 6 clearly shows this difference with an image hue space shifted in RGB and HSV space resulting in the same image however performing the same shift in LAB space and thereafter converting back to RGB space results in a slightly different colored image.
 
-### METHODOLOGY
+### Methodology
 This section will explain the implementation of color equivariance networks in the HSV and LAB color space. Just like the original paper the implementation of the lifting layer and the group convolution will be discussed this layer can then replace the standard convolution layers in different architectures like ResNet, in which the width is reduced resulting in a network with equivariant layers but with the same number of parameters.
 
 #### HSV
-In our implementation of the HSV space, hue is modeled as an angular value between zero and two pi, and can be changed by adding or substracting such an angle modulo two pi. Therefore, we represent the group $H_n$ as a set of $\frac{2\pi}{n}$ rotations: $H_n = \{\frac{2\pi}{n} k | k \in \mathbb{Z}, 0 \leq k \lneq n \}$. In HSV space this can paramerized as the vector: 
+In our implementation of the HSV space, hue is modeled as an angular value between zero and two pi and can be changed by adding or subtracting such an angle modulo two pi. Therefore, we represent the group $H_n$ as a set of $\frac{2\pi}{n}$ rotations: $H_n = \\{ \frac{2\pi}{n} k | k \in \mathbb{Z}, 0 \leq k \lneq n \\} $. In HSV space this can parameterized as the vector: 
 
 $$
-H_n (k) = \begin{bmatrix} \frac{2\pi}{n} k \\ 0 \\ 0 \end{bmatrix} 
+H_n(k) = \\begin{bmatrix} \frac{2\pi}{n} k \\\\ 0 \\\\ 0 \\end{bmatrix} 
 $$
 
 In which n is the discrete number of rotations and k indicates the k-th rotation out of n. The group action is an addition on a HSV pixel value in $\mathbb{R}^3$ modulo $2\pi$:
 
 $$
-
-[H_n(k)f] (x) = \begin{bmatrix} (f(x)_h + \frac{2\pi}{n} k) \% 2\pi \\ f(x)_s \\ f(x)_v \end{bmatrix}
+\[H_n(k)f\] (x) = \\begin{bmatrix} (f(x)_h + \frac{2\pi}{n} k) \\% 2\pi \\\\ f(x)_s \\\\ f(x)_v \\end{bmatrix}
+$$
 
 with $f(x)_{h,s,v}$ indicating the respective hue, saturation, or value at pixel value $x$ in the input image $f$. Because the Hue value is defined on a cyclic interval the dot product between a hue-shifted image ($f$) is the same as the dot product between an inverse hue-shifted filter ($\psi$), in contrast to the reproduced paper in which they model hue shifts as a 3D rotation meaning they can fall out of the RGB cube:
 
 $$
-[H_n(k)f] (x) \cdot \psi(y) = f(x) \cdot [H_n(-k)\psi] (y)
+\[H_n(k)f\] (x) \cdot \psi(y) = f(x) \cdot \[H_n(-k)\psi\](y)
 $$
 
-We can now define the group $G = \mathbb{Z}^2 \times H_n $ as the product of the 2D integers translation group and the HSV hue shift group. With the operator $ \lambda_{t, m} $ defining a translation and hue shift:
+We can now define the group $G = \\mathbb{Z}^2 \\times H_n$ as the product of the 2D integers translation group and the HSV hue shift group. With the operator $\\lambda_{t, m}$ defining a translation and hue shift:
 
 $$
-[\lambda_{t, m}f] (x) = [H_n(m)f] (x-t) = \begin{bmatrix} (f(x - t)_h + \frac{2\pi}{n} m) \% 2\pi \\ f(x - t)_s \\ f(x - t)_v \end{bmatrix}
+\[\lambda_{t, m}f\](x) = \[H_n(m)f\](x-t) = \\begin{bmatrix} (f(x - t)_h + \frac{2\pi}{n} m) \\% 2\pi \\\\ f(x - t)_s \\\\ f(x - t)_v \\end{bmatrix}
 $$
 
 We can then define the lifting layer outputting the i-th output channel as:
 
 $$
-[f \star\psi^i] (x, k) = \sum_{y \in \mathbb{Z}^2} f(y) \cdot [H_n(k)\psi^i] (y-x)
+\[f \star\psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2} f(y) \cdot \[H_n(k)\psi^i\](y-x)
 $$
 
 Here $f$ is the input image and $\psi^i$ a set of corresponding filters.
 The equivariance can be shown as:
 
 $$
-[[\lambda_{t, m}f]\star\psi^i] (x, k) = \sum_{y \in \mathbb{Z}^2} [H_n(m)f] (y-t) \cdot [H_n(k)\psi^i] (y-x)
+\[\[\lambda_{t, m}f\]\star\psi^i\] (x, k) = \sum_{y \in \mathbb{Z}^2} \[H_n(m)f\](y-t) \cdot \[H_n(k)\psi^i\](y-x)
 $$
 
 $$
-[[\lambda_{t, m}f]\star\psi^i] (x, k) = \sum_{y \in \mathbb{Z}^2} f(y) \cdot [H_n(k-m)\psi^i] (y-(x-t))
+\[\[\lambda_{t, m}f\]\star\psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2} f(y) \cdot \[H_n(k-m)\psi^i\](y-(x-t))
 $$
 
 $$
-[[\lambda_{t, m}f]\star\psi^i](x, k) = [f\star\psi^i](x-t, k-m)
+\[\[\lambda_{t, m}f\]\star\psi^i\](x, k) = \[f\star\psi^i\](x-t, k-m)
 $$
 
 $$
-[[\lambda_{t, m}f]\star\psi^i](x, k) = [\lambda'_{t, m}[f\star\psi^i]](x, k)
+\[\[\lambda_{t, m}f\]\star\psi^i\](x, k) = \[\lambda'_{t, m}[f\star\psi^i\]\](x, k)
 $$
 
-Since the input HSV image is now lifted to the group space all subsequent features and filters are function which need to be indexed using both a pixel location and a discerete rotation. The group convolution can then be defined as:
+Since the input HSV image is now lifted to the group space all subsequent features and filters are functions that need to be indexed using both a pixel location and a discrete rotation. The group convolution can then be defined as:
 
 $$
-[f \star\psi^i](x, k) = \sum_{y \in \mathbb{Z}^2} \sum_{r=1}^n f(y,r) \cdot \psi^i(y-x, (r-k)\%n)
+\[f \star\psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2} \sum_{r=1}^n f(y,r) \cdot \psi^i(y-x, (r-k)\%n)
 $$
 
 **Shifting the Kernel -** We have described some of the potential issues surrounding the HSV color space. While aware of these challenges, we initially set out to explore how the network would perform if we naively shifted the hue or saturation of the input layer filters as described above. 
 
 **Shifting the Input Image -** In order to circumvent some of the issues that present themselves when naively shif
 
-mentioned above about the HSV color space we also investigated whether we could perform the lifting convolution by shifting the input image instead of the filters. This is more intuitive as opposed to naively shifting the filter. [lifting] show that transforming the signal instead of the filter is indeed possible and these operations are equivalent when restricting to the group and standard convolution. This then allows for more general transformations than when using the group correlation of [group_convs]. In our case this way of performing the lifting operation is required as it enables us to alter the values of pixels instead of only moving the pixel locations.
+mentioned above about the HSV color space we also investigated whether we could perform the lifting convolution by shifting the input image instead of the filters. This is more intuitive as opposed to naively shifting the filter. [lifting] shows that transforming the signal instead of the filter is indeed possible and these operations are equivalent when restricting to the group and standard convolution. This then allows for more general transformations than when using the group correlation of [group_convs]. In our case, this way of performing the lifting operation is required as it enables us to alter the values of pixels instead of only moving the pixel locations.
 
 
 
-Here we shift the channels of the input image while restricting the respective channel values to the domain of this color space, using again the modulus operation for the hue channel and a clipping operation for the saturation and value channels. The lifting convolution is then performed between the stack of N hue or saturation shifted images and a 3 x 3 x 3 filter repeated N times.
+Here we shift the channels of the input image while restricting the respective channel values to the domain of this color space, using again the modulus operation for the hue channel and a clipping operation for the saturation and value channels. The lifting convolution is then performed between the stack of N hue or saturation-shifted images and a 3 x 3 x 3 filter repeated N times.
 
-For **saturation** equivariance we need to redifine the group, because saturation is represented as a number between zero and one we need to create a group containing n elements equally spaced between minus and one to model bot an increase and decrease in saturation. This makes all group elements fall in the set:
-$H_n = \{-1 +k\frac{2}{n-1} | n \geq 2, k = 0,1,2,...,n-1 \}$. In HSV space this can paramerized as the vector: 
+For **saturation** equivariance we need to redefine the group, because saturation is represented as a number between zero and one we need to create a group containing n elements equally spaced between minus and one to model both an increase and decrease in saturation. This makes all group elements fall in the set:
+$H_n = \\{-1 +k\frac{2}{n-1} | n \geq 2, k = 0,1,2,...,n-1 \\}$. In HSV space this can parameterized as the vector: 
+
 $$
-H_n(k) = \begin{bmatrix} -1 +k\frac{2}{n-1} \\ 0 \\ 0 \end{bmatrix} $$
-Because saturation is only definend between 0 and 1 and is not cyclic we need to clip the value after the group action:
+H_n(k) = 
+\begin{bmatrix} -1 +k\frac{2}{n-1} \\\\ 0 \\\\ 0 
+\end{bmatrix} 
 $$
-[H_n(k)f](x) = \begin{bmatrix} f(x)_h \\ \text{clip}(0, f(x)_s + (-1 +k\frac{2}{n-1}), 1) \\ f(x)_v \end{bmatrix}
+
+Because saturation is only defined between 0 and 1 and is not cyclic we need to clip the value after the group action:
+
 $$
-This clipping due to the non-cyclic nature of saturation might break equivariance, which will be tested with several experiments, apllying the group action on the kernel, the image and testing a different values for n.
+\[H_n(k)f\](x) = 
+\begin{bmatrix} f(x)_h \\\\ \text{clip}(0, f(x)_s + (-1 +k\frac{2}{n-1}), 1) \\\\ f(x)_v 
+\end{bmatrix}
+$$
+
+This clipping due to the non-cyclic nature of saturation might break equivariance, which will be tested with several experiments, applying the group action on the kernel, the image and testing different values for n.
 
 
 **Value** equivariance can be modelled in the same way as described for saturation the only thing different is that the group action now acts upon the value channel:
+
 $$
-[H_n(k)f](x) = \begin{bmatrix} f(x)_h \\ f(x)_s \\ \text{clip}(0, f(x)_v + \frac{1}{n} k, 1) \end{bmatrix}
+\[H_n(k)f\](x) = \\begin{bmatrix} f(x)_h \\\\ f(x)_s \\\\ \text{clip}(0, f(x)_v + \frac{1}{n} k, 1) \\end{bmatrix}
 $$
-Due to our earlier experimenting with aplying the group element on the kernel or the image we decide to now only model the value shift the input images as described in **Shifting the Input Image**.
+
+Due to our earlier experimenting with applying the group element on the kernel or the image we decided to now only model the value shift of the input images as described in **Shifting the Input Image**.
 **Combining Multiple Shifts**
 #TODO
 
@@ -377,15 +389,15 @@ H_n =
 \end{bmatrix}
 $$
 
-In which $n$ represents the number of discrete rotations in the group and k indexing the rotation to be applied. The group operation now is a matrix multiplication on the $\mathbb{R}^3$ space of LAB pixel values. The rest of the operations can be left the same. Because we are rotating on a regtangular plane we can never fall out of the lab space thus there is again no need for reprojection. However as stated before issues arise when converting from LAB to RGB and back.
+In which $n$ represents the number of discrete rotations in the group and k indexing the rotation to be applied. The group operation now is a matrix multiplication on the $\mathbb{R}^3$ space of LAB pixel values. The rest of the operations can be left the same. Because we are rotating on a rectangular plane we can never fall out of the lab space thus there is again no need for reprojection. However, as stated before issues arise when converting from LAB to RGB and back.
 
 ### Experiments & Results
-In order to test the effectivity of our implementation several experiments where conducted, 
-in these experiments we aim to test our method on a real-world dataset (Flowers102) which is artificially shifted over a range of values on the property for which the network should be equivariant (hue/saturation/value). Equal to the setting in the section [Image Classification](#image-classification). Because equivariance is implemented on a discrete domain we expect to see peaks in network performance at the places in which the test time shift equals the shift in the group.
+In order to test the effectiveness of our implementation several experiments were conducted, 
+in these experiments, we aim to test our method on a real-world dataset (Flowers102) which is artificially shifted over a range of values on the property for which the network should be equivariant (hue/saturation/value). Equal to the setting in the section [Image Classification](#image-classification). Because equivariance is implemented on a discrete domain we expect to see peaks in network performance at the places in which the test time shift equals the shift in the group.
 #### HSV
 
 ##### Hue Shift Equivariance
-**Shifting the Kernel -** Our first experiment involved the naively hue shifted filters. For this experiment we took a ResNet-18 network and replaced the standard convolutional layers with our group convolutional layers. Here the first layer will perform the lifting operations that maps our input image to the group and the later layers perform the corresponding group convolutions. We use a 3 x 3 x 3 kernel and train the network for 3 discrete hue rotations (0, 120 and 240 degrees). We utilize the flowers 102 dataset and train the models for the task om image classification with a batch size of 64 for 200 epochs. We separate 2 cases where we train the equivariant network (CE-ResNet-18) with hue jitter, randomly applying a hue shift with a uniformly chosen hue factor between -0.5 and 0.5, and without any hue jitter. Additionally, for comparison we train 2 baseline models of a ResNet-18 network with and without hue jitter, where the width on the network is increased such that the number of parameters between the equivariant networks and baseline networks is equal.
+**Shifting the Kernel -** Our first experiment involved the naively hue-shifted filters. For this experiment, we took a ResNet-18 network and replaced the standard convolutional layers with our group convolutional layers. Here the first layer will perform the lifting operations that maps our input image to the group and the later layers perform the corresponding group convolutions. We use a 3 x 3 x 3 kernel and train the network for 3 discrete hue rotations (0, 120 and 240 degrees). We utilize the Flowers 102 dataset and train the models for the task of image classification with a batch size of 64 for 200 epochs. We separate 2 cases where we train the equivariant network (CE-ResNet-18) with hue jitter, randomly applying a hue shift with a uniformly chosen hue factor between -0.5 and 0.5, and without any hue jitter. Additionally, for comparison we train 2 baseline models of a ResNet-18 network with and without hue jitter, where the width of the network is increased such that the number of parameters between the equivariant networks and baseline networks is equal.
 
 We evaluate our models based on the classification accuracy on the Flowers-102 dataset, where we shift all test images with 37 discrete hue shifts to verify whether the performance of the hue equivariant networks excels beyond the baseline models.
 
@@ -395,10 +407,10 @@ We evaluate our models based on the classification accuracy on the Flowers-102 d
   *Figure X: Accuracy over test-time value shift for hue equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (value) Equivariant networks, and jitter indicates training time hue augmentation. ([source](CEConv/plot_fig9_hue.py))* 
 </div>
 
-As expected, naively shifting the kernel does not work. In Fig X, there is a clear peak for the both the CE-ResNet 18 and the baseline model the 0° hue shift angle, and the further the hue is shifted from the image’s original values, the worse the models performance gets. Additionally, it can be seen that when training with a hue jitter data augmentation, the model is expressive enough to perform robustly over the entire hue spectrum. However, the performance of the CE-ResNet 18 still does not excel over its baseline counterpart.
+As expected, naively shifting the kernel does not work. In Fig X, there is a clear peak for both the CE-ResNet 18 and the baseline model the 0° hue shift angle, and the further the hue is shifted from the image’s original values, the worse the models' performance gets. Additionally, it can be seen that when training with a hue jitter data augmentation, the model is expressive enough to perform robustly over the entire hue spectrum. However, the performance of the CE-ResNet 18 still does not excel over its baseline counterpart.
 The fact that this doesn’t achieve hue shift equivariance is due to the fact that we can not simply utilize this kernel as though it were an image. This brings a host of inconsistencies with it, for example, applying the hue shift on the weights directly acts more as an added bias than a rotation of the hue. Moreover, weights that are negative get mapped to a high hue value after applying the modulus operation rather than a low one. Thus, while it was an interesting experiment it has no merits.
 
-**Shifting the Input Image -** The next experiment improves upon the naive hue shift of the kernel. For this experiment everything is identical to the previous one except for the fact the lifting convolution is now performed by creating an image stack of hue shifted image instead.
+**Shifting the Input Image -** The next experiment improves upon the naive hue shift of the kernel. For this experiment, everything is identical to the previous one except for the fact the lifting convolution is now performed by creating an image stack of hue-shifted images instead.
 
 <div align="center">
   <img src="blogpost_imgs/hsv_hue_shift_img.jpg" alt="Results of HSV space hue equivariance, when lifting operation is performed by hue shifting the input image" width="70%">
@@ -406,13 +418,13 @@ The fact that this doesn’t achieve hue shift equivariance is due to the fact t
   *Figure XX: Accuracy over test-time value shift for hue equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (value) Equivariant networks, and jitter indicates training time hue augmentation. ([source](CEConv/plot_fig9_hue.py))* 
 </div>
 
-As can be seen in Fig XX, in the case of the CE-ResNet 18 network 3 clear peaks can be seen at the 0°, 120° and 240° (-120°) hue rotation angles. The network is able to exploit its hue shift equivariance to perform at an equal level across all 3 discrete hue rotations, whereas the baseline model is not. However, as we only train the network for 3 discrete rotations, we can still see that when training with hue jitter both the baseline and CE-ResNet 18 achieve better, more robust performance. If trained for more discrete rotations this difference can be negated but this comes at the cost of an increase in parameters for the CE-ResNet or a severe decrease in width if training to keep the number of parameters equal to that of the baseline model.
-Similarly, the ever so slight decrease in performance on the top end of the CE-ResNet 18 model without jitter compared to its baseline can be explained by this trade-off. In our test we try to keep the amount of parameters equal between the baseline models and the hue shift equivariant models, at around 11.2M parameters. In order to do this we must however reduce the width of the CE-ResNet 18 model as making the model equivariant comes at the cost of an increased amount of parameters. Due to this reduction in width the CE-ResNet 18 model is less expressive than its baseline counterparts explaining the slight decrease in peak performance.
+As can be seen in Fig XX, in the case of the CE-ResNet 18 network 3 clear peaks can be seen at the 0°, 120°, and 240° (-120°) hue rotation angles. The network is able to exploit its hue shift equivariance to perform at an equal level across all 3 discrete hue rotations, whereas the baseline model is not. However, as we only train the network for 3 discrete rotations, we can still see that when training with hue jitter both the baseline and CE-ResNet 18 achieve better, more robust performance. If trained for more discrete rotations this difference can be negated but this comes at the cost of an increase in parameters for the CE-ResNet or a severe decrease in width if training to keep the number of parameters equal to that of the baseline model.
+Similarly, the ever-so-slight decrease in performance on the top end of the CE-ResNet 18 model without jitter compared to its baseline can be explained by this trade-off. In our test, we try to keep the amount of parameters equal between the baseline models and the hue shift equivariant models, at around 11.2M parameters. In order to do this we must however reduce the width of the CE-ResNet 18 model as making the model equivariant comes at the cost of an increased amount of parameters. Due to this reduction in width, the CE-ResNet 18 model is less expressive than its baseline counterparts explaining the slight decrease in peak performance.
 
 ##### Saturation Equivariance
 
 ##### Value Equivariance
-For value equivariance, we only tested shifting the input iamges with 5 shifts. Initialy we tested with a shift range starting at minus one however in RGB space this results in a totally black images with a complete loss of information therefor we decided to replace this minus one with minus a half. The results can be found in Figure 8/
+For value equivariance, we only tested shifting the input images with 5 shifts. Initially, we tested with a shift range starting at minus one however in RGB space this results in totally black images with a complete loss of information, therefore, we decided to replace this minus one with minus a half. The results can be found in Figure 8/
 <div align="center">
   <img src="blogpost_imgs/value_equivariance.jpg" alt="HSV space value equivariance" width="100%">
 
