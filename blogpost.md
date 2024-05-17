@@ -450,11 +450,11 @@ Similarly, the ever-so-slight decrease in performance on the top-end of the CE-R
   *Figure XX: Accuracy over test-time saturation shift for saturation equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, and jitter indicates training time saturation augmentation, which was set to be in [0, 100]. The CE-Resnet-18 models are trained for 5 discrete saturation translations of -1, -0.5, 0, 0.5 and 1. ([source](CEConv/plot_saturation.py))*  
 </div>
 
-...
+In the above figure, we find that when the image's saturation is not adjusted, the CE-ResNet-18 outperforms the baseline. However, for higher and lower saturation shifts, the baseline tends to outperform it. This means the CE-ResNet-18 was unable to obtain saturation equivariance, which could be due to the clipping. Moreover, the same trends also appear for when jitter is added and the difference between the two models is more significant towards the ends of the plot. It does appear that jitter helps both models in becoming robuster to saturation changes, as the model has seen varying saturations during training.
 
-#TODO
+**Shifting the Input Image -** In this next approach, the input signal was transformed instead, akin to the hue equivariant one. However, the aforementioned settings for saturation shifts are utilised. 
 
-**Shifting the Input Image -** 
+... #TODO
 
 ##### Value Equivariance
 For value equivariance, we only tested shifting the input images with 5 shifts. Initially, we tested with a shift range starting at minus one however in RGB space this results in totally black images with a complete loss of information, therefore, we decided to replace this minus one with minus a half. The results can be found in Figure 8/
@@ -487,6 +487,8 @@ Analyzing the jitter results shows that training with augmentations can be a way
 
 ## Authors' Contributions
 
+#TODO
+
 ## References
 <a id="1">[bird]</a> 
 Simen Hagen, Quoc C. Vuong, Lisa S. Scott, Tim Curran, James W. Tanaka; The role of color in expert object recognition. Journal of Vision 2014;14(9):9. https://doi.org/10.1167/14.9.9.
@@ -518,3 +520,16 @@ Raninen, J. (2022). The Effect of Colour Space in Deep Multitask Learning Neural
 
 <a id="1">[lifting]</a>
 Worrall, D., & Welling, M. (2019). Deep scale-spaces: Equivariance over scale. Advances in Neural Information Processing Systems, 32.
+
+## Appendix
+### A. Combining Hue and Shift Equivariance
+As outlined in the [methodology](#methodology), it is possible to model hue and saturation equivariance jointly. A model was trained to encode both of these shifts on the kernel and on the input image.
+
+..
+
+From the above figure, it can be seen that the model does not improve its performance when using both equivariances. Namely, per axis the same trends and numbers are visible as when the model was trained with that respective equivariance only. 
+
+..
+
+In the above plot we again reach the same conclusion that utilising both equivariances does not yield a significant improvement. Because these results were not promising and computationally heavier due to the combined number of hue and saturation shifts, we decided to not further pursue this direction.
+
