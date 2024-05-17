@@ -443,8 +443,18 @@ As can be seen in Fig XX, for this experiment the CE-ResNet-18 network shows 3 c
 Similarly, the ever-so-slight decrease in performance on the top-end of the CE-ResNet-18 model without jitter compared to its baseline can be explained by this trade-off. In our test, we try to keep the amount of parameters equal between the baseline models and the hue shift equivariant models, at around 11.2M parameters. In order to do this we must thus reduce the width of the CE-ResNet-18 model as making the model equivariant comes at the cost of an increased amount of parameters. Due to this reduction in width, the CE-ResNet-18 model is less expressive than its baseline counterparts explaining the slight decrease in peak performance when the hue is not shifted at test time (0° hue shift).
 
 ##### Saturation Equivariance
+**Shifting the Kernel -** This experiment largely follows the setup from the hue equivariant network in HSV space. However, 5 saturation shifts are applied on the kernel as to not only obtain images that are in black and white or have maximum saturation. Furthermore, 50 saturation shifts were applied to the test dataset in order to measure performance. Finally, jitter in this case implies saturation jitter, which was applied during training.
+<div align="center">
+  <img src="blogpost_imgs/Sat_HSV_Fig9_shiftKernel_noNorm_5shifts.jpg" alt="Results of HSV space saturation equivariance, when lifting operation is performed by naively saturation shifting the kernel" width="70%">
+  
+  *Figure XX: Accuracy over test-time saturation shift for saturation equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, and jitter indicates training time saturation augmentation, which was set to be in [0, 100]. The CE-Resnet-18 models are trained for 5 discrete saturation translations of -1, -0.5, 0, 0.5 and 1. ([source](CEConv/plot_saturation.py))*  
+</div>
+
+...
 
 #TODO
+
+**Shifting the Input Image -** 
 
 ##### Value Equivariance
 For value equivariance, we only tested shifting the input images with 5 shifts. Initially, we tested with a shift range starting at minus one however in RGB space this results in totally black images with a complete loss of information, therefore, we decided to replace this minus one with minus a half. The results can be found in Figure 8/
@@ -454,7 +464,7 @@ For value equivariance, we only tested shifting the input images with 5 shifts. 
   *Figure 8: Accuracy over test-time value shift for hue equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (value) Equivariant networks, and jitter indicates training time hue augmentation. The mean per model over all test-time value shifts is indicated in the legend. ([source](CEConv/plot_fig9_value.py))* 
 </div>
 
-While being trained with 5 different shifts the model isn't able to show this equivariance and follow the performance of the baseline Resnet-18. Training with jitter increases performance at the extremes of the shifted images but decreases performance around the original non-shifted images.
+While being trained with 5 different shifts the model is not able to show this equivariance and follow the performance of the baseline Resnet-18. Training with jitter increases performance at the extremes of the shifted images but decreases performance around the original non-shifted images.
 
 #### LAB
 To test hue equivariance implemented in LAB space the convolution layers of a ResNet-18 network were replaced by their equivariant counterpart. The equivariant layers are implemented using three discrete shifts of 0, 120, and 240 (-120) degrees. The network is trained with and without hue augmentations (jitter) on training images. The same can be said for the baseline which has the same Resnet-18 architecture, however now with only a zero-degree rotation making it equal to a normal CNN. The width of these layers is increased to get an equal number of parameters.
