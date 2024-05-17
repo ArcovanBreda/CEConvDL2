@@ -381,7 +381,9 @@ Because of the separated channels when utilzing the HSV color space, we can desc
 $$ G = \mathbb{Z}_2 \times C_n \times \mathbb{R} $$
 
 Given an pixel in an image at location $x$:
-$$ I(\mathbf{x}) = (h(\mathbf{x}), s(\mathbf{x}), v(\mathbf{x})) $$
+$$ 
+I(\mathbf{x}) = (h(\mathbf{x}), s(\mathbf{x}), v(\mathbf{x})) 
+$$
 We can then define the action of the combination of these groups acting on the image as:
 
 $$ 
