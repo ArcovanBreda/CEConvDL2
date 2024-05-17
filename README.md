@@ -130,6 +130,28 @@ python -m experiments.color_mnist.train_biased --std $2 --rotations 3 --planes 1
 #### HSV
 **Hue**
 
+```bash
+# Train + evaluation of a hue shifted image - 3 rotations
+# Baseline
+python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --hue_shift --img_shift --nonorm
+# Baseline + jitter
+python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --hue_shift --img_shift --jitter 0.5 --nonorm
+# Hue equivariant network
+python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --hue_shift --img_shift --nonorm
+# Hue equivariant network + jitter
+python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --hue_shift --img_shift --jitter 0.5 --nonorm
+
+# Train + evaluation of a hue shifted kernel - 3 rotations
+# Baseline
+python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --hue_shift --nonorm
+# Baseline + jitter
+python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --hue_shift --jitter 0.5 --nonorm
+# Hue equivariant network
+python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --hue_shift --nonorm
+# Hue equivariant network + jitter
+python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --hue_shift --jitter 0.5 --nonorm
+```
+
 **Saturation**
 
 **Value**
