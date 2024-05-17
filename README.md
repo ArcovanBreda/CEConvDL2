@@ -2,7 +2,7 @@
 This repository contains a reproduction and exstension on CEConv - Color Equivariant Convolutional Networks [[ArXiv](https://arxiv.org/abs/2310.19368)] - NeurIPS 2023, by Attila Lengyel, Ombretta Strafforello, Robert-Jan Bruintjes, Alexander Gielisse, and Jan van Gemert. This readme contains all commands in order to run the performed experiments, for an explanation about the project we refer you to our extensive [blogpost](./blogpost.md). We sincerely thank the original authors for providing the original [code](https://github.com/Attila94/CEConv).
 
 ## Prerequisites
-* A machnine running Linux / WSL on windows also works
+* A machine running Linux / WSL on windows also works
 * [Conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)
 * A CUDA enabled GPU with at least 10GB of VRAM, classification experiments may require 12GB or more (decreasing the batch size may help at the cost of training time).
 
@@ -153,7 +153,27 @@ python -m experiments.classification.train --rotations 3 --dataset flowers102 --
 ```
 
 **Saturation**
+```bash
+# Train + evaluation of a saturation shifted image - 5 shifts
+# Baseline
+python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hsv_test --nonorm --img_shift
+# Baseline + jitter
+python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --sat_jitter 0 100 --separable --hsv --sat_shift --hsv_test --nonorm --img_shift
+# Saturation equivariant network
+python -m experiments.classification.train --rotations 5 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hsv_test --nonorm --img_shift
+# Saturation equivariant network + jitter
+python -m experiments.classification.train --rotations 5 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --sat_jitter 0 100 --separable --hsv --sat_shift --hsv_test --nonorm --img_shift
 
+# Train + evaluation of a saturation shifted kernel - 5 shifts
+# Baseline
+python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hsv_test --nonorm
+# Baseline + jitter
+python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --sat_jitter 0 100 --separable --hsv --sat_shift --hsv_test --nonorm
+# Saturation equivariant network
+python -m experiments.classification.train --rotations 5 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hsv_test --nonorm
+# Saturation equivariant network + jitter
+python -m experiments.classification.train --rotations 5 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --sat_jitter 0 100 --separable --hsv --sat_shift --hsv_test --nonorm
+```
 **Value**
 ```bash
 # Baseline
@@ -166,6 +186,13 @@ python -m experiments.classification.train --rotations 5 --dataset flowers102 --
 # Value equivariance + jitter
 python -m experiments.classification.train --rotations 5 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --img_shift --value_shift --epochs 200 --nonorm --hsv_test --value_jitter 0 100
 ```
+<!-- **Hue and Saturation**
+```bash
+# Image shift, 3 rotations for hue and 3 shifts for saturation
+python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hue_shift --hsv_test --nonorm
+# Kernel shift, 3 rotations for hue and 3 shifts for saturation
+python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hue_shift --hsv_test --img_shift --nonorm
+``` -->
 #### LAB 
 **Hue**
 ```bash
