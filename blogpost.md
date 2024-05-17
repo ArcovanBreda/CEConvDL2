@@ -369,21 +369,28 @@ Due to our earlier experimenting with applying the group element on the kernel o
 **Shifting the Input Image -** In order to circumvent some of the issues that present themselves when naively shifting the kernel as though it were an image, we investigated whether we could perform the lifting convolution by shifting the input image instead of the kernel. This is a more intuitive approach and [lifting] show that transforming the signal instead of the kernel is indeed possible and that these operations are equivalent when restricted to the group and standard convolution. This then allows for more general transformations than when using the group correlation of [group_convs]. In our case, where we make use of the HSV color space with separated hue, saturation and value channels, this way of performing the lifting operation is required due to the fact that we perform our action on these separated channels. Transforming the signal instead of the kernel then allows us to alter the values of pixels instead of only moving the pixel locations.
 
 We can thus define the lifting layer outputting the i-th output channels for our semigroup H of hue shifts as follows:
+
 $$
 \[\psi^i \star f\](\mathbf(x), k) = \sum_{y \in \mathbb{Z}^2} \psi^i(y) \cdot H_n(k)\[f\](y-\mathbf(x))
 $$
+
 In a similar way we can create the lifting layer for the saturation and value groups.
 
 
 **Combining Multiple Shifts**
 #TODO
 Because of the separated channels when utilzing the HSV color space, we can describe the group product between multiple channel shifts as the direct product off these groups individually.
-$$ G = \mathbb{Z}_2 \times C_n \times \mathbb{R} $$
+
+$$ 
+G = \mathbb{Z}_2 \times C_n \times \mathbb{R} \times \mathbb{R} 
+$$
 
 Given an pixel in an image at location $x$:
+
 $$ 
 I(\mathbf{x}) = (h(\mathbf{x}), s(\mathbf{x}), v(\mathbf{x})) 
 $$
+
 We can then define the action of the combination of these groups acting on the image as:
 
 $$ 
