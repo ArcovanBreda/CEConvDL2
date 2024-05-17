@@ -371,15 +371,13 @@ Due to our earlier experimenting with applying the group element on the kernel o
 We can thus define the lifting layer outputting the i-th output channels for our semigroup H of hue shifts as follows:
 
 $$
-\[\psi^i \star f\](\mathbf(x), k) = \sum_{y \in \mathbb{Z}^2} \psi^i(y) \cdot H_n(k)\[f\](y-\mathbf(x))
+\[\psi^i \star f\](\mathbf{x}, k) = \sum_{y \in \mathbb{Z}^2} \psi^i(y) \cdot H_n(k)\[f\](y-\mathbf{x})
 $$
 
 In a similar way we can create the lifting layer for the saturation and value groups.
 
 
-**Combining Multiple Shifts**
-#TODO
-Because of the separated channels when utilzing the HSV color space, we can describe the group product between multiple channel shifts as the direct product off these groups individually.
+**Combining Multiple Shifts -** Because of the separated channels when utilzing the HSV color space, we can describe the group product between multiple channel shifts as the direct product off these groups individually.
 
 $$ 
 G = \mathbb{Z}_2 \times C_n \times \mathbb{R} \times \mathbb{R} 
