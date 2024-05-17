@@ -247,7 +247,7 @@ Furthermore, due to these entangled color channels, it’s much harder to achiev
 </p>
 
 **HSV** - is an ideal color space for our purpose of extending the achieved hue equivariant CNN with saturation equivariance. With a separate channel encoding the hue of each pixel, we can make a direct comparison to the methods employed by [main] in order to perform hue shifts in the RGB color space. Additionally, the separate saturation and value channels allow us to experiment if equivariance to saturation or value shifts are beneficial for the task of image classification.
-However, there are some potential issues with this color space. Firstly, there is the concern about the discontinuity in the hue channel. Here the fact that the hue channel, in our implementation, is encoded as an angle ranging from $0$ to $2 \pi$ could pose learning issues for a network. This is because the values of $0$ and $2 \pi$ are as far apart as possible for an HSV image but these values encode the same color, since the color space effectively loops around from $2\pi$ back to $0$ in a circular manner. Secondly, there is the fact that the saturation and value channels are not cyclic and lie within a $0-1$ interval. Therefore, when shifting these channels we would need to clip shifts that fall outside this interval, causing a loss of information. Lastly, it is not straightforward how to transform a kernel under the regular representation of the group elements for either the group of hue rotations, or saturation and value translations, in order to perform the lifting convolution.
+However, there are some potential issues with this color space. Firstly, there is the concern about the discontinuity in the hue channel. Here the fact that the hue channel, in our implementation, is encoded as an angle ranging from $0$ to $2 \pi$ could pose learning issues for a network. This is because the values of $0$ and $2 \pi$ are as far apart as possible for an HSV image but these values encode the same color, since the color space effectively loops around from $2\pi$ back to $0$ in a circular manner. Secondly, there is the fact that the saturation and value channels are not cyclic and lie within a $[0,1]$ interval. Therefore, when shifting these channels we would need to clip shifts that fall outside this interval, causing a loss of information. Lastly, it is not straightforward how to transform a kernel under the regular representation of the group elements for either the group of hue rotations, or saturation and value translations, in order to perform the lifting convolution.
 
 **LAB** - is a color space defined by the International Commission on Illumination (CIE) in 1976. Research by [color_net] and [color_segmentation] shows that images converted to LAB color space achieve around a two percentage point higher score on classifications and segmentation tasks as compared to other color models. The LAB model closely aligns with human vision encoding an image using three channels, the *L* channel encodes the perceptual lightness while *a* and *b* encode the color as a point on a 2D grid with the *a* axis modeling the red-green shift and *b* the yellow-blue shift corresponding to the four unique colors of human vision. Figure 5 shows this 2D grid in which a hue space shift can be modeled as a 2D rotation on this plane, suggesting that the full-color space has a cylindrical form. However, when visualizing the RGB gamut inside the 3D LAB space, on the right, it doesn't show this cylinder. This is a result of the nonlinear relations between *L*, *a*, and *b* intended to model the nonlinear response of the visual system, which is absent in the RGB color model.     
 
@@ -271,28 +271,28 @@ Figure 6 clearly shows this difference with an image hue space shifted in RGB an
 This section will explain the implementation of color equivariance networks in the HSV and LAB color space. Just like the original paper the implementation of the lifting layer and the group convolution will be discussed this layer can then replace the standard convolution layers in different architectures like ResNet, in which the width is reduced resulting in a network with equivariant layers but with the same number of parameters.
 
 #### HSV
-In HSV space hue is modeled as an angular value between zero and two pi, and can be changed by adding or substracting such an angle modulo two pi. Therefor we represent the group $H_n$ as a set of $\frac{2\pi}{n}$ rotations: $H_n = \{\frac{2\pi}{n} k | k \in \mathbb{Z}, 0 \leq k \lneq n \}$. In HSV space this can paramerized as the vector: 
+In our implementation of the HSV space hue is modeled as an angular value between zero and two pi, and can be changed by adding or substracting such an angle modulo two pi. Therefor we represent the group $H_n$ as a set of $\frac{2\pi}{n}$ rotations: $H_n = \{\frac{2\pi}{n} k | k \in \mathbb{Z}, 0 \leq k \lneq n \}$. In HSV space this can paramerized as the vector: 
 $$
 H_n(k) = \begin{bmatrix} \frac{2\pi}{n} k \\ 0 \\ 0 \end{bmatrix} $$
-In which n is the discrete number of rotations and k indicate the k'th rotation out of n. The group action is an addition on a HSV pixel value in $\mathbb{R}^3$ modulo $2\pi$:
+In which n is the discrete number of rotations and k indicate the k-th rotation out of n. The group action is an addition on a HSV pixel value in $\mathbb{R}^3$ modulo $2\pi$:
 $$
 [H_n(k)f](x) = \begin{bmatrix} (f(x)_h + \frac{2\pi}{n} k) \% 2\pi \\ f(x)_s \\ f(x)_v \end{bmatrix}
 $$
-with $f(x)_{h,s,v}$ indicating the respecitve hue, saturation or value at pixel value $x$ in the input image $f$. Because the Hue value is defined on a cyclic interval the dot product between a hue shifted image ($f$) is the same as the dot product between an inverse hue shifted filter ($\psi$), in contrast to the reproduced paper in which they model hue shift as a 3D rotation meaning they can fall out of the RGB cube:
+with $f(x)_{h,s,v}$ indicating the respecitve hue, saturation or value at pixel value $x$ in the input image $f$. Because the Hue value is defined on a cyclic interval the dot product between a hue shifted image ($f$) is the same as the dot product between an inverse hue shifted filter ($\psi$), in contrast to the reproduced paper in which they model hue shifts as a 3D rotation meaning they can fall out of the RGB cube:
 $$
 [H_n(k)f](x) \cdot \psi(y) = f(x) \cdot [H_n(-k)\psi](y)
 $$
 
-We can now define the group $G = \mathbb{Z}^2 \times H_n $ as the product of the 2D intergers translation group and the HSV hue shift group. With the operator $ \lambda_{t, m} $ definin a translation and hue shift:
+We can now define the group $G = \mathbb{Z}^2 \times H_n $ as the product of the 2D integers translation group and the HSV hue shift group. With the operator $ \lambda_{t, m} $ definin a translation and hue shift:
 $$
 [\lambda_{t, m}f](x) = [H_n(m)f](x-t) = \begin{bmatrix} (f(x - t)_h + \frac{2\pi}{n} m) \% 2\pi \\ f(x - t)_s \\ f(x - t)_v \end{bmatrix}
 $$
 
-We can then define the lifting layer outputting the ith output channel as:
+We can then define the lifting layer outputting the i-th output channel as:
 $$
 [f \star\psi^i](x, k) = \sum_{y \in \mathbb{Z}^2} f(y) \cdot [H_n(k)\psi^i](y-x)
 $$
-Here $f$ isthe input image and $\psi^i$ a set of corresponding filters.
+Here $f$ is the input image and $\psi^i$ a set of corresponding filters.
 The equivariance can be shown as:
 $$
 [[\lambda_{t, m}f]\star\psi^i](x, k) = \sum_{y \in \mathbb{Z}^2} [H_n(m)f](y-t) \cdot [H_n(k)\psi^i](y-x)
@@ -309,7 +309,7 @@ $$
 
 Since the input HSV image is now lifted to the group space all subsequent features and filters are function which need to be indexed using both a pixel location and a discerete rotation. The group convolution can then be defined as:
 $$
-[f \star\psi^i](x, k) = \sum_{y \in \mathbb{Z}^2} \sum_{r=1}^n f(y,r) \cdot psi^i(y-x, (r-k)\%n)
+[f \star\psi^i](x, k) = \sum_{y \in \mathbb{Z}^2} \sum_{r=1}^n f(y,r) \cdot \psi^i(y-x, (r-k)\%n)
 $$
 
 **Shifting the Kernel -** We have described some of the potential issues surrounding the HSV color space. While aware of these challenges, we initially set out to explore how the network would perform if we naively shifted the hue or saturation of the input layer filters. 
