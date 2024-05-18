@@ -485,7 +485,11 @@ Analyzing the jitter results shows that training with augmentations can be a way
 
 ## Concluding Remarks
 
-#TODO
+In conclusion, the proposed network by the original paper aimed to leverage  color equivariance to create robuster networks that still manage to exploit color information in images. This was implemented via discrete hue rotations in RGB space. Our reproduction study that was conducted on ... indeed supports their claims. ... #TODO
+
+However, the approach by the original authors lead to some limitations. For instance, their choice to model hue equivariance in RGB space could be considered suboptimal due to the issue of falling outside of the cube. Therefore, we additionally aimed to circumvent these issues by modeling hue equivariance in HSV and LAB space, and extended the notion of equivariance to saturation and value in the former color space.
+
+We found that a model with hue equivariance in LAB space and jitter managed to outperform all other models encoding this type of equivariance. Furthermore, saturation and value equivariance without any jitter performed similar to the baseline models without any equivariance. However, jitter ensured they became robuster against distribution shifts, even outperforming the baseline model with jitter, but came at the cost of achieving lower test accuracy overall. 
 
 ## Authors' Contributions
 
