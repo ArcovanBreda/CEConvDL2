@@ -49,6 +49,7 @@ $$\begin{align}
 \end{align}$$
 
 Using the substition $h \rightarrow uh$ and the notation:
+
 $$\begin{align} 
 \[ L_g f \](x) = \[ f \circ g^{-1} \](x) = f(g^{-1}x) & \qquad \qquad (\text{Equation 4})
 \end{align} $$
