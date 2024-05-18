@@ -108,24 +108,8 @@ $$\begin{align}
 \[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{r=1}^n\sum_{c=1}^{C^l}f_c(y,r) \cdot \psi_c^i(y - x, (r-k)\%n) & \qquad \qquad (\text{Equation 8})\\ 
 \end{align}$$
 
-<!---
-The operator $\mathcal{L}_g = \mathcal{L}_{(t, m)}$ expresses the translation $t$ and hue shift $m$ acting on input $f$:
-
-$$\begin{align} 
-[\mathcal{L}_gf](x) = [\mathcal{L}_{(t,m)}f](x) = H_n(m)f(x-t)& \qquad \qquad (\text{Equation 7})\\ 
-\end{align}$$
-
-The derivation equivariance of the CEConv layer can be derived (for $C^l = 1$) as:
---->
-
-
-## (Maybe Architecture/Evaluation/Dataset(s) explanation or Something)
-
 ## Reproduction of Experiments
 
-<!---
-TODO: explain findings about the reproduction of figure 2, figure 2, figure 9 and figure 13 in the following narrative: 
---->
 The reproduction of (a selection of) the experiments is primarily achieved through the code provided along with the original paper. However, it does not include the code to reproduce the plots which had to be written manually. Moreover, supplementing functionalities such as saving, loading, and evaluation of the results needed to be integrated for sufficient reproduction. Lastly, not all commands are provided/explained in the READme file to easily run all experiments. Therefore, some investigation of the code was needed to run the exact experiments.
 
 ### When is color equivariance useful? 
@@ -151,9 +135,7 @@ The figure is ordered in the availability of training samples for every class. P
 
 
 #### Color Selectivity
-<!---
-TODO: in which stages is color equivariance useful (figure 3 about color selective datasets)
---->
+
 Color selectivity is defined as: “The property of a neuron that activates highly when a particular color appears in the input image and, in contrast, shows low activation when this color is not present.” \[color_selectivity\]. The authors of the original paper utilize this notion to define the color selectivity of a dataset. Namely, they computed the color selectivity as an average of all neurons in the baseline CNN trained on the respective dataset. We reproduced the experiment to investigate the influence of using color equivariance up to late stages. Due to computational constraints, only two of the four datasets were explored; flowers102 with the highest color selectivity (0.70) and STL10 with the lowest color selectivity (0.38). While we did not explore the remaining datasets extensively, their color selectivity was comparable to STL10, suggesting that our findings are inclusive for the additional datasets.
 
 In Figure 2, the accuracy improvement of color equivariance up to later stages in the network is displayed for both mentioned datasets. The baseline is the ResNet18 model with one rotation (equivariance up to 0 stages). For the other values, HybridResNet18 models are trained with 3 rotations, max pooling, separable kernels, and the number of color equivariant stages as shown in the figure. Additionally, the graph on the right shows the result with color-jitter augmentation.
@@ -191,9 +173,6 @@ Comparing training and testing times, the baseline model completes its training 
 
 #### Number of Rotations
 
-<!---
-TODO: the impact of the number of hue rotations (figure 13)
---->
 The main implementation of the color-equivariance consists of adding three rotations of 120 degrees and the baseline model (not-equivariant) can be expressed as having 1 rotation. In Figure 4, we reproduced the experiments examining what happens with additional rotations. In order to save computational power, we limited the experiments to 1, 5, and 10 rotations (instead of 1-10 in the original paper). Nonetheless, the trends are the same.
 
 <div align="center">
@@ -303,25 +282,6 @@ $$\begin{align}
 &= \[f\star\psi^i\](x-t, k-m)\\
 &= \[\lambda'_{t, m}[f\star\psi^i\]\](x, k) & \quad \quad \text{(Equation 10)}
 \end{align}$$
-
-<!---
-
-$$
-\[\[\lambda_{t, m}f\]\star\psi^i\] (x, k) = \sum_{y \in \mathbb{Z}^2} \[H_n(m)f\](y-t) \cdot \[H_n(k)\psi^i\](y-x)
-$$
-
-$$
-\[\[\lambda_{t, m}f\]\star\psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2} f(y) \cdot \[H_n(k-m)\psi^i\](y-(x-t))
-$$
-
-$$
-\[\[\lambda_{t, m}f\]\star\psi^i\](x, k) = \[f\star\psi^i\](x-t, k-m)
-$$
-
-$$
-\[\[\lambda_{t, m}f\]\star\psi^i\](x, k) = \[\lambda'_{t, m}[f\star\psi^i\]\](x, k)
-$$
---->
 
 Since the input HSV image is now lifted to the group space all subsequent features and filters are functions that need to be indexed using both a pixel location and a discrete rotation. The group convolution can then be defined as:
 
