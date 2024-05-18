@@ -49,7 +49,9 @@ $$\begin{align}
 \end{align}$$
 
 Using the substition $h \rightarrow uh$ and the notation:
-$$\begin{align} \[ L_gf \](x) = \[ f \circ g^{-1} \](x) = f(g^{-1}x) & \qquad \qquad (\text{Equation 4})\end{align} $$
+$$\begin{align} 
+\[ L_g f \](x) = \[ f \circ g^{-1} \](x) = f(g^{-1}x) & \qquad \qquad (\text{Equation 4})
+\end{align} $$
 
 , the equivariance of the correlation can be derived such that a translation followed by a correlation is equivalent to a correlation followed by a translation:
 
