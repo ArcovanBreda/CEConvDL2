@@ -54,7 +54,7 @@ $$\begin{align}
 \[ L_g f \](x) = \[ f \circ g^{-1} \](x) = f(g^{-1}x) & \qquad \qquad (\text{Equation 4})
 \end{align} $$
 
-, the equivariance of the correlation can be derived such that a translation followed by a correlation is equivalent to a correlation followed by a translation:
+The equivariance of the correlation can be derived such that a translation followed by a correlation is equivalent to a correlation followed by a translation:
 
 $$\begin{align} 
 \[\[L_uf\] \star \psi\](g) &= \sum_{h \in G}\sum_k f_k(u^{-1}h)\psi(g^{-1}h)\\ 
@@ -143,7 +143,6 @@ Color selectivity is defined as: “The property of a neuron that activates high
 
 In Figure 2, the accuracy improvement of color equivariance up to later stages in the network is displayed for both mentioned datasets. The baseline is the ResNet18 model with one rotation (equivariance up to 0 stages). For the other values, HybridResNet18 models are trained with 3 rotations, max pooling, separable kernels, and the number of color equivariant stages as shown in the figure. Additionally, the graph on the right shows the result with color-jitter augmentation.
 
-<!-- ![Color selectivity results](blogpost_imgs/color_selectivity.png) -->
 <div align="center">
   <img src="blogpost_imgs/color_selectivity.png" alt="Color selectivity results" width="600">
 
@@ -154,13 +153,15 @@ Similar to the original paper’s results, the color-selective dataset seems to 
 
 ### Color Equivariance in Image Classification and impact of hyperparameters
 
-We will now explore the reproduction of a variation on the main results along with a small insight into the hyperparameters. These results are all limited to the Flowers102 dataset since it has the largest color discrepancy and the ResNet18 model, aligning with the original paper. The results were placed in the appendix of the original paper. However, we decided that the reproduction of the figure on one dataset is more insightful than an enormous table. The final experiment is an ablation study investigating the impact of varying the number of rotations. This aspect is altered across different experiments, highlighting its importance and deserving notice.
+We will now explore the reproduction of the main results along with a small insight into the hyperparameters. These results are all limited to the Flowers102 dataset since it has the largest color discrepancy and the ResNet18 model, aligning with the original paper. The final experiment is an ablation study investigating the impact of varying the number of rotations. This aspect is altered across different experiments, highlighting its importance and deserving notice.
+<!-- The results were placed in the appendix of the original paper. However, we decided that the reproduction of the figure on one dataset is more insightful than an enormous table. --->
 
 #### Image Classification
 
-In our evaluation of image classification performance, we utilized the flowers-102 dataset due to its most prominent color dependency across the datasets evaluated by the original authors. Our study involved training a baseline ResNet-18 model comprising approximately 11,390,000 parameters, alongside the novel color equivariant CE-ResNet trained with three rotations. Both models underwent training with and without jitter, augmenting the training data with varying hue-intensity images. Subsequently, we assessed their performance on test sets subjected to gradual hue shifts ranging from -180° to 180°.
-
-<!-- ![Classification Test-time Hue Shifts](blogpost_imgs/Test-time_Hue_Shifts.png) -->
+<!--
+In our evaluation of image classification performance, we utilized the flowers-102 dataset due to its most prominent color dependency across the datasets evaluated by the original authors. 
+--->
+Our evaluation of image classification performance involved training a baseline ResNet-18 model comprising approximately 11,390,000 parameters, alongside the novel color equivariant CE-ResNet trained with three rotations. Both models underwent training with and without jitter, augmenting the training data with varying hue-intensity images. Subsequently, we assessed their performance on test sets subjected to gradual hue shifts ranging from -180° to 180°.
 
 <div align="center">
   <img src="blogpost_imgs/Test-time_Hue_Shifts.png" alt="Classification Test-time Hue Shifts" width="600">
