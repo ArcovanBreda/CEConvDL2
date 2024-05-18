@@ -4,9 +4,6 @@
 
 ---
 
-<!--
-TODO: Introduction text
---->
 In this blog post, we discuss, analyze, and extend upon the findings of the paper titled *Color Equivariant Convolutional Networks*\[main\]. The paper introduces Color Equivariant Convolutions (CEConvs) by leveraging parameter sharing over hue shifts. The authors demonstrate the benefits of the novel model in terms of robustness to color alterations and accuracy performance.
 The objectives of this blog post are to:
 
@@ -18,22 +15,18 @@ The objectives of this blog post are to:
 
 ## Introduction
 
-<!---
-TODO: Text about the influence of color on classification (related work: color invariance)
---->
 Color is a crucial feature for recognition and classification by humans. For example, a study by \[bird\] found that color facilitates expert bird watchers in faster and more accurate recognition at both high (family) and low (specimen) levels of bird identification. Similarly, the convolutional layers in a Convolutional Neural Network (CNN) exhibit color representation akin to the human vision system \[human_vision\] with all layers containing color-selective neurons. These color representations are present at three different levels: in single neurons, in double neurons for edge detection, and in combination with shapes at all levels in the network.
 
 Although color invariance has been achieved in various research areas, such as in facial recognition to mitigate the influence of lightning conditions \[color_invariance\], some classification problems are color-dependent. Therefore, instead of training CNNs to classify images regardless of their color (invariance), it might be more beneficial to classify images using color (equivariance). 
 
-The Color Equivariant Convolutions (CEConvs) introduced in \[main\] achieve this through equivariance to discrete hue shifts. Hue is represented in RGB space as a 3D rotation around the [1, 1, 1] axis. This approach utilizes group convolutions as introduced by \[group_convs\] which can be equivariant to 3D rotations. We reproduce the results showing the effects of the CEConvs on color-imbalanced and color-selective datasets, as well as their impact on image classification. We examine the ablation studies to understand the impact of data augmentation and rotation on the CEConvs, providing additional insights into computational requirements as well. Finally, we extend the notion of color equivariance beyond hue shifts.
+The Color Equivariant Convolutions (CEConvs) introduced in \[main\] achieve this through equivariance to discrete hue shifts. Hue is represented in RGB space as a 3D rotation around the [1, 1, 1] axis. This approach utilizes group convolutions as introduced by \[group_convs\] which can be equivariant to 3D rotations. We reproduce the results showing the effects of the CEConvs on color-imbalanced and color-selective datasets, as well as their impact on image classification. We examine the ablation studies to understand the impact of data augmentation and rotation on the CEConvs, providing additional insights into computational requirements as well. Finally, we extend the notion of color equivariance to different colorspaces.
 
+<!--
 The most significant limitation of the CEConvs is that color equivariance is modeled as solely equivariance to hue shifts. By extending the notion to other dimensions, such as saturation equivariance, the CNN could achieve a higher level of equivariance, as saturation can handle a greater variety of changes in illumination. Additionally, by modeling hue shifts as 2D rotations compared to 3D rotations for the RGB space, we circumvent the limitation described in \[main\]. This limitation involves pixel values falling outside the RGB cube, requiring a reprojection operation and consequently only allowing for an approximation of hue equivariance for pixels near the border of the RGB cube.
+-->
 
 ## Recap on Group Equivariant Convolutions
 
-<!---
-TODO: Explain Group Equivariant Convolutions (technical)
---->
 Deep Convolutional Neural Networks have been around since the late 1980s and over the years proven to be highly effective for image classification \[DCNN\]. Empirical evidence shows the importance of depth for good performance and convolutional weight-sharing for parameter reduction. The latter is effective due to the translation symmetry inherent in most image data, whereby the data is roughly invariant to shifts, such that the same weights can be utilized to convolve different parts of the image \[group_convs\]. Convolution layers are translation equivariant in a deep network: the output shifts relative to shifts in the input. This notion of symmetry can be extended to larger groups, including rotation.
 
 This generalization of translation equivariance is achieved through Group Convolutional Neural Networks (G-CNN). A CNN layer is equivariant to a group if for all transformations $g \in G$, doing the transformation $T_g$ on the input and then the feature mapping $\Phi (x)$ is similar to doing the feature mapping on the input and the transformation $T'_g$ thereafter: 
@@ -67,14 +60,8 @@ $$\begin{align}
 &= \[L_u\[f \star \psi\]\](g) & \qquad \qquad (\text{Equation 5})\\
 \end{align}$$
 
-<!---
-Mss zijn deze formules allemaal net iets teveel overgenomen van [2]
---->
-
 ## Color Equivariance
-<!---
-TODO: explain specifically for color equivariance (technical)
---->
+
 The original paper exploits the concept of group equivariant convolutions to achieve color equivariance, defined as equivariance to hue shifts. In the HSV (Hue-Saturation-Value) color space, hue is represented as an angular scalar value. The hue value is shifted by adding an offset after which the modulo is taken to ensure a valid range. The HSV space is reprojected to the RGB (Red-Green-Blue) color space such that the hue shifts correspond to a rotation along the diagonal vector [1, 1, 1]. 
 
 This definition is extended to group theory, by defining the group $H_n$ as a subgroup of the $SO(3)$ group. Specifically, $H_n$ consists of multiples of 360/n-degree rotations about the [1, 1, 1] diagonal vector in $\mathbb{R}^3$ space. The rotation around a unit vector $\mathbf{u}$ by angle $\theta$ is defined in 5 steps: 
