@@ -1,4 +1,4 @@
-# A deep dive into colorspace equivariant networks
+# A deep dive into color space equivariant networks
 
 **Authors:** *S.R. Abbring, H.C. van den Bos, R. den Braber, A.J. van Breda, D. Zegveld*
 
@@ -15,11 +15,11 @@ The objectives of this blog post are to:
 
 ## Introduction
 
-Color is a crucial feature for recognition and classification by humans. For example, a study by \[bird\] found that color facilitates expert bird watchers in faster and more accurate recognition at both high (family) and low (specimen) levels of bird identification. Similarly, the convolutional layers in a Convolutional Neural Network (CNN) exhibit color representation akin to the human vision system \[human_vision\] with all layers containing color-selective neurons. These color representations are present at three different levels: in single neurons, in double neurons for edge detection, and in combination with shapes at all levels in the network.
+Color is a crucial feature for recognition and classification by humans. For example, a study by \[bird\] found that color facilitates expert bird watchers in faster and more accurate recognition at both high (family) and low (specimen) levels of bird identification. Similarly, the convolutional layers in a Convolutional Neural Network (CNN) exhibit color representation akin to the human visual system \[human_vision\] with all layers containing color-selective neurons. These color representations are present at three different levels: in single neurons, in double neurons for edge detection, and in combination with shapes at all levels in the network.
 
-Although color invariance has been achieved in various research areas, such as in facial recognition to mitigate the influence of lightning conditions \[color_invariance\], some classification problems are color-dependent. Therefore, instead of training CNNs to classify images regardless of their color (invariance), it might be more beneficial to classify images using color (equivariance). 
+Although color invariance has been achieved in various research areas, such as in facial recognition to mitigate the influence of lighting conditions \[color_invariance\], some classification problems are color-dependent. Therefore, instead of training CNNs to classify images regardless of their color (invariance), it might be more beneficial to classify them using color (equivariance). 
 
-The Color Equivariant Convolutions (CEConvs) introduced in \[main\] achieve this through equivariance to discrete hue shifts. Hue is represented in RGB space as a 3D rotation around the [1, 1, 1] axis. This approach utilizes group convolutions as introduced by \[group_convs\] which can be equivariant to 3D rotations. We reproduce the results showing the effects of the CEConvs on color-imbalanced and color-selective datasets, as well as their impact on image classification. We examine the ablation studies to understand the impact of data augmentation and rotation on the CEConvs, providing additional insights into computational requirements as well. Finally, we extend the notion of color equivariance to different colorspaces.
+The Color Equivariant Convolutions (CEConvs) introduced in \[main\] achieve this through equivariance to discrete hue shifts. Hue is represented in RGB space as a 3D rotation around the [1, 1, 1] axis. This approach utilizes group convolutions as introduced by \[group_convs\] which can be<!-- 'can be' of are? Met hoe veel zekerheid wil je deze uitspraak doen?-->  equivariant to 3D rotations. We reproduce the results showing the effects <!-- effectiveness? -->of CEConvs on color-imbalanced and color-selective datasets, as well as their impact on image classification. We examine the ablation studies to understand the impact of data augmentation and rotation on CEConvs, while also providing additional insights into computational requirements<!--as well-->. Finally, we extend the notion of color equivariance to different color spaces.
 
 <!--
 The most significant limitation of the CEConvs is that color equivariance is modeled as solely equivariance to hue shifts. By extending the notion to other dimensions, such as saturation equivariance, the CNN could achieve a higher level of equivariance, as saturation can handle a greater variety of changes in illumination. Additionally, by modeling hue shifts as 2D rotations compared to 3D rotations for the RGB space, we circumvent the limitation described in \[main\]. This limitation involves pixel values falling outside the RGB cube, requiring a reprojection operation and consequently only allowing for an approximation of hue equivariance for pixels near the border of the RGB cube.
@@ -27,7 +27,7 @@ The most significant limitation of the CEConvs is that color equivariance is mod
 
 ## Recap on Group Equivariant Convolutions
 
-Deep Convolutional Neural Networks have been around since the late 1980s and over the years proven to be highly effective for image classification \[DCNN\]. Empirical evidence shows the importance of depth for good performance and convolutional weight-sharing for parameter reduction. The latter is effective due to the translation symmetry inherent in most image data, whereby the data is roughly invariant to shifts, such that the same weights can be utilized to convolve different parts of the image \[group_convs\]. Convolution layers are translation equivariant in a deep network: the output shifts relative to shifts in the input. This notion of symmetry can be extended to larger groups, including rotation.
+Deep Convolutional Neural Networks have been around since the late 1980s and over the years proven to be highly effective for image classification \[DCNN\]<!--Ik denk dat het niet echt boeit dat ze around zijn sinds the late 1980s-->. Empirical evidence shows the importance of depth for good performance and convolutional weight-sharing for parameter reduction. The latter is effective due to the translation symmetry inherent in most image data, whereby the data is roughly invariant to shifts, such that the same weights can be utilized to convolve different parts of the image \[group_convs\]<!--Ik denk dat je deze zin beter in twe"een kan splitsen, zodat het vanaf "such that" een nieuwe zin wordt.. misschien: ". In this manner, the same weights ... of the image." -->. Convolution layers are translation equivariant in a deep network: the output shifts relative to shifts in the input<!--Kan aan het tijdstip liggen maar zie niet echt hoe deze zin volgt op de vorige, misschien linker toevoegen? Furthermore? Moreover?-->. This notion of symmetry can be extended to larger groups, including rotation.
 
 This generalization of translation equivariance is achieved through Group Convolutional Neural Networks (G-CNN). A CNN layer is equivariant to a group if for all transformations $g \in G$, doing the transformation $T_g$ on the input and then the feature mapping $\Phi (x)$ is similar to doing the feature mapping on the input and the transformation $T'_g$ thereafter: 
 
@@ -67,7 +67,7 @@ $$\begin{align}
 
 The original paper exploits the concept of group equivariant convolutions to achieve color equivariance, defined as equivariance to hue shifts. In the HSV (Hue-Saturation-Value) color space, hue is represented as an angular scalar value. The hue value is shifted by adding an offset after which the modulo is taken to ensure a valid range. The HSV space is reprojected to the RGB (Red-Green-Blue) color space such that the hue shifts correspond to a rotation along the diagonal vector [1, 1, 1]. 
 
-This definition is extended to group theory, by defining the group $H_n$ as a subgroup of the $SO(3)$ group. Specifically, $H_n$ consists of multiples of 360/n-degree rotations about the [1, 1, 1] diagonal vector in $\mathbb{R}^3$ space. The rotation around a unit vector $\mathbf{u}$ by angle $\theta$ is defined in 5 steps: 
+This definition is extended to group theory, by defining the group $H_n$ as a subgroup of the $SO(3)$ group. Specifically, $H_n$ consists of multiples of 360/$n$-degree rotations about the [1, 1, 1] diagonal vector in $\mathbb{R}^3$ space. The rotation around a unit vector $\mathbf{u}$ by angle $\theta$ is defined in 5 steps: 
 
 1. Rotate the vector such that it lies in one of the coordinate planes (e.g. $xz$)
 1. Rotate the vector such that it lies on one of the coordinate axes (e.g. $x$)
@@ -94,7 +94,7 @@ $$
 \end{align}
 $$
 
-However, we think a small mistake is made here as the sum $\sum_{c=1}^{C^l}$ indicates that $f_c(y)$ and $\psi_c^i(y - x)$ are scalar values which do not make sense given the dot product and the matrix $H_n(k)$.
+However, we think a small mistake is made here as the sum $\sum_{c=1}^{C^l}$ indicates that $f_c(y)$ and $\psi_c^i(y - x)$ are scalar values, which do not make sense given the dot product and the matrix $H_n(k)$.
 Therefore the correct formula should be:
 
 $$
@@ -105,7 +105,7 @@ $$
 
 This change does not impact the derivation of the equivariance of the CEConv layer, for this we refer to the original paper \[main\].
 
-For the hidden layers, the feature map $[f \star \psi]$ is a function on $G$ parameterized by x,k. The CEConv hidden layers are defined as:
+For the hidden layers, the feature map $[f \star \psi]$ is a function on $G$ parameterized by $x$,$k$<!--'and' ipv komma?-->. The CEConv hidden layers are defined as:
 
 $$\begin{align} 
 \[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{r=1}^n\sum_{c=1}^{C^l}f_c(y,r) \cdot \psi_c^i(y - x, (r-k)\%n) & \qquad \qquad (\text{Equation 8})\\ 
@@ -132,16 +132,16 @@ Two models were tested. The Z2CNN, a vanilla CNN model, consists of 25,990 train
   *Figure 1: ...*
 </div>
 
-The figure is ordered in the availability of training samples for every class. Performance of the shape-sharing CECNN consistently outperforms the baseline Z2CNN, where the average performance of the Z2CNN is 68.8% $\pm$ 0.6% and for the CECNN is 85.2 $\pm$ 1.2%. Most performance increase is seen in classes where little training data is provided thus confirming the hypothesis that the CECNN is able to share shape weight information effectively. These results are in line with the findings of the original authors which also describe a large performance increase. A difference in findings is the std of the CECNN which is larger than that of the Z2CNN however, this could be due to the randomness in data generation* which resulted in a different data distribution for our experiment.
+The figure is ordered in the availability of training samples for every class. Performance of the shape-sharing CECNN consistently outperforms the baseline Z2CNN, where the average performance of Z2CNN is 68.8% $\pm$ 0.6% and CECNN is 85.2 $\pm$ 1.2%. Most performance increase is seen in classes where little training data is provided thus confirming the hypothesis that the CECNN is able to share shape weight information effectively. These results are in line with the findings of the original authors which<!--who--> also describe<!--als het althans over de auteurs gaat die hebben beschreven, dan described lijkt me want ze hebben het al geschreven--> a large performance increase. A difference in findings is the std of the CECNN which is larger than that of the Z2CNN. However, this could be due to the randomness in data generation* which resulted in a different data distribution for our experiment.
 
 <span style="color:grey">* We made the data generation deterministic by setting a seed, and recreating our experiment would return the same data distribution.</span>
 
 
 #### Color Selectivity
 
-Color selectivity is defined as: “The property of a neuron that activates highly when a particular color appears in the input image and, in contrast, shows low activation when this color is not present.” \[color_selectivity\]. The authors of the original paper utilize this notion to define the color selectivity of a dataset. Namely, they computed the color selectivity as an average of all neurons in the baseline CNN trained on the respective dataset. We reproduced the experiment to investigate the influence of using color equivariance up to late stages. Due to computational constraints, only two of the four datasets were explored; flowers102 with the highest color selectivity (0.70) and STL10 with the lowest color selectivity (0.38). While we did not explore the remaining datasets extensively, their color selectivity was comparable to STL10, suggesting that our findings are inclusive for the additional datasets.
+Color selectivity is defined as: “The property of a neuron that activates highly when a particular color appears in the input image and, in contrast, shows low activation when this color is not present.” \[color_selectivity\]<!--idk, word niet helemaal warm van een quote/citaat. Denk dat het dan beter gecombineerd kan worden met de volgende zin, als in "The authors define the color selectivity of a dataset as the degree in which a neuron is activated when a particular color appears in an input image"? Mwah vind mn suggestie niet beter ik snap denk wel wrm het citaat er staat nu-->. The authors of the original paper utilize this notion to define the color selectivity of a dataset. Namely, they computed the color selectivity as an average of all neurons in the baseline CNN trained on the respective dataset. We reproduced the experiment to investigate the influence of using color equivariance up to late stages. Due to computational constraints, only two of the four datasets were explored; flowers102 with the highest color selectivity (0.70) and STL10 with the lowest color selectivity (0.38). While we did not explore the remaining datasets extensively, their color selectivity was comparable to STL10, suggesting that our findings are inclusive for the additional datasets.
 
-In Figure 2, the accuracy improvement of color equivariance up to later stages in the network is displayed for both mentioned datasets. The baseline is the ResNet18 model with one rotation (equivariance up to 0 stages). For the other values, HybridResNet18 models are trained with 3 rotations, max pooling, separable kernels, and the number of color equivariant stages as shown in the figure. Additionally, the graph on the right shows the result with color-jitter augmentation.
+In Figure 2, the accuracy improvement of color equivariance up to later stages in the network is displayed for both mentioned<!--"for the aforementioned"? --> datasets. The baseline is the ResNet18 model with one rotation (equivariance up to 0 stages). For the other values, HybridResNet18 models are trained with 3 rotations, max pooling, separable kernels, and the number of color equivariant stages as shown in the figure. Additionally, the graph on the right shows the result with color-jitter augmentation.
 
 <div align="center">
   <img src="blogpost_imgs/color_selectivity.png" alt="Color selectivity results" width="600">
@@ -153,31 +153,31 @@ Similar to the original paper’s results, the color-selective dataset seems to 
 
 ### Color Equivariance in Image Classification and impact of hyperparameters
 
-We will now explore the reproduction of the main results along with a small insight into the hyperparameters. These results are all limited to the Flowers102 dataset since it has the largest color discrepancy and the ResNet18 model, aligning with the original paper. The final experiment is an ablation study investigating the impact of varying the number of rotations. This aspect is altered across different experiments, highlighting its importance and deserving notice.
-<!-- The results were placed in the appendix of the original paper. However, we decided that the reproduction of the figure on one dataset is more insightful than an enormous table. --->
+We will now explore the reproduction of the main results along with a small insight into the hyperparameters. These results are all limited to the Flowers102 dataset since it has the largest color discrepancy and the ResNet18 model, aligning with the original paper. The final experiment is an ablation study investigating the impact of varying the number of rotations. This aspect is altered across different experiments,<!--Moet deze komma niet een : zijn?--> highlighting its importance and deserving<!--subjectief, zou het weghalen--> notice.
+<!-- The results were placed in the appendix of the original paper. However, we decided that the reproduction of the figure on one dataset is more insightful than an enormous table. ---><!-- omg hahah dat laatste in die comment klinkt als een uithaal naar de original paper :'D-->
 
 #### Image Classification
 
 <!--
 In our evaluation of image classification performance, we utilized the flowers-102 dataset due to its most prominent color dependency across the datasets evaluated by the original authors. 
 --->
-Our evaluation of image classification performance involved training a baseline ResNet-18 model comprising approximately 11,390,000 parameters, alongside the novel color equivariant CE-ResNet trained with three rotations. Both models underwent training with and without jitter, augmenting the training data with varying hue-intensity images. Subsequently, we assessed their performance on test sets subjected to gradual hue shifts ranging from -180° to 180°.
+Our evaluation of image classification performance involved training a baseline ResNet-18 model comprising approximately 11,390,000<!-- zou gwn 11 million zeggen of aantal parameters weglaten en het als baseline in die tabel hier beneden zetten oh maar dan heb je ook nog die klote accuracy nodig of huh? oh maybe haal ik dingen door elkaar idk man/vrouw. Is nu niet helemaal duidelijk denk ik op eerste gezicht te lezen waarom hier aantal parameters wordt benoemd, denk dat je wil laten weten dat ondanks de rotaties de parameters alsnog ongeveer gelijk blijven?--> parameters, alongside the novel color equivariant CE-ResNet trained with three rotations. Both models underwent training with and without jitter, augmenting the training data with varying hue-intensity images. Subsequently, we assessed their performance on test sets subjected to gradual hue shifts ranging from -180° to 180°.
 
 <div align="center">
   <img src="blogpost_imgs/Test-time_Hue_Shifts.png" alt="Classification Test-time Hue Shifts" width="600">
 
-  *Figure 3: ...*
+  *Figure 3: ...#TODO*
 </div>
 
 In the figure presented, both the baseline ResNet and the CE-ResNet demonstrate good performance when no hue shift is applied (Test-time hue shift = 0). The CE-ResNet displays optimal performance in three specific hue areas, which reflects the orientations it is trained on. Moreover, the CE-ResNet consistently maintains performance levels above or equal to the original ResNet across almost all hue shifts, indicating its dominance across distributional changes.
 
-When trained with jitter, both models exhibit robustness against distributional shifts, in line with the original author's findings, with the CE-ResNet-18 showing slightly better performance. This advantage is attributed to more efficiency in weight sharing, entailing more information can possibly be stored about other features. These models did take around 6 times as long to train than the non-jittered models. The extended training duration of these models can be attributed to the convoluted sampling process involved in generating jittered images.
+When trained with jitter, both models exhibit robustness against distributional shifts, in line with the original author's findings, with the CE-ResNet-18 showing slightly better performance. This advantage is attributed to more efficiency<!--efficiency of effective? want eerder was het vgm nog effective en als je voor effective gaat, vergeet dan niet 'in' hierna weg te halen--> in weight sharing, entailing more information can possibly<!--could ipv "can possibly"--> be stored about other features. These models did take around 6 times as long to train than the non-jittered models. The extended training duration of these models can be attributed to the convoluted sampling process involved in generating jittered images.
 
 Comparing training and testing times, the baseline model completes its training approximately 50% faster than the CEConv model. Testing time took around 2.3 times as long for the novel CEConv model. This indicates a significant speed advantage for production with the baseline model, albeit with a slight sacrifice in performance due to the non-utilization of CEConv.
 
 #### Number of Rotations
 
-The main implementation of the color-equivariance consists of adding three rotations of 120 degrees and the baseline model (not-equivariant) can be expressed as having 1 rotation. In Figure 4, we reproduced the experiments examining what happens with additional rotations. In order to save computational power, we limited the experiments to 1, 5, and 10 rotations (instead of 1-10 in the original paper). Nonetheless, the trends are the same.
+The main implementation of color-equivariance consists of adding three rotations of 120 degrees, whereas the baseline model (not-equivariant) can be expressed as having 1 rotation. In Figure 4, we reproduced the experiments examining the effect of additional rotations. In order to save computational power, we limited the experiments to 1, 5, and 10 rotations (instead of 1-10 in the original paper)<!--van mij hoeft het deel tussen haakjes niet per se in dit geval want vanuit "we limited" blijkt al dat we het hebben aangepast-->. Nonetheless, the trends are the same.<!--Deze zin weg want staat in alinea hieronder en past daar beter-->
 
 <div align="center">
   <img src="blogpost_imgs/rotations.png" alt="Hue rotations" width="600">
@@ -185,7 +185,7 @@ The main implementation of the color-equivariance consists of adding three rotat
   *Figure 4: Accuracy with varying rotations.*
 </div>
 
-The lines in the plot are not smooth because it has only been evaluated on 37 points. Nonetheless, the trends are similar to the original paper’s findings. The number of peaks aligns with the number of rotations additionally, the height of the peaks decreases as the number of rotations increases. However, the peaks have different heights which might be attributed to the reprojection into the RGB cube range. Based on these results it seems that more rotations lead to higher equivariance. These results lead to a trade-off between the amount of equivariance, the maximum accuracy, and the number of parameters as displayed in Table 1.
+The lines in the plot are not smooth because it has only been evaluated on 37 points<!--Misschien beter om hierboven te zeggen dat het geevalueerd is op 37 points en/of dat in accordance met original paper-->. Nonetheless, the trends are similar to the original paper’s findings. The number of peaks aligns with the number of rotations. Additionally, the height of the peaks decreases as the number of rotations increases. However, the peaks have different heights which might be attributed to the reprojection into the RGB cube range. Based on these results it seems that more rotations lead to higher equivariance. These results lead to a trade-off between the amount of equivariance, the maximum accuracy, and the number of parameters as displayed in Table 1.
 
 <center>
 
@@ -502,7 +502,7 @@ As outlined in the [methodology](#methodology), it is possible to model hue and 
   *Figure A.1: On the left, the baseline model's test accuracy is calculated over varying hue and saturation shifts. On the right, the hue and saturation equivariant network's test accuracy is displayed. The model was trained for any combination of 3 hue (0°, 120° and 240°) and saturation shifts (-1, 0, 1) applied to the kernel. No jitter was applied. ([source](CEConv/plot_saturation.py))* 
 </div></p>
 
-On the left in Figure A.1 it is shown that the baseline achieves the same test accuracies as when the shifts were applied independently of each other. This is also true for hue shifts for the hue and saturation equivariant model on the right. Remarkably, this model has improved its saturation equivariance, where it achieves a constant test accuracy of approximately 50% for almost all saturation shifts when no hue shift took place. *explanation how this could have occurred ...#TODO*
+On the left in Figure A.1 it is shown that the baseline achieves the same test accuracies as when the shifts were applied independently of each other. This is also true for hue shifts for the hue and saturation equivariant model on the right. Remarkably, this model has improved its saturation equivariance, where it achieves a constant test accuracy of approximately 50% for almost all saturation shifts when no hue shift took place. We hypothesize that the network learned to adapt to saturation changes when it was aware of the hue of the images. Furthermore, the test accuracy drops for negative saturation shifts, which could again indicate that color is a crucial visual cue in the task at hand. <!-- feel free to adjust this explanation -->
 
 **Shifting the Input Image**
 <p align="middle">
@@ -513,7 +513,7 @@ On the left in Figure A.1 it is shown that the baseline achieves the same test a
   *Figure A.2: On the left, the baseline model's test accuracy is calculated over varying hue and saturation shifts. On the right, the hue and saturation equivariant network's test accuracy is displayed. The model was trained for any combination of 3 hue (0°, 120° and 240°) and saturation shifts (-1, 0, 1) applied to the input image. No jitter was applied. ([source](CEConv/plot_saturation.py))* 
 </div></p>
 
-Likewise to the baseline on the left of Figure A.2, this hue and saturation equivariant network on the right did not obtain additional performance compared to the networks that were either hue or saturation equivariant. This could be due to the fact that each type of equivariance functions on a different channel in HSV space such that they are modeled as independent operations on the input images. This could have allowed the kernel to keep hue and saturation information disentangled instead of exploiting information over both of them.
+Likewise to the baseline on the left of Figure A.2, this hue and saturation equivariant network on the right did not obtain additional performance compared to the networks that were either hue or saturation equivariant. This could be due to the fact that each type of equivariance functions on a different channel in HSV space such that they are modeled as independent operations on the input images. This could have allowed the kernel to keep hue and saturation information disentangled instead of exploiting information over both of them. <!-- feel free to adjust the explanation -->
 
 Ultimately, the only improvement from these experiments was for saturation equivariance when both hue and saturation equivariances were applied to the kernel. Although this result seems promising, we decided to not continue pursuing this direction due to the exponentially increased computational costs and the limited available resources.
 
