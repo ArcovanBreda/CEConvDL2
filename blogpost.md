@@ -465,7 +465,7 @@ In the above figure, we find that when the image's saturation is not adjusted, t
 ##### Value Equivariance
 For value equivariance, we only tested shifting the input images with 5 shifts. Initially, we tested with a shift range starting at minus one however in RGB space this results in totally black images with a complete loss of information, therefore, we decided to replace this minus one with minus a half. The results can be found in Figure 8/
 <div align="center">
-  <img src="blogpost_imgs/value_equivariance.jpg" alt="HSV space value equivariance" width="100%">
+  <img src="blogpost_imgs/value_equivariance.jpg" alt="HSV space value equivariance" width="70%">
 
   *Figure 8: Accuracy over test-time value shift for hue equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (value) Equivariant networks, and jitter indicates training time hue augmentation. The mean per model over all test-time value shifts is indicated in the legend. ([source](CEConv/plot_fig9_value.py))* 
 </div>
@@ -478,7 +478,7 @@ To test hue equivariance implemented in LAB space the convolution layers of a Re
 During test time different sets of hue space-shifted images are evaluated on accuracy. This hue space shift is either done in RGB space after which the RGB images are converted to LAB format, or directly in LAB space to test the impact of the difference outlined in the [color space](#color-spaces) section. The results of these experiments can be found in Figure 9
 
 <div align="center">
-  <img src="blogpost_imgs/lab_equivariance.jpg" alt="LAB space hue equivariance" width="100%">
+  <img src="blogpost_imgs/lab_equivariance.jpg" alt="LAB space hue equivariance" width="70%">
 
   *Figure 9: Accuracy over test-time hue angle shift for hue equivariant networks trained using input images in LAB color space format. Resnet-18 indicates a baseline model, CE indicates Color (hue) Equivariant networks, jitter indicates training time hue augmentation, and LAB shift indicates test-time hue shift is performed in LAB space instead of HSV/RGB space. The mean per model over all test-time hue shifts is indicated in the legend. ([source](CEConv/plot_fig9_lab.py))* 
 </div>
