@@ -497,8 +497,14 @@ However, the approach by the original authors lead to some limitations. For inst
 We found that a model with hue equivariance in LAB space and jitter managed to outperform all other models encoding this type of equivariance. Furthermore, saturation and value equivariance without any jitter performed similar to the baseline models without any equivariance. However, jitter ensured they became robuster against distribution shifts, even outperforming the baseline model with jitter, but came at the cost of achieving lower test accuracy overall. 
 
 ## Authors' Contributions
+<ul>
+  <li>Silvia Abbring: #TODO </li>
+  <li>Hannah van den Bos: #TODO </li>
+  <li>Rens den Braber: #TODO </li>
+  <li>Arco van Breda: #TODO </li>
+  <li>Dante Zegveld: #TODO </li>
 
-#TODO
+</ul>
 
 ## References
 <a id="1">[bird]</a> 
