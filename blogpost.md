@@ -275,11 +275,9 @@ Hue equivariance in LAB space would require a rotation matrix however due to the
 
 Figure 6 clearly shows this difference with an image hue space shifted in RGB and HSV space resulting in the same image however performing the same shift in LAB space and thereafter converting back to RGB space results in a slightly different colored image.
 
-### Methodology
-This section will explain the implementation of color equivariance networks in the HSV and LAB color space. Just like the original paper the implementation of the lifting layer and the group convolution will be discussed this layer can then replace the standard convolution layers in different architectures like ResNet, in which the width is reduced resulting in a network with equivariant layers but with the same number of parameters.
+### HSV Equivariance
 
-#### HSV
-**Shifting the Kernel -** In our implementation of the HSV space, **hue** is modeled as an angular value between zero and two pi and can be changed by adding or subtracting such an angle modulo two pi. Therefore, we represent the group $H_n$ as a set of $\frac{2\pi}{n}$ rotations: $H_n = \\{ \frac{2\pi}{n} k | k \in \mathbb{Z}, 0 \leq k \lneq n \\} $. In HSV space this can parameterized as the vector: 
+**Shifting the Kernel -** In our implementation of the HSV space, **hue** is modeled as an angular value between 0 and $2\pi$ and can be changed by adding or subtracting such an angle modulo $2\pi$. Therefore, we represent the group $H_n$ as a set of $\frac{2\pi}{n}$ rotations: $H_n = \\{ \frac{2\pi}{n} k | k \in \mathbb{Z}, 0 \leq k \lneq n \\} $. In HSV space this can parameterized as the vector: 
 
 $$
 H_n(k) = \\begin{bmatrix} \frac{2\pi}{n} k \\\\ 0 \\\\ 0 \\end{bmatrix} 
@@ -312,6 +310,15 @@ $$
 Here $f$ is the input image and $\psi^i$ a set of corresponding filters.
 The equivariance can be shown as:
 
+$$\begin{align} 
+\[\[\lambda_{t, m}f\]\star\psi^i\] (x, k) &= \sum_{y \in \mathbb{Z}^2} \[H_n(m)f\](y-t) \cdot \[H_n(k)\psi^i\](y-x)\\ 
+&= \sum_{y \in \mathbb{Z}^2} f(y) \cdot \[H_n(k-m)\psi^i\](y-(x-t)) \\
+&= \[f\star\psi^i\](x-t, k-m)\\
+&= \[\lambda'_{t, m}[f\star\psi^i\]\](x, k) & \quad \quad \text{(Equation 10)}
+\end{align}$$
+
+<!---
+
 $$
 \[\[\lambda_{t, m}f\]\star\psi^i\] (x, k) = \sum_{y \in \mathbb{Z}^2} \[H_n(m)f\](y-t) \cdot \[H_n(k)\psi^i\](y-x)
 $$
@@ -327,6 +334,7 @@ $$
 $$
 \[\[\lambda_{t, m}f\]\star\psi^i\](x, k) = \[\lambda'_{t, m}[f\star\psi^i\]\](x, k)
 $$
+--->
 
 Since the input HSV image is now lifted to the group space all subsequent features and filters are functions that need to be indexed using both a pixel location and a discrete rotation. The group convolution can then be defined as:
 
@@ -335,8 +343,8 @@ $$
 $$
 
 
-For **saturation** equivariance we need to redefine the group, because saturation is represented as a number between zero and one we need to create a group containing n elements equally spaced between minus and one to model both an increase and decrease in saturation. This makes all group elements fall in the set:
-$H_n = \\{-1 +k\frac{2}{n-1} | n \geq 2, k = 0,1,2,...,n-1 \\}$. In HSV space this can parameterized as the vector: 
+For **saturation** equivariance we need to redefine the group, because saturation is represented as a number between 0 and 1 we need to create a group containing n elements equally spaced between minus and one to model both an increase and decrease in saturation. This makes all group elements fall in the set:
+$H_n = \\{-1 +k\frac{2}{n-1} | n \geq 2, k = 0,1,2,...,n-1 \\}$. In HSV space this can be parameterized as the vector: 
 
 $$
 H_n(k) = 
@@ -355,17 +363,17 @@ $$
 This clipping due to the non-cyclic nature of saturation might break equivariance, which will be tested with several experiments, applying the group action on the kernel, the image and testing different values for n.
 
 
-**Value** equivariance can be modelled in the same way as described for saturation the only thing different is that the group action now acts upon the value channel:
+**Value** equivariance can be modelled in the same way as described for saturation where the group action is now acting upon the value channel:
 
 $$
 \[H_n(k)f\](x) = \\begin{bmatrix} f(x)_h \\\\ f(x)_s \\\\ \text{clip}(0, f(x)_v + \frac{1}{n} k, 1) \\end{bmatrix}
 $$
 
-Due to our earlier experimenting with applying the group element on the kernel or the image we decided to now only model the value shift of the input images as described in the next paragraph.
+Due to our earlier experimenting with applying the group element on the kernel or the image we decided to only model the value shift of the input images as described in the next paragraph.
 
-**Shifting the Input Image -** In order to circumvent some of the issues that present themselves when naively shifting the kernel as though it were an image, we investigated whether we could perform the lifting convolution by shifting the input image instead of the kernel. This is a more intuitive approach and [lifting] show that transforming the signal instead of the kernel is indeed possible and that these operations are equivalent when restricted to the group and standard convolution. This then allows for more general transformations than when using the group correlation of [group_convs]. In our case, where we make use of the HSV color space with separated hue, saturation and value channels, this way of performing the lifting operation is required due to the fact that we perform our action on these separated channels. Transforming the signal instead of the kernel then allows us to alter the values of pixels instead of only moving the pixel locations.
+**Shifting the Input Image -** In order to circumvent some of the issues that present themselves when naively shifting the kernel as though it were an image, we investigated whether we could perform the lifting convolution by shifting the input image instead of the kernel. This is a more intuitive approach and [lifting] show that transforming the signal instead of the kernel is indeed possible and that these operations are equivalent when restricted to the group and standard convolution. This allows for more general transformations than using the group correlation of [group_convs]. In our case, where we make use of the HSV color space with separated hue, saturation and value channels, this way of performing the lifting operation is required due to the fact that we perform our action on these separated channels. Transforming the signal instead of the kernel allows us to alter the values of pixels instead of only moving the pixel locations.
 
-We can thus define the lifting layer outputting the i-th output channels for our semigroup H of hue shifts as follows:
+We can thus define the lifting layer outputting the i-th output channels for our semigroup $H$ of hue shifts as follows:
 
 $$
 \[\psi^i \star f\](\mathbf{x}, k) = \sum_{y \in \mathbb{Z}^2} \psi^i(y) \cdot H_n(k)\[f\](y-\mathbf{x})
@@ -386,7 +394,7 @@ $$
 I(\mathbf{x}) = (h(\mathbf{x}), s(\mathbf{x}), v(\mathbf{x})) 
 $$
 
-We can then define the action of the combination of these groups acting on the image as:
+We can define the action of the combination of these groups acting on the image as:
 
 $$ 
 \mathcal{L}_{(\mathbf{x'},h',s',v')} \[ I \](\mathbf(x)) = (h' \cdot h(\mathbf{x} - \mathbf{x'}, \ s' \cdot s(\mathbf{x} - \mathbf{x'}), \ v' \cdot v(\mathbf{x} - \mathbf{x'}))
