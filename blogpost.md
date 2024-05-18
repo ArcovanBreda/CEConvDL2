@@ -444,20 +444,20 @@ As can be seen in Fig XX, the CE-ResNet-18 network shows 3 clear peaks at the 0Â
 Similarly, the ever-so-slight decrease in performance on the top-end of the CE-ResNet-18 model without jitter compared to its baseline can be explained by this trade-off. In our test, we try to keep the amount of parameters equal between the baseline models and the hue shift equivariant models, at around 11.2M parameters. Herefore, we must reduce the width of the CE-ResNet-18 model as making the model equivariant comes at the cost of an increased amount of parameters. Consequently, the CE-ResNet-18 model is less expressive than its baseline counterparts explaining the slight decrease in peak performance when the hue is not shifted at test time (0Â° hue shift).
 
 ##### Saturation Equivariance
-**Shifting the Kernel -** This experiment largely follows the setup from the hue equivariant network in HSV space. However, 5 saturation shifts are applied on the kernel as to not only obtain images that are in black and white or have maximum saturation. Furthermore, 50 saturation shifts were applied to the test dataset in order to measure performance. Finally, jitter in this case implies saturation jitter, which was applied during training.
+**Shifting the Kernel -** This experiment largely follows the setup from the hue equivariant network in HSV space. However, 5 saturation shifts are applied on the kernel as to not only obtain images that are in black and white or have maximum saturation. Furthermore, 50 saturation shifts were applied to the test dataset in order to measure performance. Finally, jitter in this case implies saturation jitter, which was applied during training. <!-- In appendix B, further details can be found on how the degree of saturation jitter was determined.-->
 <div align="center">
-  <img src="blogpost_imgs/Sat_HSV_Fig9_shiftKernel_noNorm_5shifts.jpg" alt="Results of HSV space saturation equivariance, when lifting operation is performed by naively saturation shifting the kernel" width="70%">
+  <img src="blogpost_imgs/Sat_HSV_Fig9_satshiftKernel.jpg" alt="Results of HSV space saturation equivariance, when lifting operation is performed by naively saturation shifting the kernel" width="70%">
   
-  *Figure XX: Accuracy over test-time saturation shift for saturation equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, and jitter indicates training time saturation augmentation, which was set to be in [0, 100]. The CE-Resnet-18 models are trained for 5 discrete saturation translations of -1, -0.5, 0, 0.5 and 1. ([source](CEConv/plot_saturation.py))*  
+  *Figure XX: Accuracy over test-time saturation shift for saturation equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, and jitter indicates training time saturation augmentation, which was set to be in [0, 20]. The CE-Resnet-18 models are trained for 5 discrete saturation translations of -1, -0.5, 0, 0.5 and 1. ([source](CEConv/plot_saturation.py))*  
 </div>
 
 In the above figure, we find that when the image's saturation is not adjusted, the CE-ResNet-18 outperforms the baseline. However, for higher and lower saturation shifts, the baseline tends to outperform it. This means the CE-ResNet-18 was unable to obtain saturation equivariance, which could be due to the clipping. Moreover, the same trends also appear for when jitter is added. The difference between the two models is also more significant towards the ends of the plot. It does appear that jitter helps both models in becoming robuster to saturation changes, as the model has seen varying saturations during training.
 
 **Shifting the Input Image -** In this next approach, the input signal was transformed instead, akin to the hue equivariant one. However, the aforementioned settings for saturation shifts are utilised. 
 <div align="center">
-  <img src="blogpost_imgs/Sat_HSV_Fig9_satshiftImage_noNorm_5shifts.jpg" alt="Results of HSV space saturation equivariance, when lifting operation is performed by saturation shifting the input image" width="70%">
+  <img src="blogpost_imgs/Sat_HSV_Fig9_satshiftImage.jpg" alt="Results of HSV space saturation equivariance, when lifting operation is performed by saturation shifting the input image" width="70%">
   
-  *Figure XX: Accuracy over test-time saturation shift for saturation equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, and jitter indicates training time saturation augmentation, which was set to be in [0, 100]. The CE-Resnet-18 models are trained for 5 discrete saturation translations of -1, -0.5, 0, 0.5 and 1 that were applied to the input image. ([source](CEConv/plot_saturation.py))*  
+  *Figure XX: Accuracy over test-time saturation shift for saturation equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, and jitter indicates training time saturation augmentation, which was set to be in [0, 20]. The CE-Resnet-18 models are trained for 5 discrete saturation translations of -1, -0.5, 0, 0.5 and 1 that were applied to the input image. ([source](CEConv/plot_saturation.py))*  
 </div>
 
 ... #TODO
@@ -558,4 +558,22 @@ From the above figure, it can be seen that the model does not improve its perfor
 </div>
 
 In the above plot we again reach the same conclusion that utilising both equivariances does not yield a significant improvement. Because these results were not promising and computationally heavier due to the combined number of hue and saturation shifts, we decided to not further pursue this direction. #TODO
+
+### B. Determining Settings Saturation Equivariance
+...
+
+**Effects of Saturation Shifts**
+...
+<div align="center">
+  <img src="blogpost_imgs/Sat_HSV_ShiftsKernel.jpg" alt="Hue and Saturation equivariance in HSV space" width="70%">
+
+  *Figure B.X: ... ([source](CEConv/plot_saturation.py))* 
+</div>
+
+**Effects of Saturation Jitter**
+<div align="center">
+  <img src="blogpost_imgs/Sat_HSV_satshiftkernel_jitter.jpg" alt="Hue and Saturation equivariance in HSV space" width="70%">
+
+  *Figure B.X: ... ([source](CEConv/plot_saturation.py))* 
+</div>
 
