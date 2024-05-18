@@ -64,7 +64,7 @@ def plot_sat_jitters(paths_jit, shift="Kernel", filename="Sat_HSV_satshiftkernel
     plt.savefig(filename)
 
 
-def plot_3d(paths_3d, saturations=50, rotations=37, shift="Kernel", filename="HueSat_HSV_shiftkernel.jpg"):
+def plot_3d(paths_3d, saturations=50, rotations=37, num_shift=3, shift="Kernel", filename="HueSat_HSV_shiftkernel.jpg"):
     original_shape = (rotations, saturations)
 
     X = np.load(paths_3d)["hue"].reshape(original_shape)
@@ -77,7 +77,7 @@ def plot_3d(paths_3d, saturations=50, rotations=37, shift="Kernel", filename="Hu
     surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,
                         linewidth=0, antialiased=False)
 
-    ax.set_title(f"Hue and Saturation Equivariant Network trained in HSV Space\nFlowers-102 dataset [3 Hue and Sat Shifts on {shift}]", fontsize=15)
+    ax.set_title(f"Hue and Saturation Equivariant Network trained in HSV Space\nFlowers-102 dataset [{num_shift} Hue and Sat Shifts on {shift}]", fontsize=15)
     ax.set_xlabel("Hue shift (°)", labelpad=10, fontsize=11)
     ax.set_xticks(ticks=[-0.45, -0.3, -0.15, 0, 0.15, 0.3, 0.45],labels=["-150", "-100", "-50", "0", "50", "100", "150" ])
     ax.set_ylabel("Saturation shift", labelpad=10, fontsize=11)
@@ -151,8 +151,8 @@ paths_sat_base = [
     "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-no_norm.npz"
 ]
 
-plot_3d(paths_3d[0], saturations=25, rotations=25, shift="Image", filename="HueSat_HSV_shiftImgBase_noNorm.jpg")
-plot_3d(paths_3d[1], saturations=25, rotations=25, filename="HueSat_HSV_shiftKernelBase_noNorm.jpg")
+plot_3d(paths_3d[0], saturations=25, rotations=25, num_shift="No", shift="Image", filename="HueSat_HSV_shiftImgBase_noNorm.jpg")
+plot_3d(paths_3d[1], saturations=25, rotations=25, num_shift="No", filename="HueSat_HSV_shiftKernelBase_noNorm.jpg")
 plot_3d(paths_3d[2], saturations=25, rotations=25, shift="Image", filename="HueSat_HSV_shiftImage_noNorm.jpg")
 plot_3d(paths_3d[3], saturations=25, rotations=25, filename="HueSat_HSV_shiftKernel_noNorm.jpg")
 plot_sat_base(paths_sat_base[4:])
