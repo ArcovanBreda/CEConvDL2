@@ -534,7 +534,7 @@ Worrall, D., & Welling, M. (2019). Deep scale-spaces: Equivariance over scale. A
 
 ## Appendices
 ### A. Combining Hue and Shift Equivariance
-As outlined in the [methodology](#methodology), it is possible to model hue and saturation equivariance jointly. A model was trained to encode both of these shifts on the kernel and on the input image. We will first display the baseline model and then the equivariant ones, where the shifts were applied on the kernel and input images, respectively.
+As outlined in the [methodology](#methodology), it is possible to model hue and saturation equivariance jointly. A model was trained to encode both of these shifts on the kernel and on the input image. The results will be displayed and discussed in this appendix.
 
 **Shifting the Kernel**
 <p align="middle">
