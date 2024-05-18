@@ -460,7 +460,8 @@ In the above figure, we find that the equivariant model outperforms the baseline
   *Figure XX: Accuracy over test-time saturation shift for saturation equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, and jitter indicates training time saturation augmentation, which was set to be in [0, 20]. The CE-Resnet-18 models are trained for 5 saturation shifts of -1, -0.5, 0, 0.5 and 1 that were applied to the input image. ([source](CEConv/plot_saturation.py))*  
 </div>
 
-... #TODO
+Compared to the equivariance implemented by transforming the kernel, there are some changes. The peak around no saturation shift has become wider and flatter for CE-ResNet-18 and towards the ends of the test-time saturation shifts, it manages to outperform the baseline. Furthermore, CE-ResNet-18 with jitter now outperform the baseline with jitter for positive saturation shifts. However, all of these changes lead only to an insignificant increase in test accuracy. Therefore, there is no clear preference for one over the other.
+
 
 ##### Value Equivariance
 For value equivariance, we only tested shifting the input images with 5 shifts. Initially, we tested with a shift range starting at minus one however in RGB space this results in totally black images with a complete loss of information, therefore, we decided to replace this minus one with minus a half. The results can be found in Figure 8/
@@ -531,7 +532,7 @@ Raninen, J. (2022). The Effect of Colour Space in Deep Multitask Learning Neural
 <a id="1">[lifting]</a>
 Worrall, D., & Welling, M. (2019). Deep scale-spaces: Equivariance over scale. Advances in Neural Information Processing Systems, 32.
 
-## Appendix
+## Appendices
 ### A. Combining Hue and Shift Equivariance
 As outlined in the [methodology](#methodology), it is possible to model hue and saturation equivariance jointly. A model was trained to encode both of these shifts on the kernel and on the input image. We will first display the baseline model and then the equivariant ones, where the shifts were applied on the kernel and input images, respectively.
 
