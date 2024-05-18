@@ -460,7 +460,7 @@ In the above figure, we find that the equivariant model outperforms the baseline
   *Figure XX: Accuracy over test-time saturation shift for saturation equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, and jitter indicates training time saturation augmentation, which was set to be in [0, 20]. The CE-Resnet-18 models are trained for 5 saturation shifts of -1, -0.5, 0, 0.5 and 1 that were applied to the input image. ([source](CEConv/plot_saturation.py))*  
 </div>
 
-Compared to the equivariance implemented by transforming the kernel, there are some changes. The peak around no saturation shift has become wider and flatter for CE-ResNet-18 and towards the ends of the test-time saturation shifts, it manages to outperform the baseline. Furthermore, CE-ResNet-18 with jitter now outperform the baseline with jitter for positive saturation shifts. However, all of these changes lead only to an insignificant increase in test accuracy. Therefore, there is no clear preference for one over the other.
+Compared to the equivariance implemented by transforming the kernel, there are some changes. The peak around no saturation shift has become wider and lower for CE-ResNet-18 and towards the ends of the test-time saturation shifts, it manages to outperform the baseline. Furthermore, CE-ResNet-18 with jitter now outperforms the baseline with jitter for positive saturation shifts. However, all of these variations only lead to an insignificant change in test accuracy. Therefore, there is no clear preference for one over the other.
 
 
 ##### Value Equivariance
