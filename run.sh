@@ -60,7 +60,6 @@ export WANDB_NAME=$RUN_NAME_ON_WANDB
 # # Saturation equivariant network + jitter
 # python -m experiments.classification.train --rotations 5 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --sat_jitter 0 100 --separable --hsv --sat_shift --hsv_test --nonorm --img_shift
 
-
 # # Train + evaluation of a saturation shifted kernel - 5 shifts
 # # Baseline
 # python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hsv_test --nonorm
