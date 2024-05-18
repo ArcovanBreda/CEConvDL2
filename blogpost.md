@@ -536,7 +536,7 @@ Worrall, D., & Welling, M. (2019). Deep scale-spaces: Equivariance over scale. A
 As outlined in the [methodology](#methodology), it is possible to model hue and saturation equivariance jointly. A model was trained to encode both of these shifts on the kernel and on the input image. We will first display the baseline model and then the equivariant ones, where the shifts were applied on the kernel and input images, respectively.
 
 <div align="center">
-  <img src="blogpost_imgs/HueSat_HSV_shiftkernel_base.jpg" alt="Hue and Saturation equivariance in HSV space" width="70%">
+  <img src="blogpost_imgs/HueSat_HSV_baseline_noNorm.jpg" alt="Hue and Saturation equivariance in HSV space" width="70%">
 
   *Figure A.1: Accuracy over test-time hue and saturation shifts for ResNet-18 model trained in HSV space. ([source](CEConv/plot_saturation.py))* 
 </div>
