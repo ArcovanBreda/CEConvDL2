@@ -540,9 +540,10 @@ As outlined in the [methodology](#methodology), it is possible to model hue and 
 <p align="middle">
   <img src="blogpost_imgs/HueSat_HSV_shiftKernelBase_noNorm.jpg" alt="ResNet-18 model tested on Hue and Saturation equivariance in HSV space" width="49%">
   <img src="blogpost_imgs/HueSat_HSV_shiftkernel_noNorm.jpg" alt="Hue and Saturation equivariance in HSV space" width="49%">
-
+<div align="center">
+  
   *Figure A.1: On the left, ... On the right, accuracy over test-time hue and saturation shifts for hue and saturation equivariant network trained in HSV space. The model was trained for any combination of 3 hue (0°, 120° and 240°) and saturation shifts (-1, 0, 1) applied to the kernel. ([source](CEConv/plot_saturation.py))* 
-</p>
+</div></p>
 
 From the above figure, it can be seen that the model does not improve its performance when using both equivariances. Namely, per axis the same trends and numbers are visible as when the model was trained with that respective equivariance only. #TODO
 
@@ -550,9 +551,10 @@ From the above figure, it can be seen that the model does not improve its perfor
 <p align="middle">
   <img src="blogpost_imgs/HueSat_HSV_shiftImgBase_noNorm.jpg" alt="ResNet-18 model tested on Hue and Saturation equivariance in HSV space with transformations applied to the input image" width="49%">
   <img src="blogpost_imgs/HueSat_HSV_shiftimg_noNorm.jpg" alt="Hue and Saturation equivariance in HSV space with transformations applied to the input image" width="49%">
-
+<div align="center">
+  
   *Figure A.2: On the left, ... On the right, accuracy over test-time hue and saturation shifts for hue and saturation equivariant network trained in HSV space. The model was trained for any combination of 3 hue (0°, 120° and 240°) and saturation shifts (-1, 0, 1) applied to the input image. ([source](CEConv/plot_saturation.py))* 
-</div>
+</div></p>
 
 In the above plot we again reach the same conclusion that utilising both equivariances does not yield a significant improvement. Because these results were not promising and computationally heavier due to the combined number of hue and saturation shifts, we decided to not further pursue this direction. #TODO
 
