@@ -126,6 +126,44 @@ python -m experiments.color_mnist.train_biased --std $2 --rotations 3 --planes 1
 python -m experiments.color_mnist.train_biased --std $2 --rotations 3 --planes 18 --ce_layers 4 --separable --groupcosetpool
 ```
 
+#### Color Selectivity
+```bash
+# flowers102 dataset without jitter
+python -m experiments.classification.train --rotations 1 --architecture resnet18 --dataset flowers102 --bs 64
+python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 1 --architecture resnet18 --dataset flowers102 --bs 64
+python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 2 --architecture resnet18 --dataset flowers102 --bs 64
+python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 3 --architecture resnet18 --dataset flowers102 --bs 64
+python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 4 --architecture resnet18 --dataset flowers102 --bs 64
+
+# flowers102 dataset with jitter
+python -m experiments.classification.train --rotations 1 --architecture resnet18 --dataset flowers102 --bs 64 --jitter 0.5
+python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 1 --architecture resnet18 --dataset flowers102 --jitter 0.5 --bs 64
+python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 2 --architecture resnet18 --dataset flowers102 --jitter 0.5 --bs 64
+python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 3 --architecture resnet18 --dataset flowers102 --jitter 0.5 --bs 64
+python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 4 --architecture resnet18 --dataset flowers102 --jitter 0.5 --bs 64
+
+# stl10 dataset without jitter
+python -m experiments.classification.train --rotations 1 --architecture resnet18 --dataset stl10 --bs 64
+python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 1 --architecture resnet18 --dataset stl10 --bs 64
+python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 2 --architecture resnet18 --dataset stl10 --bs 64
+python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 3 --architecture resnet18 --dataset stl10 --bs 64
+python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 4 --architecture resnet18 --dataset stl10 --bs 64
+
+# stl10 with jitter
+python -m experiments.classification.train --rotations 1 --architecture resnet18 --dataset stl10 --bs 64 --jitter 0.5
+python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 1 --architecture resnet18 --dataset stl10 --jitter 0.5 --bs 64
+python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 2 --architecture resnet18 --dataset stl10 --jitter 0.5 --bs 64
+python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 3 --architecture resnet18 --dataset stl10 --jitter 0.5 --bs 64
+python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 4 --architecture resnet18 --dataset stl10 --jitter 0.5 --bs 64
+```
+
+#### Rotations
+```bash
+python -m experiments.classification.train --rotations 1 --architecture resnet18 --dataset flowers102 --bs 64 --separable --groupcosetmaxpool
+python -m experiments.classification.train --rotations 5 --architecture resnet18 --dataset flowers102 --bs 64 --separable --groupcosetmaxpool
+python -m experiments.classification.train --rotations 10 --architecture resnet18 --dataset flowers102 --bs 64 --separable --groupcosetmaxpool
+```
+
 ### Extension
 #### HSV
 **Hue**
