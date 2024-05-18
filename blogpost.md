@@ -491,7 +491,7 @@ Worrall, D., & Welling, M. (2019). Deep scale-spaces: Equivariance over scale. A
 
 ## Appendices
 ### A. Combining Hue and Shift Equivariance
-As outlined in the [methodology](#methodology), it is possible to model hue and saturation equivariance jointly. A model was trained to encode both of these shifts on the kernel and on the input image. The results will be displayed and discussed in this appendix.
+As outlined in the [methodology](#methodology), it is possible to model hue and saturation equivariance jointly. A model was trained to encode both of these shifts on the kernel and on the input image of which the results will be displayed and discussed here.
 
 **Shifting the Kernel**
 <p align="middle">
@@ -499,10 +499,10 @@ As outlined in the [methodology](#methodology), it is possible to model hue and 
   <img src="blogpost_imgs/HueSat_HSV_shiftkernel_noNorm.jpg" alt="Hue and Saturation equivariance in HSV space" width="49%">
 <div align="center">
   
-  *Figure A.1: On the left, ... On the right, accuracy over test-time hue and saturation shifts for hue and saturation equivariant network trained in HSV space. The model was trained for any combination of 3 hue (0°, 120° and 240°) and saturation shifts (-1, 0, 1) applied to the kernel. ([source](CEConv/plot_saturation.py))* 
+  *Figure A.1: On the left, the baseline model's test accuracy is calculated over varying hue and saturation shifts. On the right, the hue and saturation equivariant network's test accuracy is displayed. The model was trained for any combination of 3 hue (0°, 120° and 240°) and saturation shifts (-1, 0, 1) applied to the kernel. No jitter was applied. ([source](CEConv/plot_saturation.py))* 
 </div></p>
 
-From the above figure, it can be seen that the model does not improve its performance when using both equivariances. Namely, per axis the same trends and numbers are visible as when the model was trained with that respective equivariance only. #TODO
+On the left in Figure A.1 it is shown that the baseline achieves the same test accuracies as when the shifts were applied independently of each other. This is also true for hue shifts for the hue and saturation equivariant model on the right. Remarkably, this model has improved its saturation equivariance, where it achieves a constant test accuracy of approximately 50% for almost all saturation shifts when no hue shift took place. *explanation how this could have occurred ...#TODO*
 
 **Shifting the Input Image**
 <p align="middle">
@@ -510,10 +510,12 @@ From the above figure, it can be seen that the model does not improve its perfor
   <img src="blogpost_imgs/HueSat_HSV_shiftimg_noNorm.jpg" alt="Hue and Saturation equivariance in HSV space with transformations applied to the input image" width="49%">
 <div align="center">
   
-  *Figure A.2: On the left, ... On the right, accuracy over test-time hue and saturation shifts for hue and saturation equivariant network trained in HSV space. The model was trained for any combination of 3 hue (0°, 120° and 240°) and saturation shifts (-1, 0, 1) applied to the input image. ([source](CEConv/plot_saturation.py))* 
+  *Figure A.2: On the left, the baseline model's test accuracy is calculated over varying hue and saturation shifts. On the right, the hue and saturation equivariant network's test accuracy is displayed. The model was trained for any combination of 3 hue (0°, 120° and 240°) and saturation shifts (-1, 0, 1) applied to the input image. No jitter was applied. ([source](CEConv/plot_saturation.py))* 
 </div></p>
 
-In the above plot we again reach the same conclusion that utilising both equivariances does not yield a significant improvement. Because these results were not promising and computationally heavier due to the combined number of hue and saturation shifts, we decided to not further pursue this direction. #TODO
+Likewise to the baseline on the left of Figure A.2, this hue and saturation equivariant network on the right did not obtain additional performance compared to the networks that were either hue or saturation equivariant. This could be due to the fact that each type of equivariance functions on a different channel in HSV space such that they are modeled as independent operations on the input images. This could have allowed the kernel to keep hue and saturation information disentangled instead of exploiting information over both of them.
+
+Ultimately, the only improvement from these experiments was for saturation equivariance when both hue and saturation equivariances were applied to the kernel. Although this result seems promising, we decided to not continue pursuing this direction due to the exponentially increased computational costs and the limited available resources.
 
 ### B. Determining Settings Saturation Equivariance
 ...
