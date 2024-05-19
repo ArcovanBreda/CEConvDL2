@@ -487,6 +487,10 @@ def main(args) -> None:
         run_name += f"-val_jitter_{args.value_jitter[0]}_{args.value_jitter[1]}"
     if args.img_shift:
         run_name += "-img_shift"
+    if args.lab_test:
+        run_name += "-lab_test"
+    if args.hsv_test:
+        run_name += "-hsv_test"
     if args.grayscale:
         run_name += "-grayscale"
     if not args.normalize:
