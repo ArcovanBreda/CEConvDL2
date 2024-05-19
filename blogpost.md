@@ -550,6 +550,7 @@ While most CNNs are trained using RGB images, work by [[2]](#color_net) and [[7]
 &nbsp; &nbsp; &nbsp; &nbsp;
   <img alt="A visualization of the HSV color space" src="blogpost_imgs/HSV_COLOR_SPACE.png" width="350px">
   <div align="center">
+
   *Figure A.1: The left figure displays the RGB color space as a cube where the rotational axis (Rot-Axis [1,1,1]) along which hue rotations are modelled in this space is also illustrated. The right figure showcases a visualization of the HSV color space in which the hue is modelled as an rotational angle between zero and two pi, while the saturation and value are modelled as translations on the interval of zero to one.* 
   </div>
 </p>
