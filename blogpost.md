@@ -4,7 +4,7 @@
 
 ---
 
-In this blog post, we discuss, analyze, and extend upon the findings of the paper titled *Color Equivariant Convolutional Networks*\[main\]. The paper introduces Color Equivariant Convolutions (CEConvs) by leveraging parameter sharing over hue shifts. The authors demonstrate the benefits of the novel model in terms of robustness to color alterations and accuracy performance.
+In this blog post, we discuss, analyze, and extend upon the findings of the paper titled *Color Equivariant Convolutional Networks*[[5]](#main). The paper introduces Color Equivariant Convolutions (CEConvs) by leveraging parameter sharing over hue shifts. The authors demonstrate the benefits of the novel model in terms of robustness to color alterations and accuracy performance.
 The objectives of this blog post are to:
 
 1. Discuss the methods introduced in the paper
@@ -15,11 +15,11 @@ The objectives of this blog post are to:
 
 ## Introduction
 
-Color is a crucial feature for recognition and classification by humans. For example, a study by \[bird\] found that color facilitates expert bird watchers in faster and more accurate recognition at both high (family) and low (specimen) levels of bird identification. Similarly, the convolutional layers in a Convolutional Neural Network (CNN) exhibit color representation akin to the human visual system \[human_vision\] with all layers containing color-selective neurons. These color representations are present at three different levels: in single neurons, in double neurons for edge detection, and in combination with shapes at all levels in the network.
+Color is a crucial feature for recognition and classification by humans. For example, a study by [[8]](#bird) found that color facilitates expert bird watchers in faster and more accurate recognition at both high (family) and low (specimen) levels of bird identification. Similarly, the convolutional layers in a Convolutional Neural Network (CNN) exhibit color representation akin to the human visual system [[4]](#human_vision) with all layers containing color-selective neurons. These color representations are present at three different levels: in single neurons, in double neurons for edge detection, and in combination with shapes at all levels in the network.
 
-Although color invariance has been achieved in various research areas, such as in facial recognition to mitigate the influence of lighting conditions \[color_invariance\], some classification problems are color-dependent. Therefore, instead of training CNNs to classify images regardless of their color (invariance), it might be more beneficial to classify them using color (equivariance). 
+Although color invariance has been achieved in various research areas, such as in facial recognition to mitigate the influence of lighting conditions \[[7]](#color_invariance), some classification problems are color-dependent. Therefore, instead of training CNNs to classify images regardless of their color (invariance), it might be more beneficial to classify them using color (equivariance). 
 
-The Color Equivariant Convolutions (CEConvs) introduced in \[main\] achieve this through equivariance to discrete hue shifts. Hue is represented in RGB space as a 3D rotation around the [1, 1, 1] axis. This approach utilizes group convolutions as introduced by \[group_convs\] which can be equivariant to 3D rotations. We reproduce the results showing the effectiveness of CEConvs on color-imbalanced and color-selective datasets, as well as their impact on image classification. We examine the ablation studies to understand the impact of data augmentation and rotation on CEConvs, while also providing additional insights into computational requirements. Finally, we extend the notion of color equivariance to different color spaces.
+The Color Equivariant Convolutions (CEConvs) introduced in [[5]](#main) achieve this through equivariance to discrete hue shifts. Hue is represented in RGB space as a 3D rotation around the [1, 1, 1] axis. This approach utilizes group convolutions as introduced by [[1]](#group_convs) which can be equivariant to 3D rotations. We reproduce the results showing the effectiveness of CEConvs on color-imbalanced and color-selective datasets, as well as their impact on image classification. We examine the ablation studies to understand the impact of data augmentation and rotation on CEConvs, while also providing additional insights into computational requirements. Finally, we extend the notion of color equivariance to different color spaces.
 
 <!--
 The most significant limitation of the CEConvs is that color equivariance is modeled as solely equivariance to hue shifts. By extending the notion to other dimensions, such as saturation equivariance, the CNN could achieve a higher level of equivariance, as saturation can handle a greater variety of changes in illumination. Additionally, by modeling hue shifts as 2D rotations compared to 3D rotations for the RGB space, we circumvent the limitation described in \[main\]. This limitation involves pixel values falling outside the RGB cube, requiring a reprojection operation and consequently only allowing for an approximation of hue equivariance for pixels near the border of the RGB cube.
@@ -27,7 +27,7 @@ The most significant limitation of the CEConvs is that color equivariance is mod
 
 ## Recap on Group Equivariant Convolutions
 
-Deep Convolutional Neural Networks have been proven to be highly effective for image classification over the years \[DCNN\]. Empirical evidence shows the importance of depth for good performance and convolutional weight-sharing for parameter reduction. The latter is effective due to the translation symmetry inherent in most image data, whereby the data is roughly invariant to shifts. In this manner, the same weights can be utilized to convolve different parts of the image \[group_convs\]. 
+Deep Convolutional Neural Networks have been proven to be highly effective for image classification over the years [[10]](#DCNN). Empirical evidence shows the importance of depth for good performance and convolutional weight-sharing for parameter reduction. The latter is effective due to the translation symmetry inherent in most image data, whereby the data is roughly invariant to shifts. In this manner, the same weights can be utilized to convolve different parts of the image [[1]](#group_convs). 
 Convolution layers are translation equivariant in a deep network: the output shifts relative to shifts in the input. This notion of symmetry can be extended to larger groups, including rotation.
 
 This generalization of translation equivariance is achieved through Group Convolutional Neural Networks (G-CNN). A CNN layer is equivariant to a group if for all transformations $g \in G$, doing the transformation $T_g$ on the input and then the feature mapping $\Phi (x)$ is similar to doing the feature mapping on the input and the transformation $T'_g$ thereafter: 
@@ -37,7 +37,7 @@ $$\begin{align*}
 \end{align*}$$
 
 where $T_g$ and $T'_g$ can be equivalent.
-We utilize the equations from \[group_convs\] to show that G-CNNs are equivariant. Instead of shifting a filter, correlation in the first layer can be described more generally by replacing it with some transformation from group $G$, whereby $f$ is the input image and $\psi$ is the filter:
+We utilize the equations from [[1]](#group_convs) to show that G-CNNs are equivariant. Instead of shifting a filter, correlation in the first layer can be described more generally by replacing it with some transformation from group $G$, whereby $f$ is the input image and $\psi$ is the filter:
 
 $$\begin{align*} 
 \[ f \star \psi \](g) = \sum_{y \in \mathbb{Z}^2}\sum_{k} f_k(y) \psi_{k}(g^{-1}y) & \qquad \qquad (\text{Equation 2})
@@ -87,7 +87,7 @@ a - b & a + b & \cos (\frac{2k\pi}{n}) + a \\
 \end{bmatrix}
 $$
 
-The group of discrete hue shifts is combined with the group of discrete 2D translations into the group $G = \mathbb{Z}^2 \times H_n$. The Color Equivariant Convolution (CEConv) in the first layer is defined in \[main\] as:
+The group of discrete hue shifts is combined with the group of discrete 2D translations into the group $G = \mathbb{Z}^2 \times H_n$. The Color Equivariant Convolution (CEConv) in the first layer is defined in [[5]](#main) as:
 
 $$
 \begin{align} 
@@ -104,7 +104,7 @@ $$
 \end{align}
 $$
 
-This change does not impact the derivation of the equivariance of the CEConv layer, for this we refer to the original paper \[main\].
+This change does not impact the derivation of the equivariance of the CEConv layer, for this we refer to the original paper [[5]](#main).
 
 For the hidden layers, the feature map $[f \star \psi]$ is a function on $G$ parameterized by $x$ and $k$. The CEConv hidden layers are defined as:
 
@@ -140,7 +140,7 @@ The figure is ordered in the availability of training samples for every class. P
 
 #### Color Selectivity
 
-Color selectivity is defined as: “The property of a neuron that activates highly when a particular color appears in the input image and, in contrast, shows low activation when this color is not present.” \[color_selectivity\]<!--idk, word niet helemaal warm van een quote/citaat. Denk dat het dan beter gecombineerd kan worden met de volgende zin, als in "The authors define the color selectivity of a dataset as the degree in which a neuron is activated when a particular color appears in an input image"? Mwah vind mn suggestie niet beter ik snap denk wel wrm het citaat er staat nu-->. The authors of the original paper utilize this notion to define the color selectivity of a dataset. Namely, they computed the color selectivity as an average of all neurons in the baseline CNN trained on the respective dataset. We reproduced the experiment to investigate the influence of using color equivariance up to late stages. Due to computational constraints, only two of the four datasets were explored; flowers102 with the highest color selectivity (0.70) and STL10 with the lowest color selectivity (0.38). While we did not explore the remaining datasets extensively, their color selectivity was comparable to STL10, suggesting that our findings are inclusive for the additional datasets.
+Color selectivity is defined as: “The property of a neuron that activates highly when a particular color appears in the input image and, in contrast, shows low activation when this color is not present.” [[3]](#color_selectivity)<!--idk, word niet helemaal warm van een quote/citaat. Denk dat het dan beter gecombineerd kan worden met de volgende zin, als in "The authors define the color selectivity of a dataset as the degree in which a neuron is activated when a particular color appears in an input image"? Mwah vind mn suggestie niet beter ik snap denk wel wrm het citaat er staat nu-->. The authors of the original paper utilize this notion to define the color selectivity of a dataset. Namely, they computed the color selectivity as an average of all neurons in the baseline CNN trained on the respective dataset. We reproduced the experiment to investigate the influence of using color equivariance up to late stages. Due to computational constraints, only two of the four datasets were explored; flowers102 with the highest color selectivity (0.70) and STL10 with the lowest color selectivity (0.38). While we did not explore the remaining datasets extensively, their color selectivity was comparable to STL10, suggesting that our findings are inclusive for the additional datasets.
 
 In Figure 2, the accuracy improvement of color equivariance up to later stages in the network is displayed for the aforementioned datasets. The baseline is the ResNet18 model with one rotation (equivariance up to 0 stages). For the other values, HybridResNet18 models are trained with 3 rotations, max pooling, separable kernels, and the number of color equivariant stages as shown in the figure. Additionally, the graph on the right shows the result with color-jitter augmentation.
 
@@ -206,54 +206,10 @@ The main implementation of color-equivariance consists of adding three rotations
 
 The reproduced results showcase that the notion of equivariance can be extended to photometric transformations by incorporating parameter sharing over hue shifts. However, as opposed to what the title of the paper suggests, these networks are only equivariant to hue shifts and not fully color equivariant. We therefore set out to explore if we can move one step closer to achieving a fully color equivariant CNN by adding saturation or value shift equivariance in addition to hue shift equivariance. In order to disentangle the channels, we experiment with switching from the RGB color space to the HSV color space.
 
-Additionally, one noticeable flaw in the work of [main] is the fact that they model hue shifts with a 3D rotation in the RGB space along the diagonal vector
+Additionally, one noticeable flaw in the work of [[5]](#main) is the fact that they model hue shifts with a 3D rotation in the RGB space along the diagonal vector
 [1,1,1]. This can cause pixels with values close to the boundaries of the RGB cube to fall outside the RGB cube when rotated for certain hue shifts. In order to stay within the RGB space, these pixels have to be reprojected back into the RGB cube, effectively clipping the values. This causes the artifacts seen in Figure 4. 
 We explore if we can circumvent these limitations by modeling the hue shift as a 2D rotation instead in the LAB color space.
-
-### Color Spaces
-
-While most CNNs are trained using RGB images, work by [color_net] and [color_segmentation] shows that different color spaces can be utilized to achieve similar performance for the task of image classification and segmentation respectively. 
-
-**RGB** - is the most frequently used color space in image datasets. However, it is limited by the above mentioned clipping effects near the boundaries of the RGB cube. Furthermore, due to the entangled color channels, it’s much harder to achieve a saturation or value shift in this color space when compared to other color spaces that encode the hue and saturation/value/lightness channels separately.
-
-<!-- <p align="center">
-  <img alt="A visualization of the RGB color space" src="blogpost_imgs/RGB_CUBE_ROT_AXIS.png" width="38%"> 
-&nbsp; &nbsp; &nbsp; &nbsp;
-  <img alt="A visualization of the HSV color space" src="blogpost_imgs/HSV_COLOR_SPACE.png" width="45%">
-  <div align="center">
-  *Figure D: The left figure displays the RGB color space as a cube where the rotational axis (Rot-Axis [1,1,1]) along which hue rotations are modelled in this space is also illustrated. The right figure showcases a visualization of the HSV color space in which the hue is modelled as an rotational angle between zero and two pi, while the saturation and value are modelled as translations on the interval of zero to one.* 
-  </div>
-</p> -->
-
-<p align="center">
-  <img alt="A visualization of the RGB color space" src="blogpost_imgs/RGB_CUBE_ROT_AXIS.png" width="250px"> 
-&nbsp; &nbsp; &nbsp; &nbsp;
-  <img alt="A visualization of the HSV color space" src="blogpost_imgs/HSV_COLOR_SPACE.png" width="350px">
-  <div align="center">
-  *Figure D: The left figure displays the RGB color space as a cube where the rotational axis (Rot-Axis [1,1,1]) along which hue rotations are modelled in this space is also illustrated. The right figure showcases a visualization of the HSV color space in which the hue is modelled as an rotational angle between zero and two pi, while the saturation and value are modelled as translations on the interval of zero to one.* 
-  </div>
-</p>
-
-**HSV** - is an ideal color space for our purpose of extending the achieved hue equivariant CNN with saturation equivariance. With a separate channel encoding the hue of each pixel, we can make a direct comparison to the methods employed by [main] in order to perform hue shifts in the RGB color space. Additionally, the separate saturation and value channels allow us to experiment if equivariance to saturation or value shifts are beneficial for the task of image classification.
-However, there are some potential issues with this color space. Firstly, the hue channel, in our implementation, is encoded as an angle ranging from $0$ to $2 \pi$. Although these values encode the same color, they are as far apart as possible for an HSV image. This discontinuity in the hue channel could pose learning issues for the network. Secondly, there is the fact that the saturation and value channels are not cyclic and lie within a $[0,1]$ interval. Therefore, when shifting these channels we would need to clip shifts that fall outside this interval, causing a loss of information. Lastly, it is not straightforward how to transform a kernel under the regular representation of the group elements for either the group of hue rotations, or saturation and value translations, in order to perform the lifting convolution.
-
-**LAB** - is a color space defined by the International Commission on Illumination (CIE) in 1976. Research by [color_net] and [color_segmentation] shows that images converted to LAB color space achieve around a two percentage point higher score on classifications and segmentation tasks as compared to other color models. The LAB model closely aligns with human vision encoding an image using three channels, the *L* channel encodes the perceptual lightness while *a* and *b* encode the color as a point on a 2D grid with the *a* axis modeling the red-green shift and *b* the yellow-blue shift corresponding to the four unique colors of human vision. Figure 5 shows this 2D grid in which a hue space shift can be modeled as a 2D rotation on this plane, suggesting that the full-color space has a cylindrical form. However, when visualizing the RGB gamut inside the 3D LAB space, on the right, it doesn't show this cylinder. This is a result of the nonlinear relations between *L*, *a*, and *b* intended to model the nonlinear response of the visual system, which is absent in the RGB color model.     
-
-<div align="center">
-  <img src="blogpost_imgs/lab-color-space.png" alt="Visualization of the LAB color space" width="600px">
-
-  *Figure 5: left: LAB color space visualized as a 2d color grid, right: sRGB color gamut shown in LAB space. ([source](https://www.xrite.com/blog/lab-color-space), [source](https://blogs.mathworks.com/steve/2015/04/03/displaying-a-color-gamut-surface/))*
-</div>
-
-Hue equivariance in LAB space would require a rotation matrix however due to the problems with converting between RGB/HSV as outlined below it could be difficult for a hue equivariant model trained on LAB space hue equivariance to also become equivariant to hue space shifted images in RGB/HSV format which are thereafter converted to LAB format.
-
-<div align="center">
-  <img src="blogpost_imgs/hue_shift_comparison.jpg" alt="Hue shift in different image spaces" width="600px">
-
-  *Figure 6: An example image (original far left) hue space shifted multiple times in HSV (angular addition), RGB (3D rotation), and LAB (2D rotation) space, thereafter converted to RGB space for visualization. ([source](CEConv/plot_hue_comparison.py))*
-</div>
-
-Figure 6 clearly shows this difference with an image hue space shifted in RGB and HSV space resulting in the same image however performing the same shift in LAB space and thereafter converting back to RGB space results in a slightly different colored image.
+For an overview of the color spaces and their limitations we refer to the section [color spaces](#a-color-spaces) in the Appendix.
 
 ### HSV Equivariance
 
@@ -332,7 +288,7 @@ $$
 
 Due to our earlier experimenting with applying the group element on the kernel or the image we decided to only model the value shift of the input images as described in the next paragraph.
 
-**Shifting the Input Image -** In order to circumvent some of the issues that present themselves when naively shifting the kernel as though it were an image, we investigated whether we could perform the lifting convolution by shifting the input image instead of the kernel. This is a more intuitive approach and [lifting] show that transforming the signal instead of the kernel is indeed possible and that these operations are equivalent when restricted to the group and standard convolution. This allows for more general transformations than using the group correlation of [group_convs]. In our case, where we make use of the HSV color space with separated hue, saturation and value channels, this way of performing the lifting operation is required due to the fact that we perform our action on these separated channels. Transforming the signal instead of the kernel allows us to alter the values of pixels instead of only moving the pixel locations.
+**Shifting the Input Image -** In order to circumvent some of the issues that present themselves when naively shifting the kernel as though it were an image, we investigated whether we could perform the lifting convolution by shifting the input image instead of the kernel. This is a more intuitive approach and [[9]](#lifting) show that transforming the signal instead of the kernel is indeed possible and that these operations are equivalent when restricted to the group and standard convolution. This allows for more general transformations than using the group correlation of [[1]](#group_convs). In our case, where we make use of the HSV color space with separated hue, saturation and value channels, this way of performing the lifting operation is required due to the fact that we perform our action on these separated channels. Transforming the signal instead of the kernel allows us to alter the values of pixels instead of only moving the pixel locations.
 
 We can thus define the lifting layer outputting the i-th output channels for our semigroup $H$ of hue shifts as follows:
 
@@ -447,7 +403,50 @@ During test time different sets of hue space-shifted images are evaluated on acc
 
 Figure 9 shows some interesting observations. To start the Resnet-18 baseline only shows a peak around images that are not hue-shifted (zero degrees). The hue equivariant network (CE) tested with hue space shifts in RGB/HSV space shows small bumps around ±120° but still exhibits terrible performance. On the other hand, the same CE model evaluated with Hue space shift applied in LAB space shows performance equal to the baseline also around ±120°, meaning the model is LAB space Hue shift equivariant. This also means that there is a too-large gap between Hue space shifts in LAB space compared to RGB/HSV space and the model isn't able to generalize to RGB/HSV space.
 
-Analyzing the jitter results shows that training with augmentations can be a way to implicitly encode equivariance into a network. The baseline Resnet-18 model outperforms all non-jitter models' overall hue angles. Interestingly when training the CE-Resnet with jitter we can see a significant jump in performance over the baseline jitter model, on average gaining six percentage points. Getting the highest accuracy over all models, outperforming the reproduced CE-Resnet-18 + jitter model which only gains about four percentage points compared to the RGB baseline+jitter which has similar performance to the LAB baseline+jitter model. This indicates that first of all training with jitter and an equivariant model combines the best of both worlds and results in a robust model, and that training in LAB space can indeed lead to a small performance increase in line with the findings of [color_net] and [color_segmentation]. 
+Analyzing the jitter results shows that training with augmentations can be a way to implicitly encode equivariance into a network. The baseline Resnet-18 model outperforms all non-jitter models' overall hue angles. Interestingly when training the CE-Resnet with jitter we can see a significant jump in performance over the baseline jitter model, on average gaining six percentage points. Getting the highest accuracy over all models, outperforming the reproduced CE-Resnet-18 + jitter model which only gains about four percentage points compared to the RGB baseline+jitter which has similar performance to the LAB baseline+jitter model. This indicates that first of all training with jitter and an equivariant model combines the best of both worlds and results in a robust model, and that training in LAB space can indeed lead to a small performance increase in line with the findings of [[2]](#color_net) and [[6]](#color_segmentation). ### Color Spaces
+
+While most CNNs are trained using RGB images, work by [[2]](#color_net) and [[6]](#color_segmentation) shows that different color spaces can be utilized to achieve similar performance for the task of image classification and segmentation respectively. 
+
+**RGB** - is the most frequently used color space in image datasets. However, it is limited by the above mentioned clipping effects near the boundaries of the RGB cube. Furthermore, due to the entangled color channels, it’s much harder to achieve a saturation or value shift in this color space when compared to other color spaces that encode the hue and saturation/value/lightness channels separately.
+
+<!-- <p align="center">
+  <img alt="A visualization of the RGB color space" src="blogpost_imgs/RGB_CUBE_ROT_AXIS.png" width="38%"> 
+&nbsp; &nbsp; &nbsp; &nbsp;
+  <img alt="A visualization of the HSV color space" src="blogpost_imgs/HSV_COLOR_SPACE.png" width="45%">
+  <div align="center">
+  *Figure D: The left figure displays the RGB color space as a cube where the rotational axis (Rot-Axis [1,1,1]) along which hue rotations are modelled in this space is also illustrated. The right figure showcases a visualization of the HSV color space in which the hue is modelled as an rotational angle between zero and two pi, while the saturation and value are modelled as translations on the interval of zero to one.* 
+  </div>
+</p> -->
+
+<p align="center">
+  <img alt="A visualization of the RGB color space" src="blogpost_imgs/RGB_CUBE_ROT_AXIS.png" width="250px"> 
+&nbsp; &nbsp; &nbsp; &nbsp;
+  <img alt="A visualization of the HSV color space" src="blogpost_imgs/HSV_COLOR_SPACE.png" width="350px">
+  <div align="center">
+  *Figure D: The left figure displays the RGB color space as a cube where the rotational axis (Rot-Axis [1,1,1]) along which hue rotations are modelled in this space is also illustrated. The right figure showcases a visualization of the HSV color space in which the hue is modelled as an rotational angle between zero and two pi, while the saturation and value are modelled as translations on the interval of zero to one.* 
+  </div>
+</p>
+
+**HSV** - is an ideal color space for our purpose of extending the achieved hue equivariant CNN with saturation equivariance. With a separate channel encoding the hue of each pixel, we can make a direct comparison to the methods employed by [[5]](#main) in order to perform hue shifts in the RGB color space. Additionally, the separate saturation and value channels allow us to experiment if equivariance to saturation or value shifts are beneficial for the task of image classification.
+However, there are some potential issues with this color space. Firstly, the hue channel, in our implementation, is encoded as an angle ranging from $0$ to $2 \pi$. Although these values encode the same color, they are as far apart as possible for an HSV image. This discontinuity in the hue channel could pose learning issues for the network. Secondly, there is the fact that the saturation and value channels are not cyclic and lie within a $[0,1]$ interval. Therefore, when shifting these channels we would need to clip shifts that fall outside this interval, causing a loss of information. Lastly, it is not straightforward how to transform a kernel under the regular representation of the group elements for either the group of hue rotations, or saturation and value translations, in order to perform the lifting convolution.
+
+**LAB** - is a color space defined by the International Commission on Illumination (CIE) in 1976. Research by [[2]](#color_net) and [[6]](#color_segmentation) shows that images converted to LAB color space achieve around a two percentage point higher score on classifications and segmentation tasks as compared to other color models. The LAB model closely aligns with human vision encoding an image using three channels, the *L* channel encodes the perceptual lightness while *a* and *b* encode the color as a point on a 2D grid with the *a* axis modeling the red-green shift and *b* the yellow-blue shift corresponding to the four unique colors of human vision. Figure 5 shows this 2D grid in which a hue space shift can be modeled as a 2D rotation on this plane, suggesting that the full-color space has a cylindrical form. However, when visualizing the RGB gamut inside the 3D LAB space, on the right, it doesn't show this cylinder. This is a result of the nonlinear relations between *L*, *a*, and *b* intended to model the nonlinear response of the visual system, which is absent in the RGB color model.     
+
+<div align="center">
+  <img src="blogpost_imgs/lab-color-space.png" alt="Visualization of the LAB color space" width="600px">
+
+  *Figure 5: left: LAB color space visualized as a 2d color grid, right: sRGB color gamut shown in LAB space. ([source](https://www.xrite.com/blog/lab-color-space), [source](https://blogs.mathworks.com/steve/2015/04/03/displaying-a-color-gamut-surface/))*
+</div>
+
+Hue equivariance in LAB space would require a rotation matrix however due to the problems with converting between RGB/HSV as outlined below it could be difficult for a hue equivariant model trained on LAB space hue equivariance to also become equivariant to hue space shifted images in RGB/HSV format which are thereafter converted to LAB format.
+
+<div align="center">
+  <img src="blogpost_imgs/hue_shift_comparison.jpg" alt="Hue shift in different image spaces" width="600px">
+
+  *Figure 6: An example image (original far left) hue space shifted multiple times in HSV (angular addition), RGB (3D rotation), and LAB (2D rotation) space, thereafter converted to RGB space for visualization. ([source](CEConv/plot_hue_comparison.py))*
+</div>
+
+Figure 6 clearly shows this difference with an image hue space shifted in RGB and HSV space resulting in the same image however performing the same shift in LAB space and thereafter converting back to RGB space results in a slightly different colored image.
 
 ## Concluding Remarks
 
@@ -468,39 +467,83 @@ We found that a model with hue equivariance in LAB space and jitter managed to o
 </ul>
 
 ## References
-<a id="1">[bird]</a> 
-Simen Hagen, Quoc C. Vuong, Lisa S. Scott, Tim Curran, James W. Tanaka; The role of color in expert object recognition. Journal of Vision 2014;14(9):9. https://doi.org/10.1167/14.9.9.
+<a id="group_convs">[1]</a>
+Cohen, T. &amp; Welling, M.. (2016). Group Equivariant Convolutional Networks. <i>Proceedings of The 33rd International Conference on Machine Learning</i>, in <i>Proceedings of Machine Learning Research</i> 48:2990-2999 Available from https://proceedings.mlr.press/v48/cohenc16.html.\
 
-<a id="1">[human_vision]</a> 
-Ivet Rafegas, Maria Vanrell; Proceedings of the IEEE International Conference on Computer Vision (ICCV), 2017, pp. 2697-2705 
-
-<a id="1">[color_invariance]</a> 
-R. Rama Varior, G. Wang, J. Lu and T. Liu, "Learning Invariant Color Features for Person Reidentification," in IEEE Transactions on Image Processing, vol. 25, no. 7, pp. 3395-3410, July 2016, doi: 10.1109/TIP.2016.2531280.
-keywords: {Image color analysis;Lighting;Cameras;Histograms;Shape;Dictionaries;Robustness;Person re-identification;Illumination invariance;Photometric invariance;Color features;Joint learning;Person re-identification;illumination invariance;photometric invariance;color features;joint learning},
-
-<a id="1">[DCNN]</a>
-W. Rawat and Z. Wang, "Deep Convolutional Neural Networks for Image Classification: A Comprehensive Review," in Neural Computation, vol. 29, no. 9, pp. 2352-2449, Sept. 2017, doi: 10.1162/neco_a_00990. 
-
-<a id="1">[group_convs]</a>
-Cohen, T. &amp; Welling, M.. (2016). Group Equivariant Convolutional Networks. <i>Proceedings of The 33rd International Conference on Machine Learning</i>, in <i>Proceedings of Machine Learning Research</i> 48:2990-2999 Available from https://proceedings.mlr.press/v48/cohenc16.html.
-
-<a id="1">[main]</a>
-Lengyel, A., Strafforello, O., Bruintjes, R. J., Gielisse, A., & van Gemert, J. (2024). Color Equivariant Convolutional Networks. Advances in Neural Information Processing Systems, 36.
-
-<a id="1">[color_selectivity]</a>
-Ivet Rafegas and Maria Vanrell. Color encoding in biologically-inspired convolutional neural  networks. Vision Research, 151:7–17, 2018. Color: cone opponency and beyond.
-
-<a id="1">[color_net]</a>
+<a id="color_net">[2]</a>
 Gowda, S. N., & Yuan, C. (2019). ColorNet: Investigating the importance of color spaces for image classification. In Computer Vision–ACCV 2018: 14th Asian Conference on Computer Vision, Perth, Australia, December 2–6, 2018, Revised Selected Papers, Part IV 14 (pp. 581-596). Springer International Publishing.
 
-<a id="1">[color_segmentation]</a>
+<a id="color_selectivity">[3]</a>
+Ivet Rafegas and Maria Vanrell. Color encoding in biologically-inspired convolutional neural  networks. Vision Research, 151:7–17, 2018. Color: cone opponency and beyond.
+
+<a id="human_vision">[4]</a> 
+Ivet Rafegas, Maria Vanrell; Proceedings of the IEEE International Conference on Computer Vision (ICCV), 2017, pp. 2697-2705 
+
+<a id="main">[5]</a>
+Lengyel, A., Strafforello, O., Bruintjes, R. J., Gielisse, A., & van Gemert, J. (2024). Color Equivariant Convolutional Networks. Advances in Neural Information Processing Systems, 36.
+
+<a id="color_segmentation">[6]</a>
 Raninen, J. (2022). The Effect of Colour Space in Deep Multitask Learning Neural Networks for Road Segmentation (Master's thesis, Itä-Suomen yliopisto).
 
-<a id="1">[lifting]</a>
+<a id="color_invariance">[7]</a> 
+R. Rama Varior, G. Wang, J. Lu and T. Liu, "Learning Invariant Color Features for Person Reidentification," in IEEE Transactions on Image Processing, vol. 25, no. 7, pp. 3395-3410, July 2016, doi: 10.1109/TIP.2016.2531280.
+
+<a id="bird">[8]</a> 
+Simen Hagen, Quoc C. Vuong, Lisa S. Scott, Tim Curran, James W. Tanaka; The role of color in expert object recognition. Journal of Vision 2014;14(9):9. https://doi.org/10.1167/14.9.9.
+
+<a id="lifting">[9]</a>
 Worrall, D., & Welling, M. (2019). Deep scale-spaces: Equivariance over scale. Advances in Neural Information Processing Systems, 32.
 
+<a id="DCNN">[10]</a>
+W. Rawat and Z. Wang, "Deep Convolutional Neural Networks for Image Classification: A Comprehensive Review," in Neural Computation, vol. 29, no. 9, pp. 2352-2449, Sept. 2017, doi: 10.1162/neco_a_00990. 
+
 ## Appendices
-### A. Combining Hue and Shift Equivariance
+### A. Color Spaces
+
+While most CNNs are trained using RGB images, work by [[2]](#color_net) and [[6]](#color_segmentation) shows that different color spaces can be utilized to achieve similar performance for the task of image classification and segmentation respectively. 
+
+**RGB** - is the most frequently used color space in image datasets. However, it is limited by the above mentioned clipping effects near the boundaries of the RGB cube. Furthermore, due to the entangled color channels, it’s much harder to achieve a saturation or value shift in this color space when compared to other color spaces that encode the hue and saturation/value/lightness channels separately.
+
+<!-- <p align="center">
+  <img alt="A visualization of the RGB color space" src="blogpost_imgs/RGB_CUBE_ROT_AXIS.png" width="38%"> 
+&nbsp; &nbsp; &nbsp; &nbsp;
+  <img alt="A visualization of the HSV color space" src="blogpost_imgs/HSV_COLOR_SPACE.png" width="45%">
+  <div align="center">
+  *Figure D: The left figure displays the RGB color space as a cube where the rotational axis (Rot-Axis [1,1,1]) along which hue rotations are modelled in this space is also illustrated. The right figure showcases a visualization of the HSV color space in which the hue is modelled as an rotational angle between zero and two pi, while the saturation and value are modelled as translations on the interval of zero to one.* 
+  </div>
+</p> -->
+
+<p align="center">
+  <img alt="A visualization of the RGB color space" src="blogpost_imgs/RGB_CUBE_ROT_AXIS.png" width="250px"> 
+&nbsp; &nbsp; &nbsp; &nbsp;
+  <img alt="A visualization of the HSV color space" src="blogpost_imgs/HSV_COLOR_SPACE.png" width="350px">
+  <div align="center">
+  *Figure D: The left figure displays the RGB color space as a cube where the rotational axis (Rot-Axis [1,1,1]) along which hue rotations are modelled in this space is also illustrated. The right figure showcases a visualization of the HSV color space in which the hue is modelled as an rotational angle between zero and two pi, while the saturation and value are modelled as translations on the interval of zero to one.* 
+  </div>
+</p>
+
+**HSV** - is an ideal color space for our purpose of extending the achieved hue equivariant CNN with saturation equivariance. With a separate channel encoding the hue of each pixel, we can make a direct comparison to the methods employed by [[5]](#main) in order to perform hue shifts in the RGB color space. Additionally, the separate saturation and value channels allow us to experiment if equivariance to saturation or value shifts are beneficial for the task of image classification.
+However, there are some potential issues with this color space. Firstly, the hue channel, in our implementation, is encoded as an angle ranging from $0$ to $2 \pi$. Although these values encode the same color, they are as far apart as possible for an HSV image. This discontinuity in the hue channel could pose learning issues for the network. Secondly, there is the fact that the saturation and value channels are not cyclic and lie within a $[0,1]$ interval. Therefore, when shifting these channels we would need to clip shifts that fall outside this interval, causing a loss of information. Lastly, it is not straightforward how to transform a kernel under the regular representation of the group elements for either the group of hue rotations, or saturation and value translations, in order to perform the lifting convolution.
+
+**LAB** - is a color space defined by the International Commission on Illumination (CIE) in 1976. Research by [[2]](#color_net) and [[6]](#color_segmentation) shows that images converted to LAB color space achieve around a two percentage point higher score on classifications and segmentation tasks as compared to other color models. The LAB model closely aligns with human vision encoding an image using three channels, the *L* channel encodes the perceptual lightness while *a* and *b* encode the color as a point on a 2D grid with the *a* axis modeling the red-green shift and *b* the yellow-blue shift corresponding to the four unique colors of human vision. Figure 5 shows this 2D grid in which a hue space shift can be modeled as a 2D rotation on this plane, suggesting that the full-color space has a cylindrical form. However, when visualizing the RGB gamut inside the 3D LAB space, on the right, it doesn't show this cylinder. This is a result of the nonlinear relations between *L*, *a*, and *b* intended to model the nonlinear response of the visual system, which is absent in the RGB color model.     
+
+<div align="center">
+  <img src="blogpost_imgs/lab-color-space.png" alt="Visualization of the LAB color space" width="600px">
+
+  *Figure 5: left: LAB color space visualized as a 2d color grid, right: sRGB color gamut shown in LAB space. ([source](https://www.xrite.com/blog/lab-color-space), [source](https://blogs.mathworks.com/steve/2015/04/03/displaying-a-color-gamut-surface/))*
+</div>
+
+Hue equivariance in LAB space would require a rotation matrix however due to the problems with converting between RGB/HSV as outlined below it could be difficult for a hue equivariant model trained on LAB space hue equivariance to also become equivariant to hue space shifted images in RGB/HSV format which are thereafter converted to LAB format.
+
+<div align="center">
+  <img src="blogpost_imgs/hue_shift_comparison.jpg" alt="Hue shift in different image spaces" width="600px">
+
+  *Figure 6: An example image (original far left) hue space shifted multiple times in HSV (angular addition), RGB (3D rotation), and LAB (2D rotation) space, thereafter converted to RGB space for visualization. ([source](CEConv/plot_hue_comparison.py))*
+</div>
+
+Figure 6 clearly shows this difference with an image hue space shifted in RGB and HSV space resulting in the same image however performing the same shift in LAB space and thereafter converting back to RGB space results in a slightly different colored image.
+
+### B. Combining Hue and Shift Equivariance
 As outlined in the [methodology](#methodology), it is possible to model hue and saturation equivariance jointly. A model was trained to encode both of these shifts on the kernel and on the input image of which the results will be displayed and discussed here.
 
 **Shifting the Kernel**
@@ -509,10 +552,10 @@ As outlined in the [methodology](#methodology), it is possible to model hue and 
   <img src="blogpost_imgs/HueSat_HSV_shiftkernel_noNorm.jpg" alt="Hue and Saturation equivariance in HSV space" width="49%">
 <div align="center">
   
-  *Figure A.1: On the left, the baseline model's test accuracy is calculated over varying hue and saturation shifts. On the right, the hue and saturation equivariant network's test accuracy is displayed. The model was trained for any combination of 3 hue (0°, 120° and 240°) and saturation shifts (-1, 0, 1) applied to the kernel. No jitter was applied. ([source](CEConv/plot_saturation.py))* 
+  *Figure B.1: On the left, the baseline model's test accuracy is calculated over varying hue and saturation shifts. On the right, the hue and saturation equivariant network's test accuracy is displayed. The model was trained for any combination of 3 hue (0°, 120° and 240°) and saturation shifts (-1, 0, 1) applied to the kernel. No jitter was applied. ([source](CEConv/plot_saturation.py))* 
 </div></p>
 
-On the left in Figure A.1 it is shown that the baseline achieves the same test accuracies as when the shifts were applied independently of each other. This is also true for hue shifts for the hue and saturation equivariant model on the right. Remarkably, this model has improved its saturation equivariance, where it achieves a constant test accuracy of approximately 50% for almost all saturation shifts when no hue shift took place. We hypothesize that the network learned to adapt to saturation changes when it was aware of the hue of the images. Furthermore, the test accuracy drops for negative saturation shifts, which could again indicate that color is a crucial visual cue in the task at hand. <!-- feel free to adjust this explanation -->
+On the left in Figure B.1 it is shown that the baseline achieves the same test accuracies as when the shifts were applied independently of each other. This is also true for hue shifts for the hue and saturation equivariant model on the right. Remarkably, this model has improved its saturation equivariance, where it achieves a constant test accuracy of approximately 50% for almost all saturation shifts when no hue shift took place. We hypothesize that the network learned to adapt to saturation changes when it was aware of the hue of the images. Furthermore, the test accuracy drops for negative saturation shifts, which could again indicate that color is a crucial visual cue in the task at hand. <!-- feel free to adjust this explanation -->
 
 **Shifting the Input Image**
 <p align="middle">
@@ -520,30 +563,30 @@ On the left in Figure A.1 it is shown that the baseline achieves the same test a
   <img src="blogpost_imgs/HueSat_HSV_shiftimg_noNorm.jpg" alt="Hue and Saturation equivariance in HSV space with transformations applied to the input image" width="49%">
 <div align="center">
   
-  *Figure A.2: On the left, the baseline model's test accuracy is calculated over varying hue and saturation shifts. On the right, the hue and saturation equivariant network's test accuracy is displayed. The model was trained for any combination of 3 hue (0°, 120° and 240°) and saturation shifts (-1, 0, 1) applied to the input image. No jitter was applied. ([source](CEConv/plot_saturation.py))* 
+  *Figure B.2: On the left, the baseline model's test accuracy is calculated over varying hue and saturation shifts. On the right, the hue and saturation equivariant network's test accuracy is displayed. The model was trained for any combination of 3 hue (0°, 120° and 240°) and saturation shifts (-1, 0, 1) applied to the input image. No jitter was applied. ([source](CEConv/plot_saturation.py))* 
 </div></p>
 
-Likewise to the baseline on the left of Figure A.2, this hue and saturation equivariant network on the right did not obtain additional performance compared to the networks that were either hue or saturation equivariant. This could be due to the fact that each type of equivariance functions on a different channel in HSV space such that they are modeled as independent operations on the input images. This could have allowed the kernel to keep hue and saturation information disentangled instead of exploiting information over both of them. <!-- feel free to adjust the explanation -->
+Likewise to the baseline on the left of Figure B.2, this hue and saturation equivariant network on the right did not obtain additional performance compared to the networks that were either hue or saturation equivariant. This could be due to the fact that each type of equivariance functions on a different channel in HSV space such that they are modeled as independent operations on the input images. This could have allowed the kernel to keep hue and saturation information disentangled instead of exploiting information over both of them. <!-- feel free to adjust the explanation -->
 
 Ultimately, the only improvement from these experiments was for saturation equivariance when both hue and saturation equivariances were applied to the kernel. Although this result seems promising, we decided to not continue pursuing this direction due to the exponentially increased computational costs and the limited available resources.
 
-### B. Ablation Study Saturation Equivariance
+### C. Ablation Study Saturation Equivariance
 Further investigation was conducted on the impact of the number of shifts and the degree of jitter to obtain saturation equivariance. The results will be discussed in this appendix and are employed in the experiments in [Results of Additional Experiments](#results-of-additional-experiments).
 
 **Effects of Saturation Shifts -** For the number of shifts, different models were trained with respectively 3, 5 and 10 saturation shifts ranging from -1 to 1 and including 0, so no shift. The baseline model was a default ResNet-18.
 <div align="center">
   <img src="blogpost_imgs/Sat_HSV_ShiftsKernel.jpg" alt="Hue and Saturation equivariance in HSV space" width="70%">
 
-  *Figure B.1: Test accuracy of a saturation equivariant model trained on a varying number of saturation shifts ranging from -1 to 1 while including 0. The baseline is indicated with None. No jitter was applied. ([source](CEConv/plot_saturation.py))* 
+  *Figure C.1: Test accuracy of a saturation equivariant model trained on a varying number of saturation shifts ranging from -1 to 1 while including 0. The baseline is indicated with None. No jitter was applied. ([source](CEConv/plot_saturation.py))* 
 </div>
 
-Figure B.1 showcases that the number of shifts does not make a significant impact, since all saturation equivariant networks obtain approximately equal performance. Therefore, we opted to go for the middle option by utilising 5 shifts as to include subtler saturation shifts that would not only increase or decrease saturation maximally. Additionally, adding more saturations did not seem beneficial for performance, hence we discarded 10 shifts.
+Figure C.1 showcases that the number of shifts does not make a significant impact, since all saturation equivariant networks obtain approximately equal performance. Therefore, we opted to go for the middle option by utilising 5 shifts as to include subtler saturation shifts that would not only increase or decrease saturation maximally. Additionally, adding more saturations did not seem beneficial for performance, hence we discarded 10 shifts.
 
 **Effects of Saturation Jitter -** Saturation jitter was implemented by using Pytorch's function that is called directly when the data is loaded in. However, a disadvantage is that this implementation does not set an upper bound on how much the saturation can be scaled with. Therefore, several upper bounds were tempered with, namely 2, 20 and 100 while preserving the lower bound 0.
 <div align="center">
   <img src="blogpost_imgs/Sat_HSV_satshiftkernel_jitter.jpg" alt="Hue and Saturation equivariance in HSV space" width="70%">
 
-  *Figure B.2: Test accuracy of a saturation equivariant model. The model was trained on 5 saturation shifts, namely -1, 0.5, 0, 0.5 and 1. Saturation jitter was applied during training with varying upper bounds of 2, 20 and 100. ([source](CEConv/plot_saturation.py))* 
+  *Figure C.2: Test accuracy of a saturation equivariant model. The model was trained on 5 saturation shifts, namely -1, 0.5, 0, 0.5 and 1. Saturation jitter was applied during training with varying upper bounds of 2, 20 and 100. ([source](CEConv/plot_saturation.py))* 
 </div>
 
 In the above figure, all degrees of saturation jitter enhance robustness to test-time saturation distribution shifts compared to the baseline with none. The upper bound of 2 ensures an increased test accuracy for when no shift is applied. However, it rapidly drops when shifts are applied, where it is outperformed by the upper bound of 20. The upper bound of 100 also appears to be robust. Nevertheless, it suffers from a significant drop in test accuracy for many saturation shifts. Eventually, we decided to utilize an upper bound of 20. This lead to the most stable results while preserving test accuracy despite the lower peak when no jitter was applied. 
