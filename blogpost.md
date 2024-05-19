@@ -420,6 +420,33 @@ For value equivariance, we only tested shifting the input images with 5 shifts. 
 
 While being trained with 5 different shifts the model is not able to show this equivariance and follow the performance of the baseline Resnet-18. Training with jitter increases performance at the extremes of the shifted images but decreases performance around the original non-shifted images.
 
+##### Combining Hue and Shift Equivariance
+<!--As outlined in the [methodology](#methodology), it is possible to model hue and saturation equivariance jointly. A model was trained to encode both of these shifts on the kernel and on the input image of which the results will be displayed and discussed here.-->
+
+**Shifting the Kernel -** A hue and saturation equivariant kernel was created for any combination of 3 hue and saturation shifts. Furthermore, the baseline model was again ResNet-18.
+<p align="middle">
+  <img src="blogpost_imgs/HueSat_HSV_shiftKernelBase_noNorm.jpg" alt="ResNet-18 model tested on Hue and Saturation equivariance in HSV space" width="49%">
+  <img src="blogpost_imgs/HueSat_HSV_shiftkernel_noNorm.jpg" alt="Hue and Saturation equivariance in HSV space" width="49%">
+<div align="center">
+  
+  *Figure 10: On the left, the baseline model's test accuracy is calculated over varying hue and saturation shifts. On the right, the hue and saturation equivariant network's test accuracy is displayed. The model was trained for any combination of 3 hue (0°, 120° and 240°) and saturation shifts (-1, 0, 1) applied to the kernel. No jitter was applied. ([source](CEConv/plot_saturation.py))* 
+</div></p>
+
+On the left in Figure 10 it is shown that the baseline achieves the same test accuracies as when the shifts were applied independently of each other. This is also true for hue shifts for the hue and saturation equivariant model on the right. Remarkably, this model has improved its saturation equivariance, where it achieves a constant test accuracy of approximately 50% for almost all saturation shifts when no hue shift took place. We hypothesize that the network learned to adapt to saturation changes when it was aware of the hue of the images. Furthermore, the test accuracy drops for negative saturation shifts, which could again indicate that color is a crucial visual cue in the task at hand. <!-- feel free to adjust this explanation but dont do any longer-->
+
+**Shifting the Input Image -** For this experiment, the same combinations of hue and saturation shifts were utilised as for the kernel. However, this time they were applied to the input image.
+<p align="middle">
+  <img src="blogpost_imgs/HueSat_HSV_shiftImgBase_noNorm.jpg" alt="ResNet-18 model tested on Hue and Saturation equivariance in HSV space with transformations applied to the input image" width="49%">
+  <img src="blogpost_imgs/HueSat_HSV_shiftimg_noNorm.jpg" alt="Hue and Saturation equivariance in HSV space with transformations applied to the input image" width="49%">
+<div align="center">
+  
+  *Figure 11: On the left, the baseline model's test accuracy is calculated over varying hue and saturation shifts. On the right, the hue and saturation equivariant network's test accuracy is displayed. The model was trained for any combination of 3 hue (0°, 120° and 240°) and saturation shifts (-1, 0, 1) applied to the input image. No jitter was applied. ([source](CEConv/plot_saturation.py))* 
+</div></p>
+
+Likewise to the baseline on the left of Figure 11, this hue and saturation equivariant network on the right did not obtain additional performance compared to the networks that were either hue or saturation equivariant. This could be due to the fact that each type of equivariance functions on a different channel in HSV space such that they are modeled as independent operations on the input images. This could have allowed the kernel to keep hue and saturation information disentangled instead of exploiting information over both of them. <!-- feel free to adjust the explanation but dont do any longer-->
+
+Ultimately, the only improvement from these experiments was for saturation equivariance when both hue and saturation equivariances were applied to the kernel. Although this result seems promising, we decided to not continue pursuing this direction due to the exponentially increased computational costs and the limited available resources.
+
 #### LAB
 To test hue equivariance implemented in LAB space the convolution layers of a ResNet-18 network were replaced by their equivariant counterpart. The equivariant layers are implemented using three discrete shifts of 0, 120, and 240 (-120) degrees. The network is trained with and without hue augmentations (jitter) on training images. The same can be said for the baseline which has the same Resnet-18 architecture, however now with only a zero-degree rotation making it equal to a normal CNN. The width of these layers is increased to get an equal number of parameters.
 
@@ -428,10 +455,10 @@ During test time different sets of hue space-shifted images are evaluated on acc
 <div align="center">
   <img src="blogpost_imgs/lab_equivariance.jpg" alt="LAB space hue equivariance" width="600px">
 
-  *Figure 10: Accuracy over test-time hue angle shift for hue equivariant networks trained using input images in LAB color space format. Resnet-18 indicates a baseline model, CE indicates Color (hue) Equivariant networks, jitter indicates training time hue augmentation, and LAB shift indicates test-time hue shift is performed in LAB space instead of HSV/RGB space. The mean per model over all test-time hue shifts is indicated in the legend. ([source](CEConv/plot_fig9_lab.py))* 
+  *Figure 12: Accuracy over test-time hue angle shift for hue equivariant networks trained using input images in LAB color space format. Resnet-18 indicates a baseline model, CE indicates Color (hue) Equivariant networks, jitter indicates training time hue augmentation, and LAB shift indicates test-time hue shift is performed in LAB space instead of HSV/RGB space. The mean per model over all test-time hue shifts is indicated in the legend. ([source](CEConv/plot_fig9_lab.py))* 
 </div>
 
-Figure 10 shows some interesting observations. To start the Resnet-18 baseline only shows a peak around images that are not hue-shifted (zero degrees). The hue equivariant network (CE) tested with hue space shifts in RGB/HSV space shows small bumps around ±120° but still exhibits terrible performance. On the other hand, the same CE model evaluated with Hue space shift applied in LAB space shows performance equal to the baseline also around ±120°, meaning the model is LAB space Hue shift equivariant. This also means that there is a too-large gap between Hue space shifts in LAB space compared to RGB/HSV space and the model isn't able to generalize to RGB/HSV space.
+Figure 12 shows some interesting observations. To start the Resnet-18 baseline only shows a peak around images that are not hue-shifted (zero degrees). The hue equivariant network (CE) tested with hue space shifts in RGB/HSV space shows small bumps around ±120° but still exhibits terrible performance. On the other hand, the same CE model evaluated with Hue space shift applied in LAB space shows performance equal to the baseline also around ±120°, meaning the model is LAB space Hue shift equivariant. This also means that there is a too-large gap between Hue space shifts in LAB space compared to RGB/HSV space and the model isn't able to generalize to RGB/HSV space.
 
 Analyzing the jitter results shows that training with augmentations can be a way to implicitly encode equivariance into a network. The baseline Resnet-18 model outperforms all non-jitter models' overall hue angles. Interestingly when training the CE-Resnet with jitter we can see a significant jump in performance over the baseline jitter model, on average gaining six percentage points. Getting the highest accuracy over all models, outperforming the reproduced CE-Resnet-18 + jitter model which only gains about four percentage points compared to the RGB baseline+jitter which has similar performance to the LAB baseline+jitter model. This indicates that first of all training with jitter and an equivariant model combines the best of both worlds and results in a robust model, and that training in LAB space can indeed lead to a small performance increase in line with the findings of [[2]](#color_net) and [[7]](#color_segmentation).
 
@@ -441,14 +468,6 @@ In conclusion, the  network proposed by the original paper aimed to leverage col
 
 We investigated the limitations of the approach by the original authors. Firstly, the limited notion of modeling color equivariance as hue equivariance. Secondly, the problem of values falling outside the RGB cube. We aimed to circumvent these issues by modeling hue equivariance in HSV and LAB spaces, and extended the notion of equivariance to saturation and value in the former color space.
 We found that a model with hue equivariance in LAB space and jitter managed to outperform all other models encoding this type of equivariance. Furthermore, saturation and value equivariance without any jitter performed similar to the baseline models without any equivariance. However, jitter ensured they became robuster against distribution shifts, even outperforming the baseline model with jitter, but came at the cost of achieving lower test accuracy overall.
-
-<!--
-In conclusion, the proposed network by the original paper aimed to leverage  color equivariance to create robuster networks that still manage to exploit color information in images. This was implemented via discrete hue rotations in RGB space. Our reproduction study that was conducted on ... indeed supports their claims. ... #TODO
-
-However, the approach by the original authors lead to some limitations. For instance, their choice to model hue equivariance in RGB space could be considered suboptimal due to the issue of falling outside of the cube. Therefore, we additionally aimed to circumvent these issues by modeling hue equivariance in HSV and LAB space, and extended the notion of equivariance to saturation and value in the former color space.
-
-We found that a model with hue equivariance in LAB space and jitter managed to outperform all other models encoding this type of equivariance. Furthermore, saturation and value equivariance without any jitter performed similar to the baseline models without any equivariance. However, jitter ensured they became robuster against distribution shifts, even outperforming the baseline model with jitter, but came at the cost of achieving lower test accuracy overall.
--->
 
 
 ## Authors' Contributions
@@ -530,34 +549,6 @@ However, there are some potential issues with this color space. Firstly, the hue
 
   *Figure A.2: left: LAB color space visualized as a 2d color grid, right: sRGB color gamut shown in LAB space. ([source](https://www.xrite.com/blog/lab-color-space), [source](https://blogs.mathworks.com/steve/2015/04/03/displaying-a-color-gamut-surface/))*
 </div>
-
-
-### B. Combining Hue and Shift Equivariance
-As outlined in the [methodology](#methodology), it is possible to model hue and saturation equivariance jointly. A model was trained to encode both of these shifts on the kernel and on the input image of which the results will be displayed and discussed here.
-
-**Shifting the Kernel**
-<p align="middle">
-  <img src="blogpost_imgs/HueSat_HSV_shiftKernelBase_noNorm.jpg" alt="ResNet-18 model tested on Hue and Saturation equivariance in HSV space" width="49%">
-  <img src="blogpost_imgs/HueSat_HSV_shiftkernel_noNorm.jpg" alt="Hue and Saturation equivariance in HSV space" width="49%">
-<div align="center">
-  
-  *Figure B.1: On the left, the baseline model's test accuracy is calculated over varying hue and saturation shifts. On the right, the hue and saturation equivariant network's test accuracy is displayed. The model was trained for any combination of 3 hue (0°, 120° and 240°) and saturation shifts (-1, 0, 1) applied to the kernel. No jitter was applied. ([source](CEConv/plot_saturation.py))* 
-</div></p>
-
-On the left in Figure B.1 it is shown that the baseline achieves the same test accuracies as when the shifts were applied independently of each other. This is also true for hue shifts for the hue and saturation equivariant model on the right. Remarkably, this model has improved its saturation equivariance, where it achieves a constant test accuracy of approximately 50% for almost all saturation shifts when no hue shift took place. We hypothesize that the network learned to adapt to saturation changes when it was aware of the hue of the images. Furthermore, the test accuracy drops for negative saturation shifts, which could again indicate that color is a crucial visual cue in the task at hand. <!-- feel free to adjust this explanation -->
-
-**Shifting the Input Image**
-<p align="middle">
-  <img src="blogpost_imgs/HueSat_HSV_shiftImgBase_noNorm.jpg" alt="ResNet-18 model tested on Hue and Saturation equivariance in HSV space with transformations applied to the input image" width="49%">
-  <img src="blogpost_imgs/HueSat_HSV_shiftimg_noNorm.jpg" alt="Hue and Saturation equivariance in HSV space with transformations applied to the input image" width="49%">
-<div align="center">
-  
-  *Figure B.2: On the left, the baseline model's test accuracy is calculated over varying hue and saturation shifts. On the right, the hue and saturation equivariant network's test accuracy is displayed. The model was trained for any combination of 3 hue (0°, 120° and 240°) and saturation shifts (-1, 0, 1) applied to the input image. No jitter was applied. ([source](CEConv/plot_saturation.py))* 
-</div></p>
-
-Likewise to the baseline on the left of Figure B.2, this hue and saturation equivariant network on the right did not obtain additional performance compared to the networks that were either hue or saturation equivariant. This could be due to the fact that each type of equivariance functions on a different channel in HSV space such that they are modeled as independent operations on the input images. This could have allowed the kernel to keep hue and saturation information disentangled instead of exploiting information over both of them. <!-- feel free to adjust the explanation -->
-
-Ultimately, the only improvement from these experiments was for saturation equivariance when both hue and saturation equivariances were applied to the kernel. Although this result seems promising, we decided to not continue pursuing this direction due to the exponentially increased computational costs and the limited available resources.
 
 ### C. Ablation Study Saturation Equivariance
 Further investigation was conducted on the impact of the number of shifts and the degree of jitter to obtain saturation equivariance. The results will be discussed in this appendix and are employed in the experiments in [Results of Additional Experiments](#results-of-additional-experiments).
