@@ -20,34 +20,77 @@ cd $HOME/CEConvDL2/CEConv
 
 # set env vars
 export DATA_DIR=./DATA
-# export WANDB_DIR=$HOME/.conda/envs/CEConv/lib/python3.12/site-packages #idk if we want to use this one instead
 export WANDB_DIR=$HOME/CEConvDL2/CEConv/WANDB
 export OUT_DIR=./output
 export WANDB_API_KEY=$YOUR_API_KEY
-export WANDB_NAME=testRun
+export WANDB_NAME=$RUN_NAME_ON_WANDB
 
-# ResNet44 (or optionally 18)
-# Baseline, grayscale and color jitter.
-python -m experiments.classification.train --rotations 1
-# python -m experiments.classification.train --rotations 1 --grayscale
-# python -m experiments.classification.train --rotations 1 --jitter 0.5
+# ########  Extension  ######## 
+# ##### HSV
+# #### Hue
+# # Train + evaluation of a hue shifted image - 3 rotations
+# # Baseline
+# python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --hue_shift --img_shift --nonorm
+# # Baseline + jitter
+# python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --hue_shift --img_shift --jitter 0.5 --nonorm
+# # Hue equivariant network
+# python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --hue_shift --img_shift --nonorm
+# # Hue equivariant network + jitter
+# python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --hue_shift --img_shift --jitter 0.5 --nonorm
 
-# # Color Equivariant with and without group coset pooling and color jitter.
-# python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable
-# python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --jitter 0.5
+# # Train + evaluation of a hue shifted kernel - 3 rotations
+# # Baseline
+# python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --hue_shift --nonorm
+# # Baseline + jitter
+# python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --hue_shift --jitter 0.5 --nonorm
+# # Hue equivariant network
+# python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --hue_shift --nonorm
+# # Hue equivariant network + jitter
+# python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --hue_shift --jitter 0.5 --nonorm
 
-# # Hybrid Color Equivariant architectures.
-# python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 1 --width 31
-# python -m experiments.classification.train --rotations 3 --groupcosetmaxpool --separable --ce_stages 2 --width 30
 
-# ImageNet
-# Baseline.
-# python -m experiments.imagenet.main --rotations 1 --jitter 0.0 --arch 'resnet18'
+# #### Saturation
+# # Train + evaluation of a saturation shifted image - 5 shifts
+# # Baseline
+# python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hsv_test --nonorm --img_shift
+# # Baseline + jitter
+# python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --sat_jitter 0 100 --separable --hsv --sat_shift --hsv_test --nonorm --img_shift
+# # Saturation equivariant network
+# python -m experiments.classification.train --rotations 5 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hsv_test --nonorm --img_shift
+# # Saturation equivariant network + jitter
+# python -m experiments.classification.train --rotations 5 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --sat_jitter 0 100 --separable --hsv --sat_shift --hsv_test --nonorm --img_shift
 
-# # Color Equivariant.
-# python -m experiments.imagenet.main --rotations 3 --batch-size 256 --jitter 0.0 --workers 4 --arch 'resnet18' --groupcosetmaxpool --separable
+# # Train + evaluation of a saturation shifted kernel - 5 shifts
+# # Baseline
+# python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hsv_test --nonorm
+# # Baseline + jitter
+# python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --sat_jitter 0 100 --separable --hsv --sat_shift --hsv_test --nonorm
+# # Saturation equivariant network
+# python -m experiments.classification.train --rotations 5 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hsv_test --nonorm
+# # Saturation equivariant network + jitter
+# python -m experiments.classification.train --rotations 5 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --sat_jitter 0 100 --separable --hsv --sat_shift --hsv_test --nonorm
 
-# # Hybrid Color Equivariant architectures.
-# python -m experiments.imagenet.main --rotations 3 --batch-size 256 --jitter 0.0 --workers 4 --arch 'resnet18' --network_width 63 --run_name 'hybrid_1' --groupcosetmaxpool --separable --ce_stages 1
-# python -m experiments.imagenet.main --rotations 3 --batch-size 256 --jitter 0.0 --workers 4 --arch 'resnet18' --network_width 63 --run_name 'hybrid_2' --groupcosetmaxpool --separable --ce_stages 2
-# python -m experiments.imagenet.main --rotations 3 --batch-size 256 --jitter 0.0 --workers 4 --arch 'resnet18' --network_width 61 --run_name 'hybrid_3' --groupcosetmaxpool --separable --ce_stages 3
+
+# #### Value
+# # Baseline
+# python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --img_shift --value_shift --epochs 200 --nonorm --hsv_test
+# # Baseline + jitter
+# python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --img_shift --value_shift --epochs 200 --nonorm --hsv_test --value_jitter 0 100
+# # Value equivariance
+# python -m experiments.classification.train --rotations 5 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --img_shift --value_shift --epochs 200 --nonorm --hsv_test
+# # Value equivariance + jitter
+# python -m experiments.classification.train --rotations 5 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --img_shift --value_shift --epochs 200 --nonorm --hsv_test --value_jitter 0 100
+
+
+# ##### LAB 
+# #### Hue
+# # Baseline
+# python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --lab --epochs 200 --nonorm
+# # Baseline + jitter
+# python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --lab --epochs 200 --nonorm --jitter 0.5
+# # Hue lab space equivariance
+# python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --lab --epochs 200 --nonorm
+# # Hue lab space equivariance + jitter
+# python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --lab --epochs 200 --nonorm --jitter 0.5
+# # Hue lab space equivariance + test images hue shifted in lab space
+# python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --lab --epochs 200 --nonorm --lab_test

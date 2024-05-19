@@ -146,16 +146,16 @@ class PL_model(pl.LightningModule):
         return class_accuracy
 
     def save_model(self, model_path="best_model.pth"):
-        os.makedirs("./output", exist_ok=True)
+        os.makedirs(f"{os.environ['OUT_DIR']}/longtailed", exist_ok=True)
         torch.save({
             'model_state_dict': self.model.state_dict(),
             'best_epoch': self.best_epoch,
             'best_val_acc': self.best_val_acc,
             'class_acc': self.class_acc
-        }, f"./output/{self.model_name}")
+        }, f"{os.environ['OUT_DIR']}/longtailed/{self.model_name}")
 
     def load_model(self, model_path="best_model.pth"):
-        checkpoint = torch.load(f"./output/{self.model_name}")
+        checkpoint = torch.load(f"{os.environ['OUT_DIR']}/longtailed/{self.model_name}")
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.best_epoch = checkpoint['best_epoch']
         self.best_val_acc = checkpoint['best_val_acc']
@@ -231,7 +231,7 @@ def main(args) -> None:
     # Get data loaders.
     trainloader, testloader = getDataset()
     args.steps_per_epoch = len(trainloader)
-    run_name = "longtailed-seed_{}-rotations_{}".format(args.seed, args.rotations)
+    run_name = "longtailed-seed_{}-rotations_{}-planes_{}".format(args.seed, args.rotations, args.planes)
     args.model_name = run_name
 
     # Initialize model.
@@ -269,11 +269,16 @@ def main(args) -> None:
     )
     end_time = time.time()
     training_time = end_time - start_time
-    print("Training time:", training_time, "seconds")
+    print(f"Training time: {training_time:.1f} seconds")
 
+    # load model to retrieve best arguments
     model = PL_model(args)
     model.load_model()
-    
+
+    # Save model
+    os.makedirs(f"{os.environ['OUT_DIR']}/longtailed/npz", exist_ok=True)
+    np.savez(f"{os.environ['OUT_DIR']}/longtailed/npz/{args.model_name}", class_acc=model.class_acc, best_epoch=model.best_epoch)
+
     print("Best epoch:", model.best_epoch)
     print("Class accuracy:", model.class_acc)
 

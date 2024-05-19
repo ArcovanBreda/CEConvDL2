@@ -1,215 +1,161 @@
-import os
-import torch
-from argparse import Namespace
+"""
+Contains plotting code for the different figures for the
+saturation equivariance experiments.
+
+Commands are found all the way below.
+"""
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator
 import matplotlib.pyplot as plt
 import numpy as np
-import torchmetrics
 
 
-def plot_figure_9(checkpoints, hsv_test=False):
-    from experiments.color_mnist.train_longtailed import PL_model, CustomDataset
-
-    hue_values = [
-    -0.5, -0.472222222222222, -0.444444444444444, -0.416666666666667, -0.388888888888889,
-    -0.361111111111111, -0.333333333333333, -0.305555555555556, -0.277777777777778, -0.25,
-    -0.222222222222222, -0.194444444444444, -0.166666666666667, -0.138888888888889, -0.111111111111111,
-    -0.0833333333333334, -0.0555555555555556, -0.0277777777777778, 0, 0.0277777777777778,
-    0.0555555555555556, 0.0833333333333333, 0.111111111111111, 0.138888888888889, 0.166666666666667,
-    0.194444444444444, 0.222222222222222, 0.25, 0.277777777777778, 0.305555555555555, 0.333333333333333,
-    0.361111111111111, 0.388888888888889, 0.416666666666667, 0.444444444444444, 0.472222222222222, 0.5
-    ]
-
-    model_names = ["No norm + Jitter", "RGB norm + Jitter",
-                   "No norm", "RGB norm"]
-    colors = [['darkorange', "--"], ['mediumblue', "--"], ['darkorange', "-"], ['mediumblue', "-"]]
-    
+def plot_sat_base(paths, shift="Kernel"):
+    x = np.load(paths[0])["hue"]
+    y_nonorm_baseline = np.load(paths[0])["acc"] * 100
+    y_nonorm_baseline_jitter = np.load(paths[1])["acc"] * 100
+    y_nonorm = np.load(paths[2])["acc"] * 100
+    y_nonorm_jitter = np.load(paths[3])["acc"] * 100
 
     fig, ax = plt.subplots(figsize=(12, 6))
-    for (checkpoint, name, color) in zip(checkpoints, model_names, colors):
-        results = evaluate_classify(checkpoint, hsv_test=hsv_test)
+    plt.plot(x, y_nonorm_baseline, label="Resnet-18")
+    plt.plot(x, y_nonorm, label="CE-Resnet-18")
+    plt.plot(x, y_nonorm_baseline_jitter, label="Resnet-18 + Jitter", ls="--") 
+    plt.plot(x, y_nonorm_jitter, label="CE-Resnet-18 + Jitter", ls="--")
 
-        if torch.is_tensor(results["hue"][0]):
-            results["hue"] = [i.item() for i in results["hue"]]
-        
-        plt.plot(results["hue"], results["acc"], color[1], label=name, color=color[0], linewidth=3)
-
-    plt.title("Saturation Equivariant ResNet-18 trained in HSV space", fontsize=22)
+    plt.title(f"Saturation equivariant network trained in HSV space\n{shift} Shift | Flowers-102 dataset", fontsize=22, pad=10)
     plt.ylabel("Test accuracy (%)", fontsize=18)
     plt.yticks(fontsize=16,)
-    plt.ylim(top=0.99)
     plt.xlabel("Test-time saturation shift", fontsize=18)
-    plt.legend(fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 0.99),
+    plt.xticks(fontsize=16,)
+    plt.legend(fontsize=14, loc='upper center', bbox_to_anchor=(0.5, 0.99),
             borderaxespad=0., ncol=2, fancybox=True, shadow=True,
             columnspacing=0.7, handletextpad=0.2)
     plt.grid(axis="both")
-    plt.savefig(f"sat_equiv_kernel_hsv_test={hsv_test}.png")
+    plt.ylim(0, 100)
+    plt.savefig(f"Sat_HSV_Fig9_satshift{shift}.jpg")
 
 
-def evaluate_classify(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classification/flowers102-resnet18_1-false-jitter_0_0-split_1_0-seed_0.pth.tar.ckpt", ce_stages=None, seperable=True, width=None, hsv_test=False):
-    import pytorch_lightning as pl
-    from experiments.classification.datasets import get_dataset
-    from pytorch_lightning import loggers as pl_loggers
-    from experiments.classification.train import PL_model
+def plot_sat_jitters(paths_jit, shift="Kernel", filename="Sat_HSV_satshiftkernel_jitter.jpg"):
+    x = np.load(paths_jit[0])["hue"]
+    x_nonorm_020 = np.load(paths_jit[2])["hue"]
+    y_nonorm_nojitter = np.load(paths_jit[0])["acc"] * 100
+    y_nonorm_02 = np.load(paths_jit[1])["acc"] * 100
+    y_nonorm_020 = np.load(paths_jit[2])["acc"] * 100
+    y_nonorm_0100 = np.load(paths_jit[3])["acc"] * 100
 
-    splitted = path.split("/")[-1].split("-")
-    arch_rot = splitted[1].split("_")
-    seed = splitted[5].split("_")[1]
-    if len(seed.split(".")) != 1:
-        seed = int(seed.split(".")[0])
-    else:
-        seed = int(seed)
-    lab = True if "lab_space" in splitted else False
-    hsv = True if "hsv_space" in splitted else False
-    idx = None
+    fig, ax = plt.subplots(figsize=(12, 6))
+    plt.plot(x, y_nonorm_nojitter, label="None")
+    plt.plot(x, y_nonorm_02, label="[0, 2]")
+    plt.plot(x_nonorm_020, y_nonorm_020, label="[0, 20]")
+    plt.plot(x, y_nonorm_0100, label="[0, 100]")
 
-    if "hue_and_sat_shift" in splitted:
-        hue_shift, sat_shift = True, True
-        idx = splitted.index("hue_and_sat_shift")
-    else:
-        hue_shift = True if "hue_shift" in splitted else False
-        sat_shift = True if "sat_shift" in splitted else False
-    
-    if sat_shift:
-        if idx is None:
-            idx = splitted.index("sat_shift")
-
-        min_max = splitted[idx + 1].split("_")[2:]
-    
-    sat_jitter = []
-    for i in min_max:
-        num = i.split(".")        
-        tmp = [j for j in num if j != "pth" and j != "tar" and j != "ckpt"]
-
-        sat_jitter.append(float(".".join(tmp)))
-
-    no_norm = True if "no_norm" in splitted else False
-
-    args = Namespace(seed = seed,
-                    dataset = splitted[0],
-                    jitter = float(".".join(splitted[3].split("_")[1:])),
-                    grayscale= True if "grayscale" in splitted else False,
-                    split= float(".".join(splitted[4].split("_")[1:])),
-                    bs= 64,
-                    architecture=arch_rot[0],
-                    rotations=arch_rot[1],
-                    groupcosetmaxpool= False if splitted[2] == "false" else True,
-                    no_norm=no_norm,
-                    ce_stages=ce_stages,
-                    epochs=200,
-                    resume=True,
-                    normalize = not no_norm,
-                    nonorm = no_norm,
-                    separable=seperable,
-                    width=width,
-                    lab=lab,
-                    hsv=hsv,
-                    hue_shift=hue_shift,
-                    sat_shift=sat_shift,
-                    sat_jitter=sat_jitter,
-                    hsv_test=hsv_test
-    )
-
-    run_name = "{}-{}_{}-{}-jitter_{}-split_{}-seed_{}".format(
-        args.dataset,
-        args.architecture,
-        args.rotations,
-        str(args.groupcosetmaxpool).lower(),
-        str(args.jitter).replace(".", "_"),
-        str(args.split).replace(".", "_"),
-        args.seed,
-    )
-    if args.lab:
-        run_name += "-lab_space"
-    if args.hsv:
-        run_name += "-hsv_space"
-    if args.hue_shift and not args.sat_shift:
-        run_name += "-hue_shift"
-    if args.sat_shift and not args.hue_shift:
-        run_name += "-sat_shift"
-    if args.hue_shift and args.sat_shift:
-        run_name += "-hue_and_sat_shift"
-    if args.sat_jitter:
-        run_name += f"-sat_jitter_{args.sat_jitter[0]}_{args.sat_jitter[1]}"
-    if args.grayscale:
-        run_name += "-grayscale"
-    if not args.normalize:
-        run_name += "-no_norm"
-    if args.ce_stages is not None:
-        run_name += "-{}_stages".format(args.ce_stages)
-
-    args.model_name=run_name    
-    mylogger = pl_loggers.WandbLogger(  # type: ignore
-        project="DL2 CEConv",
-        config=vars(args),
-        name=run_name,
-        save_dir=os.environ["WANDB_DIR"],
-    )
-
-    model = PL_model.load_from_checkpoint(path)
-    model.hsv_test = hsv_test
-
-    # overwrite model saturation settings if it didnt train with hsv_test=True
-    if model.hsv_test:
-        saturations = 50
-        neg_sats = saturations // 2
-        pos_sats = neg_sats - 1 + saturations % 2
-
-        # In case of even saturations, consider 0 to be positive
-        model.test_jitter = torch.concat((torch.linspace(-1, 0, neg_sats + 1)[:-1],
-                                        torch.tensor([0]),
-                                        torch.linspace(0, 1, pos_sats + 1)[1:])).type(torch.float32).to(model._device)
-        model.test_acc_dict = {}
-        for i in model.test_jitter:
-            if model.args.dataset == "cifar10":
-                model.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
-            elif model.args.dataset == "flowers102":
-                model.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
-            elif model.args.dataset == "stl10":
-                model.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
-            else:
-                raise NotImplementedError
-
-    mylogger = pl_loggers.WandbLogger(  # type: ignore
-        project="DL2 CEConv",
-        config=vars(args),
-        name=run_name,
-        save_dir=os.environ["WANDB_DIR"],
-    )
-
-    trainer = pl.Trainer(accelerator='gpu', gpus=1, logger=mylogger)
-
-    _, testloader = get_dataset(args)
-    trainer.test(model, dataloaders=testloader, verbose=False)
-    return model.results
+    plt.title(f"Effect of Jitter on Saturation Equivariant Network\n{shift} Shift | Flowers-102 dataset",
+               fontsize=22, pad=10)
+    plt.ylabel("Test accuracy (%)", fontsize=18)
+    plt.yticks(fontsize=16,)
+    plt.xlabel("Test-time saturation shift", fontsize=18)
+    plt.xticks(fontsize=16,)
+    plt.legend(fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 0.99),
+            borderaxespad=0., ncol=4, fancybox=True, shadow=True,
+            columnspacing=0.7, handletextpad=0.2)
+    plt.grid(axis="both")
+    plt.ylim(0, 100)
+    plt.savefig(filename)
 
 
-checkpoints = [
-    "/home/sabbring/CEConvDL2/CEConv/output/color_equivariance/classification/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_100-no_norm.pth.tar.ckpt",
-    "/home/sabbring/CEConvDL2/CEConv/output/color_equivariance/classification/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_100.pth.tar.ckpt",
-    "/home/sabbring/CEConvDL2/CEConv/output/color_equivariance/classification/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.pth.tar.ckpt",
-    "/home/sabbring/CEConvDL2/CEConv/output/color_equivariance/classification/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1.pth.tar.ckpt"
+def plot_3d(paths_3d, saturations=50, rotations=37, num_shift=3, shift="Kernel", filename="HueSat_HSV_shiftkernel.jpg"):
+    original_shape = (rotations, saturations)
+
+    X = np.load(paths_3d)["hue"].reshape(original_shape)
+    Y = np.load(paths_3d)["sat"].reshape(original_shape)
+    Z = np.load(paths_3d)["acc"].reshape(original_shape) * 100
+
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"}, figsize=(9,5))
+
+    # Plot the surface.
+    surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,
+                        linewidth=0, antialiased=False)
+
+    ax.set_title(f"Hue and Saturation Equivariant Network trained in HSV Space\nFlowers-102 dataset [{num_shift} Hue and Sat Shifts on {shift}]", fontsize=15)
+    ax.set_xlabel("Hue shift (°)", labelpad=10, fontsize=11)
+    ax.set_xticks(ticks=[-0.45, -0.3, -0.15, 0, 0.15, 0.3, 0.45],labels=["-150", "-100", "-50", "0", "50", "100", "150" ])
+    ax.set_ylabel("Saturation shift", labelpad=10, fontsize=11)
+    ax.set_zlabel("Test accuracy (%)", labelpad=10, fontsize=11)
+
+    # Customize the z axis.
+    ax.set_zlim(0, 100)
+
+    # Add a color bar which maps values to colors.
+    fig.colorbar(surf, shrink=0.5, aspect=5, pad=0.15)
+
+    plt.savefig(filename)
+
+
+def plot_sat_shift(paths, shift="Kernel"):
+    x = np.load(paths[0])["hue"]
+    y_nonorm_baseline = np.load(paths[0])["acc"] * 100
+    y_nonorm_baseline_jitter = np.load(paths[1])["acc"] * 100
+    y_nonorm = np.load(paths[2])["acc"] * 100
+    y_nonorm_jitter = np.load(paths[3])["acc"] * 100
+    x_nonorm_jitter = np.load(paths[3])["hue"]
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+    plt.plot(x, y_nonorm_baseline, label="None")
+    plt.plot(x, y_nonorm, label="3 shifts")
+    plt.plot(x, y_nonorm_baseline_jitter, label="5 shifts")
+    plt.plot(x_nonorm_jitter, y_nonorm_jitter, label="10 shifts")
+
+    plt.title(f"Saturation equivariant network trained in HSV space\n{shift} Shift | Flowers-102 dataset", fontsize=22, pad=10)
+    plt.ylabel("Test accuracy (%)", fontsize=18)
+    plt.yticks(fontsize=16,)
+    plt.xlabel("Test-time saturation shift", fontsize=18)
+    plt.xticks(fontsize=16,)
+    plt.legend(fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 0.99),
+            borderaxespad=0., ncol=4, fancybox=True, shadow=True,
+            columnspacing=0.7, handletextpad=0.2)
+    plt.grid(axis="both")
+    plt.ylim(0, 100)
+    plt.savefig(f"Sat_HSV_Shifts{shift}.jpg")
+
+
+paths_sat_shifts = [
+    "CEConv/output/test_results/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
+    "CEConv/output/test_results/maintest_flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
+    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
+    "CEConv/output/test_results/maintest_flowers102-resnet18_10-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz"
 ]
 
-# plot_figure_9(checkpoints, hsv_test=True)
-
-test_np = [
-    # "/home/sabbring/CEConvDL2/CEConv/output/test_results/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-lab_space-sat_jitter_1_1.npz",
-    # "/home/sabbring/CEConvDL2/CEConv/output/test_results/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-sat_jitter_1_1.npz",
-    # "/home/sabbring/CEConvDL2/CEConv/output/test_results/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_shift-sat_jitter_1_1.npz",
-    "/home/sabbring/CEConvDL2/CEConv/output/test_results/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1.npz" # broke the code (if u know u know)
+paths_jit = [
+    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
+    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_2-no_norm.npz",
+    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-no_norm.npz",
+    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_100-no_norm.npz",
 ]
 
+paths_3d = [
+    "CEConv/output/test_results/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_and_sat_shift-sat_jitter_1_1-img_shift-no_norm_test-rot=25_test-sat=25.npz",
+    "CEConv/output/test_results/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_and_sat_shift-sat_jitter_1_1-no_norm_test-rot=25_test-sat=25.npz",
+    "CEConv/output/test_results/maintest_flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_and_sat_shift-sat_jitter_1_1-img_shift-no_norm_test-rot=25_test-sat=25.npz",
+    "CEConv/output/test_results/maintest_flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_and_sat_shift-sat_jitter_1_1-no_norm_test-rot=25_test-sat=25.npz"
+]
 
-fig, ax = plt.subplots(figsize=(12, 6))
+paths_sat_base = [
+    "CEConv/output/test_results/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-img_shift-no_norm.npz",
+    "CEConv/output/test_results/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-img_shift-no_norm.npz",
+    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-img_shift-no_norm.npz",
+    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-img_shift-no_norm.npz",
+    "CEConv/output/test_results/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
+    "CEConv/output/test_results/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-no_norm.npz",
+    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
+    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-no_norm.npz"
+]
 
-for i in test_np:
-    file = np.load(i)
-
-    if torch.is_tensor(file["hue"][0]):
-        file["hue"] = [i.item() for i in file["hue"]]
-        
-    plt.plot(file["hue"], file["acc"])
-
-plt.savefig(f"test_4.png")
-
-
+plot_3d(paths_3d[0], saturations=25, rotations=25, num_shift="No", shift="Image", filename="HueSat_HSV_shiftImgBase_noNorm.jpg")
+plot_3d(paths_3d[1], saturations=25, rotations=25, num_shift="No", filename="HueSat_HSV_shiftKernelBase_noNorm.jpg")
+plot_3d(paths_3d[2], saturations=25, rotations=25, shift="Image", filename="HueSat_HSV_shiftImage_noNorm.jpg")
+plot_3d(paths_3d[3], saturations=25, rotations=25, filename="HueSat_HSV_shiftKernel_noNorm.jpg")
+plot_sat_base(paths_sat_base[4:])
+plot_sat_base(paths_sat_base, shift="Image")
+plot_sat_shift(paths_sat_shifts)
+plot_sat_jitters(paths_jit)
