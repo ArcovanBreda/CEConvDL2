@@ -215,7 +215,7 @@ The reproduced results showcase that the notion of equivariance can be extended 
 Additionally, one noticeable flaw in the work of [[6]](#main) is the fact that they model hue shifts with a 3D rotation in the RGB space along the diagonal vector
 [1,1,1]. This can cause pixels with values close to the boundaries of the RGB cube to fall outside the RGB cube when rotated for certain hue shifts. In order to stay within the RGB space, these pixels have to be reprojected back into the RGB cube, effectively clipping the values. This causes the artifacts seen in Figure 4. 
 We explore if we can circumvent these limitations by modeling the hue shift as a 2D rotation in the LAB color space.
-For an overview of the color spaces and their limitations, we refer to section [color spaces](#a-color-spaces) in the Appendix.
+For an overview of the color spaces and their limitations, we refer to section [Color Spaces](#a-color-spaces) in the Appendix.
 
 ### HSV Equivariance
 
@@ -454,7 +454,7 @@ On the left in Figure 11 it is shown that the baseline achieves the same test ac
 
 Likewise to the baseline on the left of Figure 12, this hue and saturation equivariant network on the right did not obtain additional performance compared to the networks that were either hue or saturation equivariant. This could be due to the fact that each type of equivariance functions on a different channel in HSV space such that they are modeled as independent operations on the input images. This could have allowed the kernel to keep hue and saturation information disentangled instead of exploiting information over both of them. <!-- feel free to adjust the explanation but dont do any longer-->
 
-Ultimately, the only improvement from these experiments was for saturation equivariance when both hue and saturation equivariances were applied to the kernel. Although this result seems promising, we decided to not continue pursuing this direction due to the exponentially increased computational costs and the limited available resources.
+Ultimately, the only improvement from these experiments was for saturation equivariance when both hue and saturation equivariances were applied to the kernel. Although this result seems promising, we decided to not continue pursuing this direction due to increased computational costs and limited available resources.
 
 #### LAB
 To test hue equivariance implemented in LAB space the convolution layers of a ResNet-18 network were replaced by their equivariant counterpart. The equivariant layers are implemented using three discrete shifts of 0, 120, and 240 (-120) degrees. The network is trained with and without hue augmentations (jitter) on training images. <!--The same can be said for the baseline which has the same Resnet-18 architecture, however now with only a zero-degree rotation making it equal to a normal CNN. Ik hoop dat deze zin niet nodig is, want dit geldt al voor de hele blogpost--> The width of the layers of the baseline ResNet-18 model is increased to get an equal number of parameters.
@@ -605,7 +605,7 @@ The figure shows that in order to create stable accuracy for the original model,
 
 ### D. Training time study 
 
-During the reproduction of "Color Imbalance," we observed a significant discrepancy in the training times required for the two models. To verify that the CECNN excels in retaining and sharing shape information, we tested a Z2CNN model with a similar training duration. This was achieved by increasing the width (parameter called planes) of each layer from 20 to 70.
+During the reproduction of "Color Imbalance" we observed a significant discrepancy in the training times required for the two models. To verify that the CECNN excels in retaining and sharing shape information, we tested a Z2CNN model with a similar training duration. This was achieved by increasing the width (parameter called planes) of each layer from 20 to 70.
 
 <div align="center">
   <img src="blogpost_imgs/Longtailed_appendix.png" alt="Jitter ablation" width="600px">
