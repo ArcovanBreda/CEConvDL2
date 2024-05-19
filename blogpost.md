@@ -9,7 +9,7 @@ The objectives of this blog post are to:
 
 1. Discuss the methods introduced in the paper
 1. Verify the authors' claims
-1. Extend the notion of color equivariance to other dimensions beyond hue by leveraging different colorspaces than RGB
+1. Extend the notion of color equivariance to other dimensions beyond hue by leveraging different color spaces than RGB
 
 ---
 
@@ -481,7 +481,7 @@ Interestingly, training the CE-ResNet with jitter results in an average increase
 
 In conclusion, the  network proposed by the origi-nal paper aimed to leverage color equivariance to create more robust networks that still manage to exploit color information in images. This was implemented via discrete hue rotations in RGB space. Our reproduction study, focusing on the most color-exploitive dataset, supports their findings in terms of the importance of color equivariance for various (color-dependent) datasets and performance quality. Furthermore, the reproduction of the ablation study about the impact of the number of rotations validates the conclusions about the level of equivariance and provides additional insights in terms of the number of parameters.
 
-We investigated the limitations of the approach by the original authors. Firstly, the limited notion of modeling color equivariance as hue equivariance. Secondly, the problem of values falling outside the RGB cube. We aimed to circumvent these issues by modeling hue equivariance in HSV and LAB spaces, and extended the notion of equivariance to saturation and value in the former color space.
+We additionally investigated the limitations of the approach by the original authors. Firstly, the limited notion of modeling color equivariance as hue equivariance. Secondly, the problem of values falling outside the RGB cube. We aimed to circumvent these issues by modeling hue equivariance in HSV and LAB spaces, and extended the notion of equivariance to saturation and value in the former color space.
 We found that a model with hue equivariance in LAB space and jitter managed to outperform all other models encoding this type of equivariance. Furthermore, saturation and value equivariance without any jitter performed similar to the baseline models without any equivariance. However, jitter ensured they became robuster against distribution shifts, even outperforming the baseline model with jitter, but came at the cost of achieving lower test accuracy overall.
 
 
