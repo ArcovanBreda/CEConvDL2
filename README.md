@@ -85,33 +85,35 @@ The experiments from our blog post can be reproduced by running the following co
 **Generate ColorMNIST datasets**
 ```bash
 python -m experiments.color_mnist.colormnist_longtailed
-python -m experiments.color_mnist.colormnist_biased --std 0
-python -m experiments.color_mnist.colormnist_biased --std 12
-python -m experiments.color_mnist.colormnist_biased --std 24
-python -m experiments.color_mnist.colormnist_biased --std 36
-python -m experiments.color_mnist.colormnist_biased --std 48
-python -m experiments.color_mnist.colormnist_biased --std 60
-python -m experiments.color_mnist.colormnist_biased --std 1000000
 ```
 
 **Longtailed ColorMNIST**
 ```bash
-# Baseline, grayscale and color jitter.
-python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20
-python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale 
-python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --jitter 0.5
-
-# Color Equivariant with and without group coset pooling and color jitter.
-python -m experiments.color_mnist.train_longtailed --rotations 3 --planes 17 --separable
-python -m experiments.color_mnist.train_longtailed --rotations 3 --planes 17 --separable --jitter 0.5
-python -m experiments.color_mnist.train_longtailed --rotations 3 --planes 17 --separable --groupcosetpool
-
-# Hybrid Color Equivariant architectures.
-python -m experiments.color_mnist.train_longtailed --rotations 3 --planes 19 --ce_layers 2 --separable --groupcosetpool
-python -m experiments.color_mnist.train_longtailed --rotations 3 --planes 18 --ce_layers 4 --separable --groupcosetpool
+# Baseline:
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 1
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 2
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 3
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 4
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 5
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 6
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 7
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 8
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 9
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 10
+# Color equivariant CNN:
+python -m experiments.color_mnist.train_longtailed --rotations 3 --planes 17 --separable --seed 1
+python -m experiments.color_mnist.train_longtailed --rotations 3 --planes 17 --separable --seed 2
+python -m experiments.color_mnist.train_longtailed --rotations 3 --planes 17 --separable --seed 3
+python -m experiments.color_mnist.train_longtailed --rotations 3 --planes 17 --separable --seed 4
+python -m experiments.color_mnist.train_longtailed --rotations 3 --planes 17 --separable --seed 5
+python -m experiments.color_mnist.train_longtailed --rotations 3 --planes 17 --separable --seed 6
+python -m experiments.color_mnist.train_longtailed --rotations 3 --planes 17 --separable --seed 7
+python -m experiments.color_mnist.train_longtailed --rotations 3 --planes 17 --separable --seed 8
+python -m experiments.color_mnist.train_longtailed --rotations 3 --planes 17 --separable --seed 9
+python -m experiments.color_mnist.train_longtailed --rotations 3 --planes 17 --separable --seed 10
 ```
 
-**Biased ColorMNIST**
+<!-- **Biased ColorMNIST**
 ```bash
 # Baseline and grayscale.
 python -m experiments.color_mnist.train_biased --std $2 --rotations 1 --planes 20 
@@ -124,6 +126,18 @@ python -m experiments.color_mnist.train_biased --std $2 --rotations 3 --planes 1
 # Hybrid Color Equivariant architectures.
 python -m experiments.color_mnist.train_biased --std $2 --rotations 3 --planes 19 --ce_layers 2 --separable --groupcosetpool
 python -m experiments.color_mnist.train_biased --std $2 --rotations 3 --planes 18 --ce_layers 4 --separable --groupcosetpool
+``` -->
+
+#### Classification performance with test-time hue shifts on Flowers dataset:
+```bash
+# Baseline:
+python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18
+# Baseline + jitter:
+python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --jitter 0.5
+# CEConv:
+python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable
+# CEConv + jitter:
+python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --jitter 0.5
 ```
 
 #### Color Selectivity
