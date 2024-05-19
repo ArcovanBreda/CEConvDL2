@@ -90,15 +90,16 @@ H_n =
 a + b & \cos (\frac{2k\pi}{n}) + a & a - b \\
 a - b & a + b & \cos (\frac{2k\pi}{n}) + a \\
 \end{bmatrix}
-\tag{1}
+\tag{6}
 $$
 
 The group of discrete hue shifts is combined with the group of discrete 2D translations into the group $G = \mathbb{Z}^2 \times H_n$. The Color Equivariant Convolution (CEConv) in the first layer is defined in [[5]](#main) as:
 
 $$
 \begin{align} 
-\[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{c=1}^{C^l}f_c(y) \cdot H_n(k)\psi_c^i(y - x) & \qquad \qquad (\text{Equation 6})\\ 
+\[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{c=1}^{C^l}f_c(y) \cdot H_n(k)\psi_c^i(y - x)\\ 
 \end{align}
+\tag{7}
 $$
 
 However, we think a small mistake is made here as the sum $\sum_{c=1}^{C^l}$ indicates that $f_c(y)$ and $\psi_c^i(y - x)$ are scalar values, which do not make sense given the dot product and the matrix $H_n(k)$.
@@ -106,8 +107,9 @@ Therefore the correct formula should be:
 
 $$
 \begin{align} 
-\[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}f(y) \cdot H_n(k)\psi^i(y - x) & \qquad \qquad (\text{Equation 7})\\ 
+\[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}f(y) \cdot H_n(k)\psi^i(y - x)\\ 
 \end{align}
+\tag{8}
 $$
 
 This change does not impact the derivation of the equivariance of the CEConv layer, for this we refer to the original paper [[5]](#main).
@@ -115,8 +117,9 @@ This change does not impact the derivation of the equivariance of the CEConv lay
 For the hidden layers, the feature map $[f \star \psi]$ is a function on $G$ parameterized by $x$ and $k$. The CEConv hidden layers are defined as:
 
 $$\begin{align} 
-\[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{r=1}^n\sum_{c=1}^{C^l}f_c(y,r) \cdot \psi_c^i(y - x, (r-k)\%n) & \qquad \qquad (\text{Equation 8})\\ 
-\end{align}$$
+\[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{r=1}^n\sum_{c=1}^{C^l}f_c(y,r) \cdot \psi_c^i(y - x, (r-k)\%n)\\ 
+\end{align}
+\tag{9}$$
 
 ## Reproduction of Experiments
 
@@ -223,30 +226,35 @@ For an overview of the color spaces and their limitations we refer to the sectio
 
 $$
 H_n(k) = \\begin{bmatrix} \frac{2\pi}{n} k \\\\ 0 \\\\ 0 \\end{bmatrix} 
+\tag{10}
 $$
 
 In which n is the discrete number of rotations and k indicates the k-th rotation out of n. The group action is an addition on a HSV pixel value in $\mathbb{R}^3$ modulo $2\pi$:
 
 $$
 \[H_n(k)f\] (x) = \\begin{bmatrix} (f(x)_h + \frac{2\pi}{n} k) \\% 2\pi \\\\ f(x)_s \\\\ f(x)_v \\end{bmatrix}
+\tag{11}
 $$
 
 with $f(x)_{h,s,v}$ indicating the respective hue, saturation, or value at pixel value $x$ in the input image $f$. Because the Hue value is defined on a cyclic interval the dot product between a hue-shifted image ($f$) is the same as the dot product between an inverse hue-shifted filter ($\psi$), in contrast to the reproduced paper in which they model hue shifts as a 3D rotation meaning they can fall out of the RGB cube:
 
 $$
 \[H_n(k)f\] (x) \cdot \psi(y) = f(x) \cdot \[H_n(-k)\psi\](y)
+\tag{12}
 $$
 
 We can now define the group $G = \\mathbb{Z}^2 \\times H_n$ as the product of the 2D integers translation group and the HSV hue shift group. With the operator $\\lambda_{t, m}$ defining a translation and hue shift:
 
 $$
 \[\lambda_{t, m}f\](x) = \[H_n(m)f\](x-t) = \\begin{bmatrix} (f(x - t)_h + \frac{2\pi}{n} m) \\% 2\pi \\\\ f(x - t)_s \\\\ f(x - t)_v \\end{bmatrix}
+\tag{13}
 $$
 
 We can then define the lifting layer outputting the i-th output channel as:
 
 $$
 \[f \star\psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2} f(y) \cdot \[H_n(k)\psi^i\](y-x)
+\tag{14}
 $$
 
 Here $f$ is the input image and $\psi^i$ a set of corresponding filters.
@@ -256,13 +264,15 @@ $$\begin{align}
 \[\[\lambda_{t, m}f\]\star\psi^i\] (x, k) &= \sum_{y \in \mathbb{Z}^2} \[H_n(m)f\](y-t) \cdot \[H_n(k)\psi^i\](y-x)\\ 
 &= \sum_{y \in \mathbb{Z}^2} f(y) \cdot \[H_n(k-m)\psi^i\](y-(x-t)) \\
 &= \[f\star\psi^i\](x-t, k-m)\\
-&= \[\lambda'_{t, m}[f\star\psi^i\]\](x, k) & \quad \quad \text{(Equation 10)}
-\end{align}$$
+&= \[\lambda'_{t, m}[f\star\psi^i\]\](x, k)
+\end{align}
+\tag{15}$$
 
 Since the input HSV image is now lifted to the group space all subsequent features and filters are functions that need to be indexed using both a pixel location and a discrete rotation. The group convolution can then be defined as:
 
 $$
 \[f \star\psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2} \sum_{r=1}^n f(y,r) \cdot \psi^i(y-x, (r-k)\%n)
+\tag{16}
 $$
 
 
@@ -273,6 +283,7 @@ $$
 H_n(k) = 
 \begin{bmatrix} -1 +k\frac{2}{n-1} \\\\ 0 \\\\ 0 
 \end{bmatrix} 
+\tag{17}
 $$
 
 Because saturation is only defined between 0 and 1 and is not cyclic we need to clip the value after the group action:
@@ -281,6 +292,7 @@ $$
 \[H_n(k)f\](x) = 
 \begin{bmatrix} f(x)_h \\\\ \text{clip}(0, f(x)_s + (-1 +k\frac{2}{n-1}), 1) \\\\ f(x)_v 
 \end{bmatrix}
+\tag{18}
 $$
 
 This clipping due to the non-cyclic nature of saturation might break equivariance, which will be tested with several experiments, applying the group action on the kernel, the image and testing different values for n.
@@ -290,6 +302,7 @@ This clipping due to the non-cyclic nature of saturation might break equivarianc
 
 $$
 \[H_n(k)f\](x) = \\begin{bmatrix} f(x)_h \\\\ f(x)_s \\\\ \text{clip}(0, f(x)_v + \frac{1}{n} k, 1) \\end{bmatrix}
+\tag{19}
 $$
 
 Due to our earlier experimenting with applying the group element on the kernel or the image we decided to only model the value shift of the input images as described in the next paragraph.
@@ -300,6 +313,7 @@ We can thus define the lifting layer outputting the i-th output channels for our
 
 $$
 \[\psi^i \star f\](\mathbf{x}, k) = \sum_{y \in \mathbb{Z}^2} \psi^i(y) \cdot H_n(k)\[f\](y-\mathbf{x})
+\tag{20}
 $$
 
 In a similar way we can create the lifting layer for the saturation and value groups.
@@ -309,18 +323,21 @@ In a similar way we can create the lifting layer for the saturation and value gr
 
 $$ 
 G = \mathbb{Z}_2 \times C_n \times \mathbb{R} \times \mathbb{R} 
+\tag{21}
 $$
 
 Given an pixel in an image at location $x$:
 
 $$ 
 I(\mathbf{x}) = (h(\mathbf{x}), s(\mathbf{x}), v(\mathbf{x})) 
+\tag{22}
 $$
 
 We can define the action of the combination of these groups acting on the image as:
 
 $$ 
 \mathcal{L}_{(\mathbf{x'},h',s',v')} \[ I \](\mathbf(x)) = (h' \cdot h(\mathbf{x} - \mathbf{x'}, \ s' \cdot s(\mathbf{x} - \mathbf{x'}), \ v' \cdot v(\mathbf{x} - \mathbf{x'}))
+\tag{23}
 $$
 
 #### LAB 
@@ -333,6 +350,7 @@ H_n =
 0 & \cos(\frac{2k\pi}{n}) & -\sin(\frac{2k\pi}{n}) \\
 0 & \sin(\frac{2k\pi}{n}) & \cos (\frac{2k\pi}{n})\\
 \end{bmatrix}
+\tag{24}
 $$
 
 In which $n$ represents the number of discrete rotations in the group and k indexing the rotation to be applied. The group operation now is a matrix multiplication on the $\mathbb{R}^3$ space of LAB pixel values. The rest of the operations can be left the same. Because we are rotating on a rectangular plane we can never fall out of the lab space thus there is again no need for reprojection. However, as stated before issues arise when converting from LAB to RGB and back.
