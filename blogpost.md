@@ -149,7 +149,7 @@ The figure is ordered in the availability of training samples for every class. P
 
 #### Color Selectivity
 
-Color selectivity is defined as: “The property of a neuron that activates highly when a particular color appears in the input image and, in contrast, shows low activation when this color is not present.” [[3]](#color_selectivity)<!--idk, word niet helemaal warm van een quote/citaat. Denk dat het dan beter gecombineerd kan worden met de volgende zin, als in "The authors define the color selectivity of a dataset as the degree in which a neuron is activated when a particular color appears in an input image"? Mwah vind mn suggestie niet beter ik snap denk wel wrm het citaat er staat nu-->. The authors of the original paper utilize this notion to define the color selectivity of a dataset. Namely, they computed the color selectivity as an average of all neurons in the baseline CNN trained on the respective dataset. We reproduced the experiment to investigate the influence of using color equivariance up to late stages. Due to computational constraints, only two of the four datasets were explored; flowers102 with the highest color selectivity (0.70) and STL10 with the lowest color selectivity (0.38). While we did not explore the remaining datasets extensively, their color selectivity was comparable to STL10, suggesting that our findings are inclusive for the additional datasets.
+Color selectivity is defined as: “The property of a neuron that activates highly when a particular color appears in the input image and, in contrast, shows low activation when this color is not present.” [[3]](#color_selectivity)<!--idk, word niet helemaal warm van een quote/citaat. Denk dat het dan beter gecombineerd kan worden met de volgende zin, als in "The authors define the color selectivity of a dataset as the degree in which a neuron is activated when a particular color appears in an input image"? Mwah vind mn suggestie niet beter ik snap denk wel wrm het citaat er staat nu-->. The authors of the original paper utilize this notion to define the color selectivity of a dataset as an average of all neurons in the baseline CNN trained on the respective dataset. We reproduced the experiment to investigate the influence of using color equivariance up to late stages. Due to computational constraints, only two of the four datasets were explored; flowers102 with the highest color selectivity (0.70) and STL10 with the lowest color selectivity (0.38). While we did not explore the remaining datasets extensively, their color selectivity was comparable to STL10, suggesting that our findings are inclusive for the additional datasets.
 
 In Figure 2, the accuracy improvement of color equivariance up to later stages in the network is displayed for the aforementioned datasets. The baseline is the ResNet18 model with one rotation (equivariance up to 0 stages). For the other values, HybridResNet18 models are trained with 3 rotations, max pooling, separable kernels, and the number of color equivariant stages as shown in the figure. Additionally, the graph on the right shows the result with color-jitter augmentation.
 
@@ -195,10 +195,9 @@ The main implementation of color-equivariance consists of adding three rotations
   *Figure 4: Accuracy with varying rotations.*
 </div>
 
-<!--The lines in the plot are not smooth because it has only been evaluated on 37 points.--><!--Misschien beter om hierboven te zeggen dat het geevalueerd is op 37 points en/of dat in accordance met original paper--> Nonetheless, the trends are similar to the original paper’s findings. The number of peaks aligns with the number of rotations. Additionally, the height of the peaks decreases as the number of rotations increases. However, the peaks have different heights which might be attributed to the reprojection into the RGB cube range. Based on these results it seems that more rotations lead to higher equivariance. These results lead to a trade-off between the amount of equivariance, the maximum accuracy, and the number of parameters as displayed in Table 1.
+Although the lines in the plot are not smooth due to the evaluation on 37 points, the trends are similar to the original paper’s findings<!--Misschien beter om hierboven te zeggen dat het geevalueerd is op 37 points en/of dat in accordance met original paper--> The number of peaks aligns with the number of rotations. Additionally, the height of the peaks decreases as the number of rotations increases. However, the peaks have different heights which might be attributed to the reprojection into the RGB cube range. Based on these results it seems that more rotations lead to higher equivariance. These results lead to a trade-off between the amount of equivariance, the maximum accuracy, and the number of parameters as displayed in Table 1.
 
-<center>
-
+<div align="center">
 | Number of Rotations        | Number of Parameters     | Max. Accuracy    |
 |--------------|-----------|-----------|
 | 1 | 11.2 M  | 70.3%  |
@@ -206,7 +205,7 @@ The main implementation of color-equivariance consists of adding three rotations
 | 10 | 11.8 M  | 74.6%  |
 
 *Table 1: Parameter and maximum accuracy increase based on number of rotations.*
-</center>
+</div>
 
 ## Further Research
 
