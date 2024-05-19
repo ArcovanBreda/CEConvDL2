@@ -429,8 +429,8 @@ def color_selective_datasets_plot(path="/home/arco/Downloads/Master AI/CEConvDL2
     f, (ax1, ax2) = plt.subplots(1, 2, figsize=(14,7))
     plt.subplots_adjust(wspace=0.4, hspace=0.8, top=0.88, bottom=0.25001)
 
-    ax1.plot(x, y_flower, '-D', color='#23c34a', linewidth=3)
-    ax1.plot(x, y_stl, '-s', linewidth=3)
+    ax1.plot(x, y_flower, '-D', color='#23c34a', linewidth=3, markersize=7)
+    ax1.plot(x, y_stl, '-s', linewidth=3, markersize=7)
     ax1.grid(axis="x")
     ax1.grid(axis="y")
     ax1.tick_params(axis='both',
@@ -441,8 +441,8 @@ def color_selective_datasets_plot(path="/home/arco/Downloads/Master AI/CEConvDL2
     ax1.set_xlabel('Color Equivariance \nembedded up to stage', fontsize=18)
     ax1.set_ylabel(r'Accuracy improvement' + '\n' + r'(equivariant - vanilla)', fontsize=18)
 
-    ax2.plot(x, y_flower_jitter, '-D', color='#23c34a', linewidth=3)
-    ax2.plot(x, y_stl_jitter, '-s', linewidth=3)
+    ax2.plot(x, y_flower_jitter, '-D', color='#23c34a', linewidth=3, markersize=7)
+    ax2.plot(x, y_stl_jitter, '-s', linewidth=3, markersize=7)
     ax2.grid(axis="x")
     ax2.grid(axis="y")
     ax2.tick_params(axis='both',

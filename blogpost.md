@@ -130,7 +130,7 @@ Two models were tested. The Z2CNN, a vanilla CNN model, consists of 25,990 train
 <div align="center">
   <img src="blogpost_imgs/Longtailed.png" alt="Longtailed dataset results" width="600">
 
-  *Figure 1: ...*
+  *Figure 1: Classification performance of a normal CNN (Z2CNN) and the color equivariant convolutions CNN (CECNN) on a long-tailed, unequally distributed dataset, illustrating the impact of weight sharing in the color domain.*
 </div>
 
 The figure is ordered in the availability of training samples for every class. Performance of the shape-sharing CECNN consistently outperforms the baseline Z2CNN, where the average performance of Z2CNN is 68.8% $\pm$ 0.6% and CECNN is 85.2 $\pm$ 1.2%. Most performance increase is seen in classes where little training data is provided thus confirming the hypothesis that the CECNN is able to share shape weight information effectively. These results are in line with the findings of the original authors which<!--who--> also describe<!--als het althans over de auteurs gaat die hebben beschreven, dan described lijkt me want ze hebben het al geschreven--> a large performance increase. A difference in findings is the std of the CECNN which is larger than that of the Z2CNN. However, this could be due to the randomness in data generation* which resulted in a different data distribution for our experiment.
@@ -167,7 +167,7 @@ Our evaluation of image classification performance involved training a baseline 
 <div align="center">
   <img src="blogpost_imgs/Test-time_Hue_Shifts.png" alt="Classification Test-time Hue Shifts" width="600">
 
-  *Figure 3: ...#TODO*
+  *Figure 3: Test accuracy on flowers classification dataset under a test time hue shift*
 </div>
 
 In the figure presented, both the baseline ResNet and the CE-ResNet demonstrate good performance when no hue shift is applied (Test-time hue shift = 0). The CE-ResNet displays optimal performance in three specific hue areas, which reflects the orientations it is trained on. Moreover, the CE-ResNet consistently maintains performance levels above or equal to the original ResNet across almost all hue shifts, indicating its dominance across distributional changes.
@@ -216,10 +216,19 @@ While most CNNs are trained using RGB images, work by [color_net] and [color_seg
 
 **RGB** - is the most frequently used color space in image datasets. However, it is limited by the above mentioned clipping effects near the boundaries of the RGB cube. Furthermore, due to the entangled color channels, it’s much harder to achieve a saturation or value shift in this color space when compared to other color spaces that encode the hue and saturation/value/lightness channels separately.
 
-<p align="center">
+<!-- <p align="center">
   <img alt="A visualization of the RGB color space" src="blogpost_imgs/RGB_CUBE_ROT_AXIS.png" width="38%"> 
 &nbsp; &nbsp; &nbsp; &nbsp;
   <img alt="A visualization of the HSV color space" src="blogpost_imgs/HSV_COLOR_SPACE.png" width="45%">
+  <div align="center">
+  *Figure D: The left figure displays the RGB color space as a cube where the rotational axis (Rot-Axis [1,1,1]) along which hue rotations are modelled in this space is also illustrated. The right figure showcases a visualization of the HSV color space in which the hue is modelled as an rotational angle between zero and two pi, while the saturation and value are modelled as translations on the interval of zero to one.* 
+  </div>
+</p> -->
+
+<p align="center">
+  <img alt="A visualization of the RGB color space" src="blogpost_imgs/RGB_CUBE_ROT_AXIS.png" width="250px"> 
+&nbsp; &nbsp; &nbsp; &nbsp;
+  <img alt="A visualization of the HSV color space" src="blogpost_imgs/HSV_COLOR_SPACE.png" width="350px">
   <div align="center">
   *Figure D: The left figure displays the RGB color space as a cube where the rotational axis (Rot-Axis [1,1,1]) along which hue rotations are modelled in this space is also illustrated. The right figure showcases a visualization of the HSV color space in which the hue is modelled as an rotational angle between zero and two pi, while the saturation and value are modelled as translations on the interval of zero to one.* 
   </div>
@@ -231,7 +240,7 @@ However, there are some potential issues with this color space. Firstly, the hue
 **LAB** - is a color space defined by the International Commission on Illumination (CIE) in 1976. Research by [color_net] and [color_segmentation] shows that images converted to LAB color space achieve around a two percentage point higher score on classifications and segmentation tasks as compared to other color models. The LAB model closely aligns with human vision encoding an image using three channels, the *L* channel encodes the perceptual lightness while *a* and *b* encode the color as a point on a 2D grid with the *a* axis modeling the red-green shift and *b* the yellow-blue shift corresponding to the four unique colors of human vision. Figure 5 shows this 2D grid in which a hue space shift can be modeled as a 2D rotation on this plane, suggesting that the full-color space has a cylindrical form. However, when visualizing the RGB gamut inside the 3D LAB space, on the right, it doesn't show this cylinder. This is a result of the nonlinear relations between *L*, *a*, and *b* intended to model the nonlinear response of the visual system, which is absent in the RGB color model.     
 
 <div align="center">
-  <img src="blogpost_imgs/lab-color-space.png" alt="Visualization of the LAB color space" width="100%">
+  <img src="blogpost_imgs/lab-color-space.png" alt="Visualization of the LAB color space" width="600px">
 
   *Figure 5: left: LAB color space visualized as a 2d color grid, right: sRGB color gamut shown in LAB space. ([source](https://www.xrite.com/blog/lab-color-space), [source](https://blogs.mathworks.com/steve/2015/04/03/displaying-a-color-gamut-surface/))*
 </div>
@@ -239,7 +248,7 @@ However, there are some potential issues with this color space. Firstly, the hue
 Hue equivariance in LAB space would require a rotation matrix however due to the problems with converting between RGB/HSV as outlined below it could be difficult for a hue equivariant model trained on LAB space hue equivariance to also become equivariant to hue space shifted images in RGB/HSV format which are thereafter converted to LAB format.
 
 <div align="center">
-  <img src="blogpost_imgs/hue_shift_comparison.jpg" alt="Hue shift in different image spaces" width="100%">
+  <img src="blogpost_imgs/hue_shift_comparison.jpg" alt="Hue shift in different image spaces" width="600px">
 
   *Figure 6: An example image (original far left) hue space shifted multiple times in HSV (angular addition), RGB (3D rotation), and LAB (2D rotation) space, thereafter converted to RGB space for visualization. ([source](CEConv/plot_hue_comparison.py))*
 </div>
@@ -376,7 +385,7 @@ The experiments of the various color spaces are conducted on the Flowers102 data
 We separate 2 cases where we train the potential equivariant network (CE-ResNet-18) with hue jitter, randomly applying a hue shift with a uniformly chosen hue factor between -0.5 and 0.5, and without any hue jitter. Additionally, for comparison we train 2 baseline models of a ResNet-18 network with and without hue jitter, where the width of the network is increased such that the number of parameters between the equivariant and baseline networks is equal.
 
 <div align="center">
-  <img src="blogpost_imgs/hsv_hue_shift_kernel.jpg" alt="Results of HSV space hue equivariance, when lifting operation is performed by naively hue shifting the kernel" width="70%">
+  <img src="blogpost_imgs/hsv_hue_shift_kernel.jpg" alt="Results of HSV space hue equivariance, when lifting operation is performed by naively hue shifting the kernel" width="600px">
 
   *Figure X: Illustrates the test accuracy scores of a variaty of models evaluated with 37 Test-time hue shifts spanning the full range of -180° to 180° hue rotations. The CE-ResNet-18 models are trained for 3 discrete hue rotations of 0°, 120° and 240° applied to the kernel during the lifting convolution. The baseline models are standard ResNet-18 CNNs without any group convolutional layers. ([source](CEConv/plot_fig9_hue.py))* 
 </div>
@@ -387,7 +396,7 @@ The reason why this approach does not achieve hue shift equivariance is due to t
 **Shifting the Input Image -** Instead of naively hue shifting the kernel we now peform the lifting convolution by shifting the input image effectively creating an hue shifted image stack. Thus we transform the signal rather then the kernel. The experimental setup is kept identical to the previous experiment.
 
 <div align="center">
-  <img src="blogpost_imgs/hsv_hue_shift_img.jpg" alt="Results of HSV space hue equivariance, when lifting operation is performed by hue shifting the input image" width="70%">
+  <img src="blogpost_imgs/hsv_hue_shift_img.jpg" alt="Results of HSV space hue equivariance, when lifting operation is performed by hue shifting the input image" width="600px">
 
   *Figure XX: Illustrates the test accuracy scores of a variaty of models evaluated with 37 Test-time hue shifts spanning the full range of -180° to 180° hue rotations. The CE-ResNet-18 models are trained for 3 discrete hue rotations of 0°, 120° and 240° applied to the input image during the lifting convolution. The baseline models are standard ResNet-18 CNNs without any group convolutional layers. ([source](CEConv/plot_fig9_hue.py))*  
 </div>
@@ -398,7 +407,7 @@ Similarly, the ever-so-slight decrease in performance on the top-end of the CE-R
 ##### Saturation Equivariance
 **Shifting the Kernel -** This experiment largely follows the setup from the hue equivariant network in HSV space. However, 5 saturation shifts are applied on the kernel and 50 saturation shifts were applied to the test dataset in order to measure performance. Finally, jitter in this case implies saturation jitter, which was applied during training. In appendix B, further details can be found on how the number of kernel shifts and degree of jitter was determined.
 <div align="center">
-  <img src="blogpost_imgs/Sat_HSV_Fig9_satshiftKernel.jpg" alt="Results of HSV space saturation equivariance, when lifting operation is performed by naively saturation shifting the kernel" width="70%">
+  <img src="blogpost_imgs/Sat_HSV_Fig9_satshiftKernel.jpg" alt="Results of HSV space saturation equivariance, when lifting operation is performed by naively saturation shifting the kernel" width="600px">
   
   *Figure XX: Accuracy over test-time saturation shift for saturation equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, and jitter indicates training time saturation augmentation, which was set to be in [0, 20]. The CE-Resnet-18 models are trained for 5 saturation shifts of -1, -0.5, 0, 0.5 and 1. ([source](CEConv/plot_saturation.py))*  
 </div>
@@ -407,7 +416,7 @@ In the above figure, we find that the equivariant model outperforms the baseline
 
 **Shifting the Input Image -** In this next approach, the input signal was transformed instead, akin to the hue equivariant one. However, the aforementioned settings for saturation shifts are utilised. 
 <div align="center">
-  <img src="blogpost_imgs/Sat_HSV_Fig9_satshiftImage.jpg" alt="Results of HSV space saturation equivariance, when lifting operation is performed by saturation shifting the input image" width="70%">
+  <img src="blogpost_imgs/Sat_HSV_Fig9_satshiftImage.jpg" alt="Results of HSV space saturation equivariance, when lifting operation is performed by saturation shifting the input image" width="600px">
   
   *Figure XX: Accuracy over test-time saturation shift for saturation equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, and jitter indicates training time saturation augmentation, which was set to be in [0, 20]. The CE-Resnet-18 models are trained for 5 saturation shifts of -1, -0.5, 0, 0.5 and 1 that were applied to the input image. ([source](CEConv/plot_saturation.py))*  
 </div>
@@ -418,7 +427,7 @@ Compared to the equivariance implemented by transforming the kernel, there are s
 ##### Value Equivariance
 For value equivariance, we only tested shifting the input images with 5 shifts. Initially, we tested with a shift range starting at minus one however in RGB space this results in totally black images with a complete loss of information, therefore, we decided to replace this minus one with minus a half. The results can be found in Figure 8/
 <div align="center">
-  <img src="blogpost_imgs/value_equivariance.jpg" alt="HSV space value equivariance" width="70%">
+  <img src="blogpost_imgs/value_equivariance.jpg" alt="HSV space value equivariance" width="600px">
 
   *Figure 8: Accuracy over test-time value shift for hue equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (value) Equivariant networks, and jitter indicates training time hue augmentation. The mean per model over all test-time value shifts is indicated in the legend. ([source](CEConv/plot_fig9_value.py))* 
 </div>
@@ -431,7 +440,7 @@ To test hue equivariance implemented in LAB space the convolution layers of a Re
 During test time different sets of hue space-shifted images are evaluated on accuracy. This hue space shift is either done in RGB space after which the RGB images are converted to LAB format, or directly in LAB space to test the impact of the difference outlined in the [color space](#color-spaces) section. The results of these experiments can be found in Figure 9
 
 <div align="center">
-  <img src="blogpost_imgs/lab_equivariance.jpg" alt="LAB space hue equivariance" width="70%">
+  <img src="blogpost_imgs/lab_equivariance.jpg" alt="LAB space hue equivariance" width="600px">
 
   *Figure 9: Accuracy over test-time hue angle shift for hue equivariant networks trained using input images in LAB color space format. Resnet-18 indicates a baseline model, CE indicates Color (hue) Equivariant networks, jitter indicates training time hue augmentation, and LAB shift indicates test-time hue shift is performed in LAB space instead of HSV/RGB space. The mean per model over all test-time hue shifts is indicated in the legend. ([source](CEConv/plot_fig9_lab.py))* 
 </div>
