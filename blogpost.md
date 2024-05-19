@@ -33,27 +33,31 @@ Convolution layers are translation equivariant in a deep network: the output shi
 This generalization of translation equivariance is achieved through Group Convolutional Neural Networks (G-CNN). A CNN layer is equivariant to a group if for all transformations $g \in G$, doing the transformation $T_g$ on the input and then the feature mapping $\Phi (x)$ is similar to doing the feature mapping on the input and the transformation $T'_g$ thereafter: 
 
 $$\begin{align*} 
-\Phi (T_g x) = T'_g \Phi (x) & \qquad \qquad \forall g \in G, & \qquad \qquad (\text{Equation 1})
-\end{align*}$$
+\Phi (T_g x) = T'_g \Phi (x) & \qquad \qquad \forall g \in G, \\
+\end{align*}
+\tag{1}$$
 
 where $T_g$ and $T'_g$ can be equivalent.
 We utilize the equations from [[1]](#group_convs) to show that G-CNNs are equivariant. Instead of shifting a filter, correlation in the first layer can be described more generally by replacing it with some transformation from group $G$, whereby $f$ is the input image and $\psi$ is the filter:
 
 $$\begin{align*} 
-\[ f \star \psi \](g) = \sum_{y \in \mathbb{Z}^2}\sum_{k} f_k(y) \psi_{k}(g^{-1}y) & \qquad \qquad (\text{Equation 2})
-\end{align*}$$
+\[ f \star \psi \](g) = \sum_{y \in \mathbb{Z}^2}\sum_{k} f_k(y) \psi_{k}(g^{-1}y) \\
+\end{align*}
+\tag{2}$$
 
 Since the feature map $f \star \psi$ is a function on G, the filters are functions on G for all layers after the first. The correlation then becomes:
 
 $$\begin{align} 
-\[ f \star \psi \](g) = \sum_{h \in G}\sum_{k}f_k(h)\psi_{k}(g^{-1}h) & \qquad \qquad (\text{Equation 3})\\ 
-\end{align}$$
+\[ f \star \psi \](g) = \sum_{h \in G}\sum_{k}f_k(h)\psi_{k}(g^{-1}h)\\ 
+\end{align}
+\tag{3}$$
 
 Using the substition $h \rightarrow uh$ and the notation:
 
 $$\begin{align} 
-\[ L_g f \](x) = \[ f \circ g^{-1} \](x) = f(g^{-1}x) & \qquad \qquad (\text{Equation 4})
-\end{align} $$
+\[ L_g f \](x) = \[ f \circ g^{-1} \](x) = f(g^{-1}x)
+\end{align} 
+\tag{4}$$
 
 The equivariance of the correlation can be derived such that a translation followed by a correlation is equivalent to a correlation followed by a translation:
 
@@ -61,8 +65,9 @@ $$\begin{align}
 \[\[L_uf\] \star \psi\](g) &= \sum_{h \in G}\sum_k f_k(u^{-1}h)\psi(g^{-1}h)\\ 
 &= \sum_{h \in G}\sum_kf(h)\psi(g^{-1}uh)\\
 &= \sum_{h \in G}\sum_kf(h)\psi((u^{-1}g)^{-1}h)\\
-&= \[L_u\[f \star \psi\]\](g) & \qquad \qquad (\text{Equation 5})\\
-\end{align}$$
+&= \[L_u\[f \star \psi\]\](g)\\
+\end{align}
+\tag{5}$$
 
 ## Color Equivariance
 
@@ -85,6 +90,7 @@ H_n =
 a + b & \cos (\frac{2k\pi}{n}) + a & a - b \\
 a - b & a + b & \cos (\frac{2k\pi}{n}) + a \\
 \end{bmatrix}
+\tag{1}
 $$
 
 The group of discrete hue shifts is combined with the group of discrete 2D translations into the group $G = \mathbb{Z}^2 \times H_n$. The Color Equivariant Convolution (CEConv) in the first layer is defined in [[5]](#main) as:
