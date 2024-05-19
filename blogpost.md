@@ -592,9 +592,9 @@ The figure shows that in order to create stable accuracy for the original model,
 During the reproduction of "Color Imbalance," we observed a significant discrepancy in the training times required for the two models. To verify that the CECNN excels in retaining and sharing shape information, we tested a Z2CNN model with a similar training duration. This was achieved by increasing the width (parameter called planes) of each layer from 20 to 70.
 
 <div align="center">
-  <img src="blogpost_imgs/Longtailed_appendix.png" alt="Jitter ablation" width="600px%">
+  <img src="blogpost_imgs/Longtailed_appendix.png" alt="Jitter ablation" width="600px">
 
-Figure D.1: Classification performance of a standard CNN (Z2CNN) and the color equivariant convolutions CNN (CECNN) on a long-tailed, unequally distributed dataset. Additionally, a Z2CNN with increased width is tested to determine if training time is the dominant factor in performance improvement.
+*Figure D.1: Classification performance of a standard CNN (Z2CNN) and the color equivariant convolutions CNN (CECNN) on a long-tailed, unequally distributed dataset. Additionally, a Z2CNN with increased width is tested to determine if training time is the dominant factor in performance improvement.*
 </div>
 
 The figure clearly demonstrates even when training a standard CNN model with significantly more parameters and comparable training time, the CECNN consistently outperforms both models. The CNN model with a width of 70 perfomed 0.1 percentage point better over the original 20-width model. This shows that a width of 20 is sufficient to capture the trends in the data for this model, and adding more parameters does not enhance performance. This experiment gives more evidence to the conclusion that a weight-sharing network is more effective in scenarios where color data is limited but shape data is abundant.
