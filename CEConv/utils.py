@@ -394,3 +394,35 @@ def hue_shifts_plot():
             columnspacing=0.7, handletextpad=0.2)
 
     plt.show()
+
+def jitter_plot(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classification/npz"):
+    x = np.load(f"{path}/flowers102-resnet18_1-false-jitter_0_2-split_1_0-seed_0-sat_jitter_1_1-val_jitter_1_1.npz")["hue"]
+    resnet_0_2 = np.load(f"{path}/flowers102-resnet18_1-false-jitter_0_2-split_1_0-seed_0-sat_jitter_1_1-val_jitter_1_1.npz")["acc"]
+    resnet_0_4 = np.load(f"{path}/flowers102-resnet18_1-false-jitter_0_4-split_1_0-seed_0-sat_jitter_1_1-val_jitter_1_1.npz")["acc"]
+
+    ce_resnet_0_1 = np.load(f"{path}/flowers102-resnet18_3-true-jitter_0_1-split_1_0-seed_0-sat_jitter_1_1-val_jitter_1_1.npz")["acc"]
+    ce_resnet_0_2 = np.load(f"{path}/flowers102-resnet18_3-true-jitter_0_2-split_1_0-seed_0-sat_jitter_1_1-val_jitter_1_1.npz")["acc"]
+
+    f, (ax1) = plt.subplots(1, 1, figsize=(14,7))
+    plt.subplots_adjust(wspace=0.4, hspace=0.3)
+
+    ax1.plot(x, resnet_0_2, color='#2469c8', label='ResNet-18 - jitter: 0.2', linewidth=3)
+    ax1.plot(x, resnet_0_4, color='#d52320', label='ResNet-18 - jitter: 0.4', linewidth=3)
+    ax1.plot(x, ce_resnet_0_1, color='#23c34a', label='CE-ResNet-18 - jitter 0.1', linewidth=3)
+    ax1.plot(x, ce_resnet_0_2, color='#a120d5', linestyle='dashed', label='CE-ResNet-18 - jitter 0.2', linewidth=3)
+    ax1.grid(axis="x")
+    ax1.grid(axis="y")
+    ax1.set_ylim(-0.1, 0.78)
+    ax1.set_yticks([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7])
+    ax1.set_yticklabels([0, 10, 20, 30, 40, 50, 60, 70], fontsize=16)
+    ax1.set_xticks([-0.45, -0.3, -0.15, 0.0, 0.15, 0.3, 0.45])
+    ax1.set_xticklabels([-150, -100, -50, 0, 50, 100, 150], fontsize=16)
+    ax1.set_title('Effect of hue rotations with reprojection - Flowers-102', fontsize=22)
+    ax1.set_xlabel('Test-time hue shift (°)', fontsize=18)
+    ax1.set_ylabel('Test accuracy (%)', fontsize=18)
+
+    ax1.legend(fontsize=18, loc='lower center', bbox_to_anchor=(0.5, 0.01),
+            borderaxespad=0., ncol=2, fancybox=True, shadow=True,
+            columnspacing=0.7, handletextpad=0.2)
+
+    plt.show()
