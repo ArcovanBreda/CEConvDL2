@@ -218,25 +218,25 @@ The reproduced results showcase that the notion of equivariance can be extended 
 Additionally, one noticeable flaw in the work of [[5]](#main) is the fact that they model hue shifts with a 3D rotation in the RGB space along the diagonal vector
 [1,1,1]. This can cause pixels with values close to the boundaries of the RGB cube to fall outside the RGB cube when rotated for certain hue shifts. In order to stay within the RGB space, these pixels have to be reprojected back into the RGB cube, effectively clipping the values. This causes the artifacts seen in Figure 4. 
 We explore if we can circumvent these limitations by modeling the hue shift as a 2D rotation instead in the LAB color space.
-For an overview of the color spaces and their limitations we refer to the section [color spaces](#a-color-spaces) in the Appendix.
+For an overview of the color spaces and their limitations we refer to section [color spaces](#a-color-spaces) in the Appendix.
 
 ### HSV Equivariance
 
-**Shifting the Kernel -** In our implementation of the HSV space, **hue** is modeled as an angular value between 0 and $2\pi$ and can be changed by adding or subtracting such an angle modulo $2\pi$. Therefore, we represent the group $H_n$ as a set of $\frac{2\pi}{n}$ rotations: $H_n = \\{ \frac{2\pi}{n} k | k \in \mathbb{Z}, 0 \leq k \lneq n \\} $. In HSV space this can parameterized as the vector: 
+**Shifting the Kernel -** In our implementation of the HSV space, **hue** is modeled as an angular value between 0 and $2\pi$ and can be changed by adding or subtracting such an angle modulo $2\pi$. Therefore, we represent the group $H_n$ as a set of $\frac{2\pi}{n}$ rotations: $H_n = \\{ \frac{2\pi}{n} k | k \in \mathbb{Z}, 0 \leq k \lneq n \\} $. In HSV space this can be parameterized as the vector: 
 
 $$
 H_n(k) = \\begin{bmatrix} \frac{2\pi}{n} k \\\\ 0 \\\\ 0 \\end{bmatrix} 
 \tag{10}
 $$
 
-In which n is the discrete number of rotations and k indicates the k-th rotation out of n. The group action is an addition on a HSV pixel value in $\mathbb{R}^3$ modulo $2\pi$:
+In which $n$ is the discrete number of rotations and $k$ indicates the $k$-th rotation out of $n$. The group action is an addition on a HSV pixel value in $\mathbb{R}^3$ modulo $2\pi$:
 
 $$
 \[H_n(k)f\] (x) = \\begin{bmatrix} (f(x)_h + \frac{2\pi}{n} k) \\% 2\pi \\\\ f(x)_s \\\\ f(x)_v \\end{bmatrix}
 \tag{11}
 $$
 
-with $f(x)_{h,s,v}$ indicating the respective hue, saturation, or value at pixel value $x$ in the input image $f$. Because the Hue value is defined on a cyclic interval the dot product between a hue-shifted image ($f$) is the same as the dot product between an inverse hue-shifted filter ($\psi$), in contrast to the reproduced paper in which they model hue shifts as a 3D rotation meaning they can fall out of the RGB cube:
+with $f(x)_{h,s,v}$ indicating the respective hue, saturation, or value at pixel value $x$ in input image $f$. Because the hue value is defined on a cyclic interval, the dot product between a hue-shifted image ($f$) is the same as the dot product between an inverse hue-shifted filter ($\psi$). This is in contrast with the reproduced paper, where hue shifts are modeled as 3D rotations meaning they can fall out of the RGB cube:
 
 $$
 \[H_n(k)f\] (x) \cdot \psi(y) = f(x) \cdot \[H_n(-k)\psi\](y)
@@ -250,7 +250,7 @@ $$
 \tag{13}
 $$
 
-We can then define the lifting layer outputting the i-th output channel as:
+We can then define the lifting layer outputting the $i$-th output channel as:
 
 $$
 \[f \star\psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2} f(y) \cdot \[H_n(k)\psi^i\](y-x)
@@ -268,16 +268,15 @@ $$\begin{align}
 \end{align}
 \tag{15}$$
 
-Since the input HSV image is now lifted to the group space all subsequent features and filters are functions that need to be indexed using both a pixel location and a discrete rotation. The group convolution can then be defined as:
+Since the input HSV image is now lifted to the group space, all subsequent features and filters are functions that need to be indexed using both a pixel location and a discrete rotation. The group convolution can then be defined as:
 
 $$
 \[f \star\psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2} \sum_{r=1}^n f(y,r) \cdot \psi^i(y-x, (r-k)\%n)
 \tag{16}
 $$
 
-
-For **saturation** equivariance we need to redefine the group, because saturation is represented as a number between 0 and 1 we need to create a group containing n elements equally spaced between minus and one to model both an increase and decrease in saturation. This makes all group elements fall in the set:
-$H_n = \\{-1 +k\frac{2}{n-1} | n \geq 2, k = 0,1,2,...,n-1 \\}$. In HSV space this can be parameterized as the vector: 
+For **saturation** equivariance we need to redefine the group, because saturation is represented as a number between 0 and 1. Thus, we require a group that contains $n$ elements equally spaced between negative and positive one to model both an increase and decrease in saturation. This makes all group elements fall in the set:
+$H_n = \\{-1 +k\frac{2}{n-1} | n \geq 2, k = 0,1,2,...,n-1 \\}$. In HSV space this can be parameterized as the vector:
 
 $$
 H_n(k) = 
@@ -286,7 +285,7 @@ H_n(k) =
 \tag{17}
 $$
 
-Because saturation is only defined between 0 and 1 and is not cyclic we need to clip the value after the group action:
+Because saturation is only defined between 0 and 1 and is acyclic, we clip the value after the group action:
 
 $$
 \[H_n(k)f\](x) = 
@@ -295,21 +294,21 @@ $$
 \tag{18}
 $$
 
-This clipping due to the non-cyclic nature of saturation might break equivariance, which will be tested with several experiments, applying the group action on the kernel, the image and testing different values for n.
+This clipping due to the acyclic nature of saturation might break equivariance, which will be tested with several experiments: applying the group action on the kernel and the image, and testing different values for $n$.
 
 
-**Value** equivariance can be modelled in the same way as described for saturation where the group action is now acting upon the value channel:
+**Value** equivariance can be modeled in the same way as described for saturation where the group action is now acting upon the value channel:
 
 $$
 \[H_n(k)f\](x) = \\begin{bmatrix} f(x)_h \\\\ f(x)_s \\\\ \text{clip}(0, f(x)_v + \frac{1}{n} k, 1) \\end{bmatrix}
 \tag{19}
 $$
 
-Due to our earlier experimenting with applying the group element on the kernel or the image we decided to only model the value shift of the input images as described in the next paragraph.
+Due to our earlier experiments involving the application of the group element on the kernel or the image, we decided to only model the value shift of the input images as described in the next paragraph.
 
-**Shifting the Input Image -** In order to circumvent some of the issues that present themselves when naively shifting the kernel as though it were an image, we investigated whether we could perform the lifting convolution by shifting the input image instead of the kernel. This is a more intuitive approach and [[9]](#lifting) show that transforming the signal instead of the kernel is indeed possible and that these operations are equivalent when restricted to the group and standard convolution. This allows for more general transformations than using the group correlation of [[1]](#group_convs). In our case, where we make use of the HSV color space with separated hue, saturation and value channels, this way of performing the lifting operation is required due to the fact that we perform our action on these separated channels. Transforming the signal instead of the kernel allows us to alter the values of pixels instead of only moving the pixel locations.
+**Shifting the Input Image -** In order to circumvent some of the issues that present themselves when naively shifting the kernel as though it were an image, we investigated whether we could perform the lifting convolution by shifting the input image instead of the kernel. This is a more intuitive approach and [[9]](#lifting) show that transforming the signal instead of the kernel <!--is indeed possible and that these operations are--> is equivalent when restricted to the group and standard convolution. This allows for more general transformations than using the group correlation of [[1]](#group_convs). In our case, where we make use of the HSV color space with separated hue, saturation and value channels, this way of performing the lifting operation is required due to the fact that we perform our action on these separated channels. Transforming the signal instead of the kernel allows us to alter the values of pixels instead of only moving the pixel locations.
 
-We can thus define the lifting layer outputting the i-th output channels for our semigroup $H$ of hue shifts as follows:
+We can thus define the lifting layer outputting the $i$-th output channels for our semigroup $H$ of hue shifts as follows:
 
 $$
 \[\psi^i \star f\](\mathbf{x}, k) = \sum_{y \in \mathbb{Z}^2} \psi^i(y) \cdot H_n(k)\[f\](y-\mathbf{x})
@@ -319,14 +318,14 @@ $$
 In a similar way we can create the lifting layer for the saturation and value groups.
 
 
-**Combining Multiple Shifts -** Because of the separated channels when utilzing the HSV color space, we can describe the group product between multiple channel shifts as the direct product off these groups individually.
+**Combining Multiple Shifts -** Because of the separated channels when utilzing the HSV color space, we can describe the group product between multiple channel shifts as the direct product of these groups individually.
 
 $$ 
 G = \mathbb{Z}_2 \times C_n \times \mathbb{R} \times \mathbb{R} 
 \tag{21}
 $$
 
-Given an pixel in an image at location $x$:
+Given a pixel in an image at location $x$:
 
 $$ 
 I(\mathbf{x}) = (h(\mathbf{x}), s(\mathbf{x}), v(\mathbf{x})) 
@@ -341,7 +340,7 @@ $$
 $$
 
 #### LAB 
-For the LAB space only a hue shift equivariant model is implemented, as stated before a hue shift in LAB space can be modeled as a 2D rotation on the *a* and *b* channels. For this, we can reuse almost all of the theory as explained in Section [Color Equivariance](#color-equivariance) with the only change being the parameterization of the group $H_n$ as 
+For the LAB space only a hue shift equivariant model is implemented, which can be modeled as a 2D rotation on the *a* and *b* channels. For this, the theory in Section [Color Equivariance](#color-equivariance) is applicable with the only exception being the reparameterization of <!--the group--> $H_n$:
 
 $$ 
 H_n = 
@@ -353,10 +352,10 @@ H_n =
 \tag{24}
 $$
 
-In which $n$ represents the number of discrete rotations in the group and k indexing the rotation to be applied. The group operation now is a matrix multiplication on the $\mathbb{R}^3$ space of LAB pixel values. The rest of the operations can be left the same. Because we are rotating on a rectangular plane we can never fall out of the lab space thus there is again no need for reprojection. However, as stated before issues arise when converting from LAB to RGB and back.
+In which $n$ represents the number of discrete rotations in the group and $k$ indexes the rotation to be applied. The group operation is now a matrix multiplication on the $\mathbb{R}^3$ space of LAB pixel values. The rest of the operations can be left the same. Because we are rotating on a rectangular plane we can never fall out of the lab space. Thus, there is no need for reprojection. However, issues arise when converting from LAB to RGB and back as stated in Appendix [color spaces](#a-color-spaces).
 
 ### Results of Additional Experiments
-The experiments of the various color spaces are conducted on the Flowers102 dataset, similarly to section [Image Classification](#image-classification).
+The experiments of the various color spaces are conducted on the Flowers102 dataset, similar to section [Image Classification](#image-classification).
 
 #### HSV
 
