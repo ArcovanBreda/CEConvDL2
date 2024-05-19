@@ -13,7 +13,7 @@ module load 2022
 module load Anaconda3/2022.05
 
 source ~/.bashrc
-conda activate CEConv
+source activate CEConv
 
 # change working dir
 cd $HOME/CEConvDL2/CEConv
