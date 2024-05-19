@@ -4,7 +4,7 @@
 
 ---
 
-In this blog post, we discuss, analyze, and extend upon the findings of the paper titled *Color Equivariant Convolutional Networks*[[6]](#main). The paper introduces Color Equivariant Convolutions (CEConvs) by leveraging parameter sharing over hue shifts. The authors demonstrate the benefits of the novel model in terms of robustness to color alterations and accuracy performance.
+In this blog post, we discuss, analyze, and extend upon the findings of the paper titled *Color Equivariant Convolutional Networks* [[6]](#main). The paper introduces Color Equivariant Convolutions (CEConvs) by leveraging parameter sharing over hue shifts. The authors demonstrate the benefits of the novel model in terms of robustness to color alterations and accuracy performance.
 The objectives of this blog post are to:
 
 1. Discuss the methods introduced in the paper
@@ -52,7 +52,7 @@ $$\begin{align}
 \end{align}
 \tag{3}$$
 
-Using the substition $h \rightarrow uh$ and the notation:
+Using the substitution $h \rightarrow uh$ and the notation defining the so-called lifting layer/convolution:
 
 $$\begin{align} 
 \[ L_g f \](x) = \[ f \circ g^{-1} \](x) = f(g^{-1}x)
@@ -73,14 +73,14 @@ $$\begin{align}
 
 The original paper exploits the concept of group equivariant convolutions to achieve color equivariance, defined as equivariance to hue shifts. In the HSV (Hue-Saturation-Value) color space, hue is represented as an angular scalar value. The hue value is shifted by adding an offset after which the modulo is taken to ensure a valid range. The HSV space is reprojected to the RGB (Red-Green-Blue) color space such that the hue shifts correspond to a rotation along the diagonal vector [1, 1, 1]. 
 
-This definition is extended to group theory, by defining the group $H_n$ as a subgroup of the $SO(3)$ group. Specifically, $H_n$ consists of multiples of 360/$n$-degree rotations about the [1, 1, 1] diagonal vector in $\mathbb{R}^3$ space. The rotation around a unit vector $\mathbf{u}$ by angle $\theta$ is defined in 5 steps: 
+This definition is extended to group theory, by defining the group $H_n$ as a subgroup of the $SO(3)$ group. Specifically, $H_n$ consists of multiples of $\frac{360}{n}$-degree rotations about the [1, 1, 1] diagonal vector in $\mathbb{R}^3$ space. 
+<!--- The rotation around a unit vector $\mathbf{u}$ by angle $\theta$ is defined in 5 steps: 
 
 1. Rotate the vector such that it lies in one of the coordinate planes (e.g. $xz$)
 1. Rotate the vector such that it lies on one of the coordinate axes (e.g. $x$)
 1. Rotate the point around vector $\mathbf{u}$ on the x-axis
 1. Reverse the rotation in step 2
-1. Reverse the rotation in step 1
-
+1. Reverse the rotation in step 1 -->
 This leads to the following parameterization of $H_n$, with $n$ the number of rotations (discrete) and $k$ the rotation:
 
 $$ 
@@ -112,7 +112,7 @@ $$
 \tag{8}
 $$
 
-This change does not impact the derivation of the equivariance of the CEConv layer, for this we refer to the original paper [[6]](#main).
+This change does not impact the derivation of the equivariance of the CEConv layer, for this, we refer to the original paper [[6]](#main).
 
 For the hidden layers, the feature map $[f \star \psi]$ is a function on $G$ parameterized by $x$ and $k$. The CEConv hidden layers are defined as:
 
@@ -133,7 +133,7 @@ Firstly, the experiments that show the importance of color equivariance are repr
 
 To verify that color equivariance can share shape information across classes, we reproduced the long-tailed ColorMNIST experiment.  In this experiment, a 30-way classification is performed on a power law distributed dataset where 10 shapes (digits 0-9) and 3 colors (Red, Green, Blue) need to be distinguished. During training, classes are not equally distributed. During testing, all classes are evaluated on 250 examples. Sharing shape information across colors is beneficial during this experiment as a certain digit may occur more frequently in one color than in another. 
 
-Two models were tested. The Z2CNN, a vanilla CNN model, consists of 25,990 trainable parameters whereas the CECNN model consists of 25,207 trainable parameters, This is because the width of the CECNN is smaller, to ensure that the same amount of GPU memory is required to train the models, which was a priority of the original authors to have a level comparison. However, the training time of the two models differed significantly with the Z2CNN model training 59% $\pm$ 4 faster than the CECNN network. Because of this we did an additional experiment where we tried to have the training time the same as eachother by fluctuating the parameters. This experiment is done in Appendix []. The exact training method and performance can be seen in the provided notebook. 
+Two models were tested. The Z2CNN, a vanilla CNN model, consists of 25,990 trainable parameters whereas the CECNN model consists of 25,207 trainable parameters, This is because the width of the CECNN is smaller, to ensure that the same amount of GPU memory is required to train the models, which was a priority of the original authors to have a level comparison. However, the training time of the two models differed significantly with the Z2CNN model training 59% $\pm$ 4 faster than the CECNN network. Because of this, we did an additional experiment where we tried to have the training time the same as each other by fluctuating the parameters. This experiment is done in Appendix []. The exact training method and performance can be seen in the provided notebook. 
 
 <!-- ![Longtailed dataset results](blogpost_imgs/Longtailed.png) -->
 <div align="center">
@@ -214,8 +214,8 @@ The reproduced results showcase that the notion of equivariance can be extended 
 
 Additionally, one noticeable flaw in the work of [[6]](#main) is the fact that they model hue shifts with a 3D rotation in the RGB space along the diagonal vector
 [1,1,1]. This can cause pixels with values close to the boundaries of the RGB cube to fall outside the RGB cube when rotated for certain hue shifts. In order to stay within the RGB space, these pixels have to be reprojected back into the RGB cube, effectively clipping the values. This causes the artifacts seen in Figure 4. 
-We explore if we can circumvent these limitations by modeling the hue shift as a 2D rotation instead in the LAB color space.
-For an overview of the color spaces and their limitations we refer to section [color spaces](#a-color-spaces) in the Appendix.
+We explore if we can circumvent these limitations by modeling the hue shift as a 2D rotation in the LAB color space.
+For an overview of the color spaces and their limitations, we refer to section [color spaces](#a-color-spaces) in the Appendix.
 
 ### HSV Equivariance
 
@@ -240,7 +240,7 @@ $$
 \tag{12}
 $$
 
-We can now define the group $G = \\mathbb{Z}^2 \\times H_n$ as the product of the 2D integers translation group and the HSV hue shift group. With the operator $\\lambda_{t, m}$ defining a translation and hue shift:
+We can now define the group $G = \\mathbb{Z}^2 \\times H_n$ as the product of the 2D integers translation group and the HSV hue shift group. With $\\%$ as the modulo operator and $\\lambda_{t, m}$ defining a translation and hue shift:
 
 $$
 \[\lambda_{t, m}f\](x) = \[H_n(m)f\](x-t) = \\begin{bmatrix} (f(x - t)_h + \frac{2\pi}{n} m) \\% 2\pi \\\\ f(x - t)_s \\\\ f(x - t)_v \\end{bmatrix}
@@ -337,7 +337,7 @@ $$
 $$
 
 #### LAB Equivariance 
-Hue equivariance in LAB space can be modeled as a 2D rotation on the *a* and *b* channels. However, due to the problems and differences that arise when converting between RGB/HSV and LAB space as outlined below it could be difficult for a hue equivariant model trained on LAB space hue equivariance to also become equivariant to hue space shifted images in RGB/HSV format which are thereafter converted to LAB format.
+Hue equivariance in LAB space can be modeled as a 2D rotation on the *a* and *b* channels. However, due to the differences that arise when converting between RGB/HSV and LAB space as outlined below it could be difficult for a hue equivariant model trained on LAB space hue equivariance to also become equivariant to hue space shifted images in RGB/HSV format which are thereafter converted to LAB format.
 
 <div align="center">
   <img src="blogpost_imgs/hue_shift_comparison.jpg" alt="Hue shift in different image spaces" width="600px">
@@ -345,7 +345,7 @@ Hue equivariance in LAB space can be modeled as a 2D rotation on the *a* and *b*
   *Figure A.3: An example image (original far left) hue space shifted multiple times in HSV (angular addition), RGB (3D rotation), and LAB (2D rotation) space, thereafter converted to RGB space for visualization. ([source](CEConv/plot_hue_comparison.py))*
 </div>
 
-Figure A.3 clearly shows this difference with a hue shift in RGB and HSV space resulting in the same image however performing the same shift in LAB space and thereafter converting back to RGB space resulting in a slightly different colored image.
+Figure A.3 shows this difference with a hue shift in RGB and HSV space resulting in the same image however performing the same shift in LAB space and thereafter converting back to RGB space resulting in a slightly different colored image.
 
 For the LAB space, only a hue shift equivariant model is implemented. For this, the theory in Section [Color Equivariance](#color-equivariance) is applicable with the only exception being the reparameterization of <!--the group--> $H_n$:
 
