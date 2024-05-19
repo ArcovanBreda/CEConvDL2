@@ -195,9 +195,12 @@ The main implementation of color-equivariance consists of adding three rotations
   *Figure 4: Accuracy with varying rotations.*
 </div>
 
-Although the lines in the plot are not smooth due to the evaluation on 37 points, the trends are similar to the original paper’s findings<!--Misschien beter om hierboven te zeggen dat het geevalueerd is op 37 points en/of dat in accordance met original paper--> The number of peaks aligns with the number of rotations. Additionally, the height of the peaks decreases as the number of rotations increases. However, the peaks have different heights which might be attributed to the reprojection into the RGB cube range. Based on these results it seems that more rotations lead to higher equivariance. These results lead to a trade-off between the amount of equivariance, the maximum accuracy, and the number of parameters as displayed in Table 1.
+Although the lines in the plot are not smooth due to the evaluation on 37 points, the trends are similar to the original paper’s findings.<!--Misschien beter om hierboven te zeggen dat het geevalueerd is op 37 points en/of dat in accordance met original paper--> The number of peaks aligns with the number of rotations. Additionally, the height of the peaks decreases as the number of rotations increases. However, the peaks have different heights which might be attributed to the reprojection into the RGB cube range. Based on these results it seems that more rotations lead to higher equivariance. These results lead to a trade-off between the amount of equivariance, the maximum accuracy, and the number of parameters as displayed in Table 1.
 
-<div align="center">
+<div style="margin-left: auto;
+            margin-right: auto;
+            width: 30%">
+
 | Number of Rotations        | Number of Parameters     | Max. Accuracy    |
 |--------------|-----------|-----------|
 | 1 | 11.2 M  | 70.3%  |
