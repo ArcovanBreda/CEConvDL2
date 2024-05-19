@@ -178,6 +178,17 @@ python -m experiments.classification.train --rotations 5 --architecture resnet18
 python -m experiments.classification.train --rotations 10 --architecture resnet18 --dataset flowers102 --bs 64 --separable --groupcosetmaxpool
 ```
 
+#### Jitter
+```bash
+# without equivariance
+python -m experiments.classification.train --rotations 1 --architecture resnet18 --dataset flowers102 --bs 64 --jitter 0.2
+python -m experiments.classification.train --rotations 1 --architecture resnet18 --dataset flowers102 --bs 64 --jitter 0.4
+
+# with equivariance
+python -m experiments.classification.train --rotations 3 --architecture resnet18 --dataset flowers102 --bs 64 --jitter 0.1 --groupcosetmaxpool --separable
+python -m experiments.classification.train --rotations 3 --architecture resnet18 --dataset flowers102 --bs 64 --jitter 0.2 --groupcosetmaxpool --separable
+```
+
 ### Extension
 #### HSV
 **Hue**
