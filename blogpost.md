@@ -133,7 +133,7 @@ Firstly, the experiments that show the importance of color equivariance are repr
 
 To verify that color equivariance can share shape information across classes, we reproduced the long-tailed ColorMNIST experiment.  In this experiment, a 30-way classification is performed on a power law distributed dataset where 10 shapes (digits 0-9) and 3 colors (Red, Green, Blue) need to be distinguished. During training, classes are not equally distributed. During testing, all classes are evaluated on 250 examples. Sharing shape information across colors is beneficial during this experiment as a certain digit may occur more frequently in one color than in another. 
 
-Two models were tested. The Z2CNN, a vanilla CNN model, consists of 25,990 trainable parameters whereas the CECNN model consists of 25,207 trainable parameters, This is because the width of the CECNN is smaller, to ensure that the same amount of GPU memory is required to train the models, which was a priority of the original authors to have a level comparison. However, the training time of the two models differed significantly with the Z2CNN model training 59% $\pm$ 4 faster than the CECNN network. The exact training method and performance can be seen in the provided notebook. 
+Two models were tested. The Z2CNN, a vanilla CNN model, consists of 25,990 trainable parameters whereas the CECNN model consists of 25,207 trainable parameters, This is because the width of the CECNN is smaller, to ensure that the same amount of GPU memory is required to train the models, which was a priority of the original authors to have a level comparison. However, the training time of the two models differed significantly with the Z2CNN model training 59% $\pm$ 4 faster than the CECNN network. Because of this we did an additional experiment where we tried to have the training time the same as eachother by fluctuating the parameters. This experiment is done in Appendix []. The exact training method and performance can be seen in the provided notebook. 
 
 <!-- ![Longtailed dataset results](blogpost_imgs/Longtailed.png) -->
 <div align="center">
@@ -588,9 +588,21 @@ In the original paper color-jitter augmentation is limited to randomly changing 
 Figure D.1 displays a more nuanced view of the jitter, showing the ResNet18 model with jitter values 0.2 and 0.4, and the CE-ResNet18 model with jitter values 0.1 and 0.2. Moreover, the baseline CE-ResNet18 model without jitter is displayed.
 
 <div align="center">
-  <img src="blogpost_imgs/Hannah_jitter.png" alt="Jitter ablation" width="70%">
+  <img src="blogpost_imgs/Hannah_jitter.png" alt="Jitter ablation" width="600px">
 
   *Figure D.1: Test accuracy over the hue-shift for color-equivariant and ResNet-18 with various degrees of color-jitter augmentation.* 
 </div>
 
 The figure shows that in order to create stable accuracy for the original model, jitter values of 0.2 and 0.4 are insufficient. Instead the jitter augmentation should at least account for fluctuations of 50% as displayed in Figure 3. Contrarily, the CE-ResNet18 model improves significantly from adding 0.1 jitter and seems stable from 0.2 jitter. This can be explained by the fact that the color equivariance is applied for 3 rotations, resulting in equivariance at -120, 0 and 120 degrees (see the baseline). However, the CE-ResNet model only allows for discrete rotations. The addition of jitter can account for the values in between the rotations. Therefore, the equivariance helps reduce the amount of augmentation needed. However, the CE models increase the number of parameters from 11.2 M to 11.4 M. Therefore, there is a trade-off between accuracy and the number of parameters.
+
+### E. Training time study 
+
+During the reproduction of "Color Imbalance," we observed a significant discrepancy in the training times required for the two models. To verify that the CECNN excels in retaining and sharing shape information, we tested a Z2CNN model with a similar training duration. This was achieved by increasing the width (parameter called planes) of each layer from 20 to 70.
+
+<div align="center">
+  <img src="blogpost_imgs/Longtailed_appendix.png" alt="Jitter ablation" width="600px%">
+
+Figure D.1: Classification performance of a standard CNN (Z2CNN) and the color equivariant convolutions CNN (CECNN) on a long-tailed, unequally distributed dataset. Additionally, a Z2CNN with increased width is tested to determine if training time is the dominant factor in performance improvement.
+</div>
+
+The figure clearly demonstrates even when training a standard CNN model with significantly more parameters and comparable training time, the CECNN consistently outperforms both models. The CNN model with a width of 70 perfomed 0.1 percentage point better over the original 20-width model. This shows that a width of 20 is sufficient to capture the trends in the data for this model, and adding more parameters does not enhance performance. This experiment gives more evidence to the conclusion that a weight-sharing network is more effective in scenarios where color data is limited but shape data is abundant.
