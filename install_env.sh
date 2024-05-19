@@ -15,8 +15,7 @@ module load Anaconda3/2022.05
 source ~/.bashrc
 cd $HOME/CEConvDL2/CEConv
 
-# conda env remove --name CEConv
-# conda create -n CEConv python=3.10 pip
-source activate CEConv
+conda create -n CEConv python=3.10 pip
+conda activate CEConv
 
 pip install -r requirements.txt
