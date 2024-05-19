@@ -487,7 +487,7 @@ We found that a model with hue equivariance in LAB space and jitter managed to o
 
 ## Authors' Contributions
 <ul>
-  <li>Silvia Abbring: Implementation of saturation equivariance and combining hue and saturation shifts during testing, wrote concluding remarks and Appendix B and C </li>
+  <li>Silvia Abbring: Implementation of saturation equivariance and combining hue and saturation shifts during testing, wrote concluding remarks, results of combining hue and saturation shifts and appendix B </li>
   <li>Hannah van den Bos: Reproduction of color selectivity, rotation and jitter ablation with implementation of plots and supplementary function evaluate, wrote introduction, recap on group equivariant convolutions, color equivariance and concluding remarks</li>
   <li>Rens den Braber: Implementation/Description of LAB space and Value equivariance, and HSV equivariance formulas. </li>
   <li>Arco van Breda: Reproduction of color imbalance and image classification, implementation of reproducibility plots and supplementary functionalities (load, save, evaluate) in the original code, and an additional experiment on the reproduction of color imbalance.</li>
