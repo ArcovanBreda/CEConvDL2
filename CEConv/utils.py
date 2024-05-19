@@ -455,7 +455,7 @@ def hue_kernel(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classificat
     plt.grid(axis="both")
     plt.ylim(-0.5, 85)
     plt.show()
-    
+
 def plot_figure_22(data_dir, print_stats=False):
     # List of model namespaces
     from experiments.color_mnist.train_longtailed import PL_model, CustomDataset
@@ -553,7 +553,7 @@ def plot_figure_22(data_dir, print_stats=False):
     avg_model_acc = np.mean(class_accs, axis=(1,2))
     std_dev_model = np.std(np.mean(class_accs, axis=2), axis=1)
 
-    print(f"model performances:\n\tZ2CNN: {avg_model_acc[0]:.3f}+/-{std_dev_model[0]:.3f}\n\tCECNN: {avg_model_acc[1]:.3f}+/-{std_dev_model[1]:.3f}")
+    print(f"model performances:\n\tZ2CNN-20: {avg_model_acc[2]:.3f}+/-{std_dev_model[2]:.3f}\n\tZ2CNN-70: {avg_model_acc[0]:.3f}+/-{std_dev_model[0]:.3f}\n\tCECNN: {avg_model_acc[1]:.3f}+/-{std_dev_model[1]:.3f}")
 
     avg_class_acc = avg_class_acc[:, sort_idx]
     std_dev = std_dev[:, sort_idx]
@@ -562,14 +562,15 @@ def plot_figure_22(data_dir, print_stats=False):
     fig, ax1 = plt.subplots(figsize=(14, 7))
 
     # Plot average accuracy with standard deviation as error bars
-    ax1.plot(labels, avg_class_acc[0, :]*100, label=f'Z2CNN-20 ({np.mean(avg_class_acc[0, :])*100:.1f}%)', color='mediumblue', linewidth=3)
-    ax1.fill_between(labels, (avg_class_acc[0, :] - std_dev[0, :])*100, (avg_class_acc[0, :] + std_dev[0, :])*100, color='mediumblue', alpha=0.2)
-
     ax1.plot(labels, avg_class_acc[1, :]*100, label=f'CECNN ({np.mean(avg_class_acc[1, :])*100:.1f}%)', color='forestgreen', linewidth=3)
     ax1.fill_between(labels, (avg_class_acc[1, :] - std_dev[1, :])*100, (avg_class_acc[1, :] + std_dev[1, :])*100, color='forestgreen', alpha=0.2)
 
-    ax1.plot(labels, avg_class_acc[2, :]*100, label=f'Z2CNN-70 ({np.mean(avg_class_acc[2, :])*100:.1f}%)', color='darkorange', linewidth=3)
-    ax1.fill_between(labels, (avg_class_acc[2, :] - std_dev[2, :])*100, (avg_class_acc[2, :] + std_dev[2, :])*100, color='darkorange', alpha=0.2)
+    ax1.plot(labels, avg_class_acc[2, :]*100, label=f'Z2CNN-20 ({np.mean(avg_class_acc[2, :])*100:.1f}%)', color='mediumblue', linewidth=3)
+    ax1.fill_between(labels, (avg_class_acc[2, :] - std_dev[2, :])*100, (avg_class_acc[2, :] + std_dev[2, :])*100, color='mediumblue', alpha=0.2)
+
+    ax1.plot(labels, avg_class_acc[0, :]*100, label=f'Z2CNN-70 ({np.mean(avg_class_acc[0, :])*100:.1f}%)', color='darkorange', linewidth=3)
+    ax1.fill_between(labels, (avg_class_acc[0, :] - std_dev[0, :])*100, (avg_class_acc[0, :] + std_dev[0, :])*100, color='darkorange', alpha=0.2)
+
     # Plot samples per class
     ax1.grid(axis='both')
     ax2 = ax1.twinx()
@@ -579,7 +580,7 @@ def plot_figure_22(data_dir, print_stats=False):
 
     ax1.set_xlabel('Class', fontsize=18)
     ax1.set_ylabel('Test Accuracy (%)', fontsize=18)
-    ax1.set_ylim(-0.05, 119)
+    ax1.set_ylim(-0.05, 119.99)
     ax1.grid(axis='y')
     ax1.bar(0, 0, color="gray", alpha=0.3, label="Class frequency")
     ax1.legend(fontsize=18, loc='upper center',bbox_to_anchor=(0.5, 0.99), 

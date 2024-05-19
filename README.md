@@ -90,16 +90,16 @@ python -m experiments.color_mnist.colormnist_longtailed
 **Longtailed ColorMNIST**
 ```bash
 # Baseline:
-python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 1
-python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 2
-python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 3
-python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 4
-python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 5
-python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 6
-python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 7
-python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 8
-python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 9
-python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --grayscale --seed 10
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20  --seed 1
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20  --seed 2
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20  --seed 3
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20  --seed 4
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20  --seed 5
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20  --seed 6
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20  --seed 7
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20 --seed 8
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20  --seed 9
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 20  --seed 10
 # Color equivariant CNN:
 python -m experiments.color_mnist.train_longtailed --rotations 3 --planes 17 --separable --seed 1
 python -m experiments.color_mnist.train_longtailed --rotations 3 --planes 17 --separable --seed 2
@@ -260,4 +260,19 @@ python -m experiments.classification.train --rotations 3 --dataset flowers102 --
 
 # Hue lab space equivariance + test images hue shifted in lab space
 python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --lab --epochs 200 --nonorm --lab_test
+```
+
+#### Longtailed ColorMNIST - Time
+```bash
+# Baseline:
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 70  --seed 1
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 70  --seed 2
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 70  --seed 3
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 70  --seed 4
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 70  --seed 5
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 70 --seed 6
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 70  --seed 7
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 70  --seed 8
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 70  --seed 9
+python -m experiments.color_mnist.train_longtailed --rotations 1 --planes 70  --seed 10
 ```
