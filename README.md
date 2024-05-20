@@ -50,7 +50,7 @@ class CNN(nn.Module):
         # Args: input rotations, output rotations, input channels, output channels, kernel size, padding.
         self.conv1 = CEConv2d(1, 3, 3, 32, 3,
         lab_space = False, # indicates input image is in LAB color space
-        hsv_space = False, # indicates input image is in LAB color space
+        hsv_space = False, # indicates input image is in HSV color space
         img_shift = False, # indicates group action is applied on image instead of kernel
         sat_shift = False, # indicates saturation equivariance in HSV space
         hue_shift = False, # indicates hue equivariance in HSV space
