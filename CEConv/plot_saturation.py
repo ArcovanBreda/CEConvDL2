@@ -120,35 +120,35 @@ def plot_sat_shift(paths, shift="Kernel"):
 
 
 paths_sat_shifts = [
-    "CEConv/output/test_results/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
-    "CEConv/output/test_results/maintest_flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
-    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
-    "CEConv/output/test_results/maintest_flowers102-resnet18_10-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz"
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_10-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz"
 ]
 
 paths_jit = [
-    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
-    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_2-no_norm.npz",
-    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-no_norm.npz",
-    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_100-no_norm.npz",
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_2-no_norm.npz",
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-no_norm.npz",
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_100-no_norm.npz",
 ]
 
 paths_3d = [
-    "CEConv/output/test_results/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_and_sat_shift-sat_jitter_1_1-img_shift-no_norm_test-rot=25_test-sat=25.npz",
-    "CEConv/output/test_results/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_and_sat_shift-sat_jitter_1_1-no_norm_test-rot=25_test-sat=25.npz",
-    "CEConv/output/test_results/maintest_flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_and_sat_shift-sat_jitter_1_1-img_shift-no_norm_test-rot=25_test-sat=25.npz",
-    "CEConv/output/test_results/maintest_flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_and_sat_shift-sat_jitter_1_1-no_norm_test-rot=25_test-sat=25.npz"
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_and_sat_shift-sat_jitter_1_1-img_shift-no_norm_test-rot=25_test-sat=25.npz",
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_and_sat_shift-sat_jitter_1_1-no_norm_test-rot=25_test-sat=25.npz",
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_and_sat_shift-sat_jitter_1_1-img_shift-no_norm_test-rot=25_test-sat=25.npz",
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_and_sat_shift-sat_jitter_1_1-no_norm_test-rot=25_test-sat=25.npz"
 ]
 
 paths_sat_base = [
-    "CEConv/output/test_results/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-img_shift-no_norm.npz",
-    "CEConv/output/test_results/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-img_shift-no_norm.npz",
-    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-img_shift-no_norm.npz",
-    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-img_shift-no_norm.npz",
-    "CEConv/output/test_results/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
-    "CEConv/output/test_results/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-no_norm.npz",
-    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
-    "CEConv/output/test_results/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-no_norm.npz"
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-img_shift-no_norm.npz",
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-img_shift-no_norm.npz",
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-img_shift-no_norm.npz",
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-img_shift-no_norm.npz",
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-no_norm.npz",
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-no_norm.npz",
+    "CEConv/output/test_results/sat/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-no_norm.npz"
 ]
 
 plot_3d(paths_3d[0], saturations=25, rotations=25, num_shift="No", shift="Image", filename="HueSat_HSV_shiftImgBase_noNorm.jpg")
