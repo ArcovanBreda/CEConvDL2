@@ -205,11 +205,19 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
         import subprocess
 
         # Download camelyon17 dataset
-        subprocess.run(["pip", "install", "awscli"], check=True)
-        subprocess.run(["aws", "s3", "sync", "--no-sign-request", 
-                        "s3://camelyon-dataset/CAMELYON17/", "./CEConv/DATA"], check=True)
-    
+        if path[-1] == "/":
+            download_path = path + "camelyon17"
+        else:
+            download_path = path + "/camelyon17"
 
+        subprocess.run(["pip", "install", "awscli"], check=True)
+        os.makedirs(download_path, exist_ok=True)
+        subprocess.run(["aws", "s3", "sync", "--no-sign-request", 
+                        "s3://camelyon-dataset/CAMELYON17/", download_path], check=True)
+    
+        # x_train = torch.utils.data.ConcatDataset([x_train, x_val])  # type: ignore
+
+        args.classes = 2 #TODO
         raise NotImplementedError("MEH")
     else:
         raise AssertionError("Invalid value for args.dataset: ", args.dataset)
