@@ -322,7 +322,7 @@ G = \mathbb{Z}_2 \times C_n \times \mathbb{R} \times \mathbb{R}
 \tag{21}
 $$
 
-The group action for $h'$, $s'$, and $v'$ discrete hue, saturation and value shifts respectively, is then defined as:
+The group action for the corresponding $h'$, $s'$, and $v'$ discrete hue, saturation and value shifts respectively, is then defined as:
 
 $$
 \mathcal{L}_{(t, h',s',v')} = \[H_n(h',s',v')f\](x-t) = 
