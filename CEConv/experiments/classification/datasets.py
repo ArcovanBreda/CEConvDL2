@@ -201,6 +201,16 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
             path, split="test", transform=tr_test, download=download
         )
         args.classes = x_train.classes
+    elif args.dataset == "camelyon17":
+        import subprocess
+
+        # Download camelyon17 dataset
+        subprocess.run(["pip", "install", "awscli"], check=True)
+        subprocess.run(["aws", "s3", "sync", "--no-sign-request", 
+                        "s3://camelyon-dataset/CAMELYON17/", "./CEConv/DATA"], check=True)
+    
+
+        raise NotImplementedError("MEH")
     else:
         raise AssertionError("Invalid value for args.dataset: ", args.dataset)
 
