@@ -286,7 +286,7 @@ Because saturation is only defined between 0 and 1 and is acyclic, we clip the v
 
 $$
 \[H_n(k)f\](x) = 
-\begin{bmatrix} f(x)_h \\\\ \text{clip}(0, f(x)_s + \frac{1}{n} k, 1) \\\\ f(x)_v 
+\begin{bmatrix} f(x)_h \\\\ \text{clip}(0, f(x)_s + (-1 + k \frac{2}{n-1}), 1) \\\\ f(x)_v 
 \end{bmatrix}
 \tag{18}
 $$
@@ -297,7 +297,7 @@ This clipping due to the acyclic nature of saturation might break equivariance, 
 **Value** equivariance can be modeled in the same way as described for saturation where the group action is now acting upon the value channel:
 
 $$
-\[H_n(k)f\](x) = \\begin{bmatrix} f(x)_h \\\\ f(x)_s \\\\ \text{clip}(0, f(x)_v + \frac{1}{n} k, 1) \\end{bmatrix}
+\[H_n(k)f\](x) = \\begin{bmatrix} f(x)_h \\\\ f(x)_s \\\\ \text{clip}(0, f(x)_v + (-1 + k \frac{2}{n-1}), 1) \\end{bmatrix}
 \tag{19}
 $$
 
