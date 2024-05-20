@@ -322,11 +322,11 @@ G = \mathbb{Z}_2 \times C_n \times \mathbb{R} \times \mathbb{R}
 \tag{21}
 $$
 
-The group action is then defined as:
+The group action for $h'$, $s'$, and $v'$ discrete hue, saturation and value shifts respectively, is then defined as:
 
 $$
-\[H_n(k)f\](x) = 
-\begin{bmatrix} (f(x)_h + \frac{2\pi}{n} k) \\% 2\pi \\\\ \text{clip}(0, f(x)_s + (-1 + k \frac{2}{n-1}), 1) \\\\ \text{clip}(0, f(x)_v + (-1 + k \frac{2}{n-1}), 1)
+\mathcal{L}_{(t, h',s',v')} = \[H_n(h',s',v')f\](x-t) = 
+\begin{bmatrix} (f(x-t)_h + \frac{2\pi}{n} h') \\% 2\pi \\\\ \text{clip}(0, f(x-t)_s + (-1 + s' \frac{2}{n-1}), 1) \\\\ \text{clip}(0, f(x-t)_v + (-1 + v' \frac{2}{n-1}), 1)
 \end{bmatrix}
 \tag{22}
 $$
