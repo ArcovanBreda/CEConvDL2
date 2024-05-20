@@ -286,7 +286,7 @@ Because saturation is only defined between 0 and 1 and is acyclic, we clip the v
 
 $$
 \[H_n(k)f\](x) = 
-\begin{bmatrix} f(x)_h \\\\ \text{clip}(0, f(x)_s + (-1 +k\frac{2}{n-1}), 1) \\\\ f(x)_v 
+\begin{bmatrix} f(x)_h \\\\ \text{clip}(0, f(x)_s + \frac{1}{n} k, 1) \\\\ f(x)_v 
 \end{bmatrix}
 \tag{18}
 $$
@@ -308,33 +308,36 @@ Due to our earlier experiments involving the application of the group element on
 We can thus define the lifting layer outputting the $i$-th output channels for our semigroup $H$ of hue shifts as follows:
 
 $$
-\[\psi^i \star f\](\mathbf{x}, k) = \sum_{y \in \mathbb{Z}^2} \psi^i(y) \cdot H_n(k)\[f\](y-\mathbf{x})
+\[\psi^i \star f\](x, k) = \sum_{y \in \mathbb{Z}^2} \psi^i(y) \cdot H_n(k)\[f\](y-x)
 \tag{20}
 $$
 
 In a similar way we can create the lifting layer for the saturation and value groups.
 
 
-**Combining Multiple Shifts -** Because of the separated channels when utilzing the HSV color space, we can describe the group product between multiple channel shifts as the direct product of these groups individually.
+**Combining Multiple Shifts -** Because of the separated channels when utilzing the HSV color space, we can describe the group product between multiple channel shifts as the direct product of the previously described groups.
 
 $$ 
 G = \mathbb{Z}_2 \times C_n \times \mathbb{R} \times \mathbb{R} 
 \tag{21}
 $$
 
-Given a pixel in an image at location $x$:
+The group action is then defined as:
 
-$$ 
-I(\mathbf{x}) = (h(\mathbf{x}), s(\mathbf{x}), v(\mathbf{x})) 
+$$
+\[H_n(k)f\](x) = 
+\begin{bmatrix} (f(x)_h + \frac{2\pi}{n} k) \ \% \ 2\pi \\\\ \text{clip}(0, f(x)_s + \frac{1}{n} k, 1) \\\\ \text{clip}(0, f(x)_v + \frac{1}{n} k, 1)
+\end{bmatrix}
 \tag{22}
 $$
 
-We can define the action of the combination of these groups acting on the image as:
-
+<!-- 
+DEZE KAN NU WEG DENK IK OMDAT HIJ 22 VERVANGT
 $$ 
-\mathcal{L}_{(\mathbf{x'},h',s',v')} \[ I \](\mathbf(x)) = (h' \cdot h(\mathbf{x} - \mathbf{x'}, \ s' \cdot s(\mathbf{x} - \mathbf{x'}), \ v' \cdot v(\mathbf{x} - \mathbf{x'}))
+\mathcal{L}_{(x',h',s',v')} (x) = (f(x)_{h'} \cdot f(x - x')_h, \ f(x)_{s'} \cdot f(x - x')_s, \ f(x)_{v'} \cdot f(x - x')_v)
 \tag{23}
-$$
+$$ 
+-->
 
 #### LAB Equivariance 
 Hue equivariance in LAB space can be modeled as a 2D rotation on the *a* and *b* channels. However, due to the differences that arise when converting between RGB/HSV and LAB space as outlined below, it could be difficult for a hue equivariant model trained on LAB space hue equivariance to also become equivariant to hue space shifted images in RGB/HSV format which are thereafter converted to LAB format.
@@ -356,7 +359,7 @@ H_n =
 0 & \cos(\frac{2k\pi}{n}) & -\sin(\frac{2k\pi}{n}) \\
 0 & \sin(\frac{2k\pi}{n}) & \cos (\frac{2k\pi}{n})\\
 \end{bmatrix}
-\tag{24}
+\tag{23}
 $$
 
 In which $n$ represents the number of discrete rotations in the group and $k$ indexes the rotation to be applied. The group operation is now a matrix multiplication on the $\mathbb{R}^3$ space of LAB pixel values. The rest of the operations can be left the same. Because we are rotating on a rectangular plane we can never fall out of the lab space. Thus, there is no need for reprojection.
