@@ -326,7 +326,7 @@ The group action is then defined as:
 
 $$
 \[H_n(k)f\](x) = 
-\begin{bmatrix} (f(x)_h + \frac{2\pi}{n} k) \ \% \ 2\pi \\\\ \text{clip}(0, f(x)_s + \frac{1}{n} k, 1) \\\\ \text{clip}(0, f(x)_v + \frac{1}{n} k, 1)
+\begin{bmatrix} (f(x)_h + \frac{2\pi}{n} k) \\% 2\pi \\\\ \text{clip}(0, f(x)_s + (-1 + k \frac{2}{n-1}), 1) \\\\ \text{clip}(0, f(x)_v + (-1 + k \frac{2}{n-1}), 1)
 \end{bmatrix}
 \tag{22}
 $$
