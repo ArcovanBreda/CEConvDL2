@@ -81,13 +81,16 @@ class PL_model(pl.LightningModule):
         elif args.dataset == "stl10":
             self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
             self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+        elif args.dataset == "camelyon17":
+            self.train_acc = torchmetrics.Accuracy(task="binary")
+            self.test_acc = torchmetrics.Accuracy(task="binary")
         else:
             raise NotImplementedError
 
         # Store accuracy metrics for testing.
         self.test_acc_dict = {}
         self.test_rotations = 37 #TODO originally 37 but takes really long when both hue and saturation equivariance
-        self.test_saturations = 25 #TODO originally 50 but takes really long when both hue and saturation equivariance
+        self.test_saturations = 50 #TODO originally 50 but takes really long when both hue and saturation equivariance
         self.test_jitter = np.linspace(-0.5, 0.5, self.test_rotations)
         
         # Hue shift in lab space
@@ -151,6 +154,8 @@ class PL_model(pl.LightningModule):
                     self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
                 elif args.dataset == "stl10":
                     self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                elif args.dataset == "camelyon17":
+                    self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"] = torchmetrics.Accuracy(task="binary")
                 else:
                     raise NotImplementedError
         else:
@@ -161,6 +166,8 @@ class PL_model(pl.LightningModule):
                     self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
                 elif args.dataset == "stl10":
                     self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                elif args.dataset == "camelyon17":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="binary")
                 else:
                     raise NotImplementedError
             
@@ -209,7 +216,7 @@ class PL_model(pl.LightningModule):
             raise Exception("Please provide either --hue_shift, --sat_shift, --val_shift or combination when working in HSV.")
         if (args.hue_shift or args.sat_shift or args.val_shift) and not args.hsv:
             raise Exception("Please provide --hsv when providing --hue/sat/value_shift!")
-        if args.hsv_test and (args.hue_shift and not args.sat_shift): #TODO adjust this one maybe later
+        if args.hsv_test and (args.hue_shift and not args.sat_shift):
             raise Exception("--hsv_test can only be provided when --sat_shift and --hsv are both given as well.")
 
     @staticmethod
@@ -243,6 +250,7 @@ class PL_model(pl.LightningModule):
 
     def training_step(self, batch, batch_idx) -> dict[str, torch.Tensor]:
         x, y = batch
+
         # Normalize images.
         if args.normalize:
             x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv)
@@ -310,7 +318,7 @@ class PL_model(pl.LightningModule):
                 if self.hsv_test:
                     # Img in HSV space
                     if self.sat_shift:
-                        add_val = i.unsqueeze(0)[:, None,None] # 1, 1, 1 #TODO this reshaping is probably redundant if version below works as well...
+                        add_val = i.unsqueeze(0)[:, None,None] # 1, 1, 1
                         w = x.shape[2]
                         h = x.shape[3]
                         x = x.reshape((x.shape[0], 3, -1)) # B, C, H*W
