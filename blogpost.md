@@ -117,7 +117,7 @@ This change does not impact the derivation of the equivariance of the CEConv lay
 For the hidden layers, the feature map $[f \star \psi]$ is a function on $G$ parameterized by $x$ and $k$. The CEConv hidden layers are defined as:
 
 $$\begin{align} 
-\[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{r=1}^n f(y,r) \cdot \psi^i(y - x, (r-k) \% n)\\ 
+\[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{r=1}^n f(y,r) \cdot \psi^i(y - x, (r-k) \\% n)\\ 
 \end{align}
 \tag{9}$$
 
@@ -220,7 +220,10 @@ For an overview of the color spaces and their limitations, we refer to section [
 ### HSV Equivariance
 
 **Shifting the Kernel -** In our implementation of the HSV space, **hue** is modeled as an angular value between 0 and $2\pi$ and can be changed by adding or subtracting such an angle modulo $2\pi$. Therefore, we represent the group $H_n$ as a set of $\frac{2\pi}{n}$ rotations: $H_n = \\{ \frac{2\pi}{n} k | k \in \mathbb{Z}, 0 \leq k \lneq n \\} $. In HSV space this can be parameterized as the vector: 
-
+b =
+q 1
+3 ∗ sin( 2kπ
+n ):
 $$
 H_n(k) = \\begin{bmatrix} \frac{2\pi}{n} k \\\\ 0 \\\\ 0 \\end{bmatrix} 
 \tag{10}
