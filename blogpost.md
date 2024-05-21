@@ -52,7 +52,7 @@ $$\begin{align}
 \end{align}
 \tag{3}$$
 
-Using the substitution $h \rightarrow uh$ and the notation defining the so-called lifting layer/convolution:
+Using the substitution $h \rightarrow uh$ and the notation defining the left regular representation, whereby the group is acting on the transitive input space of the function $f: X \rightarrow Y$:
 
 $$\begin{align} 
 \[ L_g f \](x) = \[ f \circ g^{-1} \](x) = f(g^{-1}x)
@@ -81,7 +81,7 @@ This definition is extended to group theory, by defining the group $H_n$ as a su
 1. Rotate the point around vector $\mathbf{u}$ on the x-axis
 1. Reverse the rotation in step 2
 1. Reverse the rotation in step 1 -->
-This leads to the following parameterization of $H_n$, with $n$ the number of rotations (discrete) and $k$ the rotation:
+This leads to the following parameterization of $H_n$, with $n$ the number of rotations (discrete), $k$ the rotation, $a = \frac{1}{3} - \frac{1}{3}\cos (\frac{2k\pi}{n})$ and $b = \sqrt{\frac{1}{3}} \cdot \sin (\frac{2k\pi}{n})$:
 
 $$ 
 H_n = 
@@ -117,7 +117,7 @@ This change does not impact the derivation of the equivariance of the CEConv lay
 For the hidden layers, the feature map $[f \star \psi]$ is a function on $G$ parameterized by $x$ and $k$. The CEConv hidden layers are defined as:
 
 $$\begin{align} 
-\[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{r=1}^n f(y,r) \cdot \psi^i(y - x, (r-k)\%n)\\ 
+\[f \star \psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2}\sum_{r=1}^n f(y,r) \cdot \psi^i(y - x, (r-k) \% n)\\ 
 \end{align}
 \tag{9}$$
 
