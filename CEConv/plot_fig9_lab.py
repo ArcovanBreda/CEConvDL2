@@ -4,13 +4,13 @@ import pandas as pd
 
 #TODO GET NPZ from Snellius
 
-npz_folder = "./CEConv/output/test_results"
-x = pd.read_csv(f"{npz_folder}/base.csv")["hue"]
-y_base = pd.read_csv(f"{npz_folder}/base.csv")["acc"] * 100
-y_base_jitter = pd.read_csv(f"{npz_folder}/base_jitter.csv")["acc"] * 100
-y_ce_jitter = pd.read_csv(f"{npz_folder}/CE_jitter.csv")["acc"] * 100
-y_ce_lab = pd.read_csv(f"{npz_folder}/CE_lab_test.csv")["acc"] * 100
-y_ce = pd.read_csv(f"{npz_folder}/CE.csv")["acc"] * 100
+npz_folder = "./CEConv/output/test_results/lab_shift"
+x = np.load(f"{npz_folder}/flowers102-resnet18_1-false-jitter_0_0-split_1_0-seed_0-lab_space-sat_jitter_1_1-val_jitter_1_1-no_norm.npz")["hue"]
+y_base = np.load(f"{npz_folder}/flowers102-resnet18_1-false-jitter_0_0-split_1_0-seed_0-lab_space-sat_jitter_1_1-val_jitter_1_1-no_norm.npz")["acc"] * 100
+y_base_jitter = np.load(f"{npz_folder}/flowers102-resnet18_1-false-jitter_0_5-split_1_0-seed_0-lab_space-sat_jitter_1_1-val_jitter_1_1-no_norm.npz")["acc"] * 100
+y_ce_jitter = np.load(f"{npz_folder}/flowers102-resnet18_3-true-jitter_0_5-split_1_0-seed_0-lab_space-sat_jitter_1_1-val_jitter_1_1-no_norm.npz")["acc"] * 100
+y_ce_lab = np.load(f"{npz_folder}/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-lab_space-sat_jitter_1_1-val_jitter_1_1-lab_test-no_norm.npz")["acc"] * 100
+y_ce = np.load(f"{npz_folder}/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-lab_space-sat_jitter_1_1-val_jitter_1_1-no_norm.npz")["acc"] * 100
 
 fig, ax = plt.subplots(figsize=(12, 6))
 
