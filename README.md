@@ -1,5 +1,5 @@
 # A deep dive into colorspace equivariant networks
-This repository contains a reproduction and exstension on CEConv - Color Equivariant Convolutional Networks [[ArXiv](https://arxiv.org/abs/2310.19368)] - NeurIPS 2023, by Attila Lengyel, Ombretta Strafforello, Robert-Jan Bruintjes, Alexander Gielisse, and Jan van Gemert. This readme contains all commands in order to run the performed experiments, for an explanation about the project we refer you to our extensive [blogpost](./blogpost.md). We sincerely thank the original authors for providing the original [code](https://github.com/Attila94/CEConv).
+This repository contains a reproduction and extension on CEConv - Color Equivariant Convolutional Networks [[ArXiv](https://arxiv.org/abs/2310.19368)] - NeurIPS 2023, by Attila Lengyel, Ombretta Strafforello, Robert-Jan Bruintjes, Alexander Gielisse, and Jan van Gemert. This readme contains all commands in order to run the performed experiments, for an explanation about the project we refer you to our extensive [blogpost](./blogpost.md). We sincerely thank the original authors for providing the original [code](https://github.com/Attila94/CEConv).
 
 ## Prerequisites
 * A machine running Linux / WSL on windows also works
