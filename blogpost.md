@@ -307,7 +307,7 @@ $$
 Due to our earlier experiments involving the application of the group element on the kernel or the image, we decided to only model the value shift on the input images as described in the next paragraph.
 
 <!--
-**Shifting the Input Image -** In order to circumvent some of the issues that present themselves when naively shifting the kernel as though it were an image, we investigated whether we could perform the lifting convolution by shifting the input image instead of the kernel. This is a more intuitive approach and [[10]](#lifting) show that transforming the signal instead of the kernel <!--is indeed possible and that these operations are--> is equivalent when restricted to the group and standard convolution. This allows for more general transformations than using the group correlation of [[1]](#group_convs). In our case, where we make use of the HSV color space with separated hue, saturation and value channels, this way of performing the lifting operation is required due to the fact that we perform our action on these separated channels. Transforming the signal instead of the kernel allows us to alter the values of pixels instead of only moving the pixel locations. --> 
+**Shifting the Input Image -** In order to circumvent some of the issues that present themselves when naively shifting the kernel as though it were an image, we investigated whether we could perform the lifting convolution by shifting the input image instead of the kernel. This is a more intuitive approach and [[10]](#lifting) show that transforming the signal instead of the kernel #is indeed possible and that these operations are# is equivalent when restricted to the group and standard convolution. This allows for more general transformations than using the group correlation of [[1]](#group_convs). In our case, where we make use of the HSV color space with separated hue, saturation and value channels, this way of performing the lifting operation is required due to the fact that we perform our action on these separated channels. Transforming the signal instead of the kernel allows us to alter the values of pixels instead of only moving the pixel locations. 
 
 We can thus define the lifting layer outputting the $i$-th output channels for our semigroup $H$ of hue shifts as follows:
 
@@ -317,13 +317,13 @@ $$
 $$
 
 In a similar way, we can create the lifting layer for the saturation and value groups.
-
+--> 
 
 **Combining Multiple Shifts -** Because of the separated channels when utilzing the HSV color space, we can describe the group product between multiple channel shifts as the direct product of the previously described groups.
 
 $$ 
 G = \mathbb{Z}_2 \times C_n \times \mathbb{R} \times \mathbb{R} 
-\tag{21}
+\tag{20}
 $$
 
 The group action for the corresponding $h'$, $s'$, and $v'$ discrete hue, saturation and value shifts respectively, is then defined as:
@@ -332,7 +332,7 @@ $$
 \mathcal{L}_{(t, h',s',v')} = \[H_n(h',s',v')f\](x-t) = 
 \begin{bmatrix} (f(x-t)_h + \frac{2\pi}{n} h') \\% 2\pi \\\\ \text{clip}(0, f(x-t)_s + (-1 + s' \frac{2}{n-1}), 1) \\\\ \text{clip}(0, f(x-t)_v + (-1 + v' \frac{2}{n-1}), 1)
 \end{bmatrix}
-\tag{22}
+\tag{21}
 $$
 
 <!-- 
@@ -363,7 +363,7 @@ H_n =
 0 & \cos(\frac{2k\pi}{n}) & -\sin(\frac{2k\pi}{n}) \\
 0 & \sin(\frac{2k\pi}{n}) & \cos (\frac{2k\pi}{n})\\
 \end{bmatrix}
-\tag{23}
+\tag{22}
 $$
 
 In which $n$ represents the number of discrete rotations in the group and $k$ indexes the rotation to be applied. The group operation is now a matrix multiplication on the $\mathbb{R}^3$ space of LAB pixel values. The rest of the operations can be left the same. Because we are rotating on a rectangular plane we can never fall out of the lab space. Thus, there is no need for reprojection.
