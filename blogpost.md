@@ -304,7 +304,7 @@ $$
 \tag{19}
 $$
 
-Due to our earlier experiments involving the application of the group element on the kernel or the image, we decided to only model the value shift on the input images as described in the next paragraph.
+Due to our earlier experiments involving the application of the group element on the kernel or the image, we decided to only model the value shift on the input images.
 
 <!--
 **Shifting the Input Image -** In order to circumvent some of the issues that present themselves when naively shifting the kernel as though it were an image, we investigated whether we could perform the lifting convolution by shifting the input image instead of the kernel. This is a more intuitive approach and [[10]](#lifting) show that transforming the signal instead of the kernel #is indeed possible and that these operations are# is equivalent when restricted to the group and standard convolution. This allows for more general transformations than using the group correlation of [[1]](#group_convs). In our case, where we make use of the HSV color space with separated hue, saturation and value channels, this way of performing the lifting operation is required due to the fact that we perform our action on these separated channels. Transforming the signal instead of the kernel allows us to alter the values of pixels instead of only moving the pixel locations. 
@@ -344,7 +344,7 @@ $$
 -->
 
 #### LAB Equivariance 
-Hue equivariance in LAB space can be modeled as a 2D rotation on the *a* and *b* channels. However, due to the differences that arise when converting between RGB/HSV and LAB space as outlined below, it could be difficult for a hue equivariant model trained on LAB space hue equivariance to also become equivariant to hue space shifted images in RGB/HSV format which are thereafter converted to LAB format.
+Hue equivariance in the LAB color space can be modeled as a 2D rotation on the *a* and *b* channels. However, due to the differences that arise when converting between RGB/HSV and LAB space as outlined below, it could be difficult for a hue equivariant model trained on LAB space hue equivariance to also become equivariant to hue space shifted images in RGB/HSV format which are thereafter converted to LAB format.
 
 <div align="center">
   <img src="blogpost_imgs/hue_shift_comparison.jpg" alt="Hue shift in different image spaces" width="600px">
