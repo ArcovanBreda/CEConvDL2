@@ -13,6 +13,10 @@ from torch.utils.data.dataloader import DataLoader
 
 class camelyon17(Dataset):
     def __init__(self, data_dict, num_classes=2, transform=None):
+        """
+        Custom dataset loading class for dataset retrieved from
+        huggingface to serve as input for pytorch model. 
+        """
         self.images = data_dict['image']
         self.labels = data_dict['label']
         self.transform = transform

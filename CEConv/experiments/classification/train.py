@@ -90,7 +90,7 @@ class PL_model(pl.LightningModule):
         # Store accuracy metrics for testing.
         self.test_acc_dict = {}
         self.test_rotations = 37 #TODO originally 37 but takes really long when both hue and saturation equivariance
-        self.test_saturations = 25 #TODO originally 50 but takes really long when both hue and saturation equivariance
+        self.test_saturations = 50 #TODO originally 50 but takes really long when both hue and saturation equivariance
         self.test_jitter = np.linspace(-0.5, 0.5, self.test_rotations)
         
         # Hue shift in lab space
@@ -216,7 +216,7 @@ class PL_model(pl.LightningModule):
             raise Exception("Please provide either --hue_shift, --sat_shift, --val_shift or combination when working in HSV.")
         if (args.hue_shift or args.sat_shift or args.val_shift) and not args.hsv:
             raise Exception("Please provide --hsv when providing --hue/sat/value_shift!")
-        if args.hsv_test and (args.hue_shift and not args.sat_shift): #TODO adjust this one maybe later
+        if args.hsv_test and (args.hue_shift and not args.sat_shift):
             raise Exception("--hsv_test can only be provided when --sat_shift and --hsv are both given as well.")
 
     @staticmethod
@@ -250,8 +250,7 @@ class PL_model(pl.LightningModule):
 
     def training_step(self, batch, batch_idx) -> dict[str, torch.Tensor]:
         x, y = batch
-        print("TRAIN STEP X: ", x) #TODO
-        print("TRAIN STEP Y:", y) #TODO
+
         # Normalize images.
         if args.normalize:
             x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv)
