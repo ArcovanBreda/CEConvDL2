@@ -219,11 +219,8 @@ For an overview of the color spaces and their limitations, we refer to section [
 
 ### HSV Equivariance
 
-**Shifting the Kernel -** In our implementation of the HSV space, **hue** is modeled as an angular value between 0 and $2\pi$ and can be changed by adding or subtracting such an angle modulo $2\pi$. Therefore, we represent the group $H_n$ as a set of $\frac{2\pi}{n}$ rotations: $H_n = \\{ \frac{2\pi}{n} k | k \in \mathbb{Z}, 0 \leq k \lneq n \\} $. In HSV space this can be parameterized as the vector: 
-b =
-q 1
-3 ∗ sin( 2kπ
-n ):
+**Shifting the Kernel -** In our implementation of the HSV space, **hue** is modeled as an angular value between 0 and $2\pi$ and can be changed by adding or subtracting such an angle modulo $2\pi$. Therefore, we represent the group $H_n$ as a set of $\frac{2\pi}{n}$ rotations: $H_n = \\{ \frac{2\pi}{n} k | k \in \mathbb{Z}, 0 \leq k \lneq n \\} $, and due to the circular definition of hue the group $H_n$ is isomorphic to the cyclic group $C_n$. In HSV space this can be parameterized as the vector: 
+
 $$
 H_n(k) = \\begin{bmatrix} \frac{2\pi}{n} k \\\\ 0 \\\\ 0 \\end{bmatrix} 
 \tag{10}
@@ -236,42 +233,45 @@ $$
 \tag{11}
 $$
 
-with $f(x)_{h,s,v}$ indicating the respective hue, saturation, or value at pixel value $x$ in input image $f$. Because the hue value is defined on a cyclic interval, the dot product between a hue-shifted image ($f$) is the same as the dot product between an inverse hue-shifted filter ($\psi$). This is in contrast with the reproduced paper, where hue shifts are modeled as 3D rotations meaning they can fall out of the RGB cube:
+with $f(x)_{h,s,v}$ indicating the respective hue, saturation, or value at pixel value $x$ in input image $f$. [[6]](#main) applies this transformation on the kernel made possible by the use of the inverse of the rotation matrix. However, in hue space a shift is defined as an addition, which alleviates the problem of reprojection but is a non-linear operation, and therefore:
 
 $$
-\[H_n(k)f\] (x) \cdot \psi(y) = f(x) \cdot \[H_n(-k)\psi\](y)
+\[H_n(k)f\] (x) \cdot \psi(y) \neq f(x) \cdot \[H_n(-k)\psi\](y)
 \tag{12}
 $$
 
-We can now define the group $G = \\mathbb{Z}^2 \\times H_n$ as the product of the 2D integers translation group and the HSV hue shift group. With $\\%$ as the modulo operator and $\\lambda_{t, m}$ defining a translation and hue shift:
+To test if this is indeed the case several experiments were conducted comparing models shifting the kernel as opposed to the image.
+
+Shifting the image is done following the approach of [[10]](#lifting), which show that transforming the signal instead of the kernel <!--is indeed possible and that these operations are--> is equivalent when restricted to the group and standard convolution. This allows for more general transformations than using the group correlation of [[1]](#group_convs). 
+
+We can now define the group $G = \\mathbb{Z}^2 \\times H_n$ as the product of the 2D integers translation group and the HSV hue shift group. With $\\%$ as the modulo operator and $\\mathcal{L}_{t, m}$ defining a translation and hue shift:
 
 $$
-\[\lambda_{t, m}f\](x) = \[H_n(m)f\](x-t) = \\begin{bmatrix} (f(x - t)_h + \frac{2\pi}{n} m) \\% 2\pi \\\\ f(x - t)_s \\\\ f(x - t)_v \\end{bmatrix}
+\[\mathcal{L}_{t, m}f\](x) = \[H_n(m)f\](x-t) = \\begin{bmatrix} (f(x - t)_h + \frac{2\pi}{n} m) \\% 2\pi \\\\ f(x - t)_s \\\\ f(x - t)_v \\end{bmatrix}
 \tag{13}
 $$
 
 We can then define the lifting layer outputting the $i$-th output channel as:
 
 $$
-\[f \star\psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2} f(y) \cdot \[H_n(k)\psi^i\](y-x)
+\[\psi^i \star f \](x, k) = \sum_{y \in \mathbb{Z}^2} \psi^i(y) \cdot \[H_n(k)f\](y-x) 
 \tag{14}
 $$
 
 Here $f$ is the input image and $\psi^i$ a set of corresponding filters.
 The equivariance can be shown as:
 
-$$\begin{align} 
-\[\[\lambda_{t, m}f\]\star\psi^i\] (x, k) &= \sum_{y \in \mathbb{Z}^2} \[H_n(m)f\](y-t) \cdot \[H_n(k)\psi^i\](y-x)\\ 
-&= \sum_{y \in \mathbb{Z}^2} f(y) \cdot \[H_n(k-m)\psi^i\](y-(x-t)) \\
-&= \[f\star\psi^i\](x-t, k-m)\\
-&= \[\lambda'_{t, m}[f\star\psi^i\]\](x, k)
+$$\begin{align}
+\[\psi^i \star \[ \mathcal{L}\_{t, m\} f \] \](x, k) &= \sum_{y \in \mathbb{Z}^2} \psi^i(y) \cdot \[H_n(k-m)f\](y-(x-t)) \\
+&= \[\psi^i \star f\](x-t, k-m)\\
+&= \[\mathcal{L}'_{t, m}[\psi^i \star f\]\](x, k)
 \end{align}
 \tag{15}$$
 
 Since the input HSV image is now lifted to the group space, all subsequent features and filters are functions that need to be indexed using both a pixel location and a discrete rotation. The group convolution can then be defined as:
 
 $$
-\[f \star\psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2} \sum_{r=1}^n f(y,r) \cdot \psi^i(y-x, (r-k)\%n)
+\[f \star\psi^i\](x, k) = \sum_{y \in \mathbb{Z}^2} \sum_{r=1}^n f(y,r) \cdot \psi^i(y-x, (r-k)\\% n)
 \tag{16}
 $$
 
@@ -306,7 +306,8 @@ $$
 
 Due to our earlier experiments involving the application of the group element on the kernel or the image, we decided to only model the value shift on the input images as described in the next paragraph.
 
-**Shifting the Input Image -** In order to circumvent some of the issues that present themselves when naively shifting the kernel as though it were an image, we investigated whether we could perform the lifting convolution by shifting the input image instead of the kernel. This is a more intuitive approach and [[10]](#lifting) show that transforming the signal instead of the kernel <!--is indeed possible and that these operations are--> is equivalent when restricted to the group and standard convolution. This allows for more general transformations than using the group correlation of [[1]](#group_convs). In our case, where we make use of the HSV color space with separated hue, saturation and value channels, this way of performing the lifting operation is required due to the fact that we perform our action on these separated channels. Transforming the signal instead of the kernel allows us to alter the values of pixels instead of only moving the pixel locations.
+<!--
+**Shifting the Input Image -** In order to circumvent some of the issues that present themselves when naively shifting the kernel as though it were an image, we investigated whether we could perform the lifting convolution by shifting the input image instead of the kernel. This is a more intuitive approach and [[10]](#lifting) show that transforming the signal instead of the kernel <!--is indeed possible and that these operations are--> is equivalent when restricted to the group and standard convolution. This allows for more general transformations than using the group correlation of [[1]](#group_convs). In our case, where we make use of the HSV color space with separated hue, saturation and value channels, this way of performing the lifting operation is required due to the fact that we perform our action on these separated channels. Transforming the signal instead of the kernel allows us to alter the values of pixels instead of only moving the pixel locations. --> 
 
 We can thus define the lifting layer outputting the $i$-th output channels for our semigroup $H$ of hue shifts as follows:
 
@@ -315,7 +316,7 @@ $$
 \tag{20}
 $$
 
-In a similar way we can create the lifting layer for the saturation and value groups.
+In a similar way, we can create the lifting layer for the saturation and value groups.
 
 
 **Combining Multiple Shifts -** Because of the separated channels when utilzing the HSV color space, we can describe the group product between multiple channel shifts as the direct product of the previously described groups.
@@ -351,7 +352,7 @@ Hue equivariance in LAB space can be modeled as a 2D rotation on the *a* and *b*
   *Figure 5: An example image (original far left) hue space shifted multiple times in HSV (angular addition), RGB (3D rotation), and LAB (2D rotation) space, thereafter converted to RGB space for visualization. ([source](CEConv/plot_hue_comparison.py))*
 </div>
 
-Figure 5 shows this difference with a hue shift in RGB and HSV space resulting in the same image. However, performing the same shift in LAB space and converting it back to RGB space afterwards, results in a slightly different colored image.
+Figure 5 shows this difference with a hue shift in RGB and HSV space resulting in the same image. However, performing the same shift in LAB space and converting it back to RGB space afterward, results in a slightly different colored image.
 
 For the LAB space, only a hue shift equivariant model is implemented. For this, the theory in Section [Color Equivariance](#color-equivariance) is applicable with the only exception being the reparameterization of <!--the group--> $H_n$:
 
@@ -485,16 +486,17 @@ Interestingly, training the CE-ResNet with jitter results in an average increase
 
 ## Concluding Remarks
 
-In conclusion, the  network proposed by the origi-nal paper aimed to leverage color equivariance to create more robust networks that still manage to exploit color information in images. This was implemented via discrete hue rotations in RGB space. Our reproduction study, focusing on the most color-exploitive dataset, supports their findings in terms of the importance of color equivariance for various (color-dependent) datasets and performance quality. Furthermore, the reproduction of the ablation study about the impact of the number of rotations validates the conclusions about the level of equivariance and provides additional insights in terms of the number of parameters.
+In conclusion, the  network proposed by the original paper aimed to leverage color equivariance to create more robust networks that still manage to exploit color information in images. This was implemented via discrete hue rotations in RGB space. Our reproduction study, focusing on the most color-exploitive dataset, supports their findings in terms of the importance of color equivariance for various (color-dependent) datasets and performance quality. Furthermore, the reproduction of the ablation study about the impact of the number of rotations validates the conclusions about the level of equivariance and provides additional insights in terms of the number of parameters.
 
-We additionally investigated the limitations of the approach by the original authors. Firstly, the limited notion of modeling color equivariance as hue equivariance. Secondly, the problem of values falling outside the RGB cube. We aimed to circumvent these issues by modeling hue equivariance in HSV and LAB spaces, and extended the notion of equivariance to saturation and value in the former color space.
-We found that a model with hue equivariance in LAB space and jitter managed to outperform all other models encoding this type of equivariance. Furthermore, saturation and value equivariance without any jitter performed similar to the baseline models without any equivariance. However, jitter ensured they became robuster against distribution shifts, even outperforming the baseline model with jitter, but came at the cost of achieving lower test accuracy overall.
+We additionally investigated the limitations of the approach by the original authors. Firstly, the limited notion of modeling color equivariance as hue equivariance. Secondly, the problem of values falling outside the RGB cube. We aimed to circumvent these issues by modeling hue equivariance in HSV and LAB spaces and extending the notion of equivariance to saturation and value in the former color space.
+We found that a model with hue equivariance in LAB space and jitter managed to outperform all other models encoding this type of equivariance. Furthermore, saturation and value equivariance without any jitter performed similarly to the baseline models without any equivariance. However, jitter ensured they became more robust against distribution shifts, even outperforming the baseline model with jitter, but came at the cost of achieving lower test accuracy overall.
 
+For future research, the use of steerable convolutions could be explored. Steerable convolutions could be used to encode the continuous hue spectrum therefore becoming equivariant to all shifts without the need for jitter, alleviating the problem of the expensive training cost occuring when using jitter. 
 
 ## Authors' Contributions
 <ul>
-  <li>Silvia Abbring: Implementation of saturation equivariance and combining hue and saturation shifts during testing, wrote concluding remarks, results of combining hue and saturation shifts and appendix B </li>
-  <li>Hannah van den Bos: Reproduction of color selectivity, rotation and jitter ablation with implementation of plots and supplementary function evaluate, wrote introduction, recap on group equivariant convolutions, color equivariance and concluding remarks</li>
+  <li>Silvia Abbring: Implementation of saturation equivariance and combining hue and saturation shifts during testing, wrote concluding remarks, results of combining hue and saturation shifts, and appendix B </li>
+  <li>Hannah van den Bos: Reproduction of color selectivity, rotation, and jitter ablation with implementation of plots and supplementary function evaluate, wrote introduction, recap on group equivariant convolutions, color equivariance and concluding remarks</li>
   <li>Rens den Braber: Implementation/Description of LAB space and Value equivariance, and HSV equivariance formulas. </li>
   <li>Arco van Breda: Reproduction of color imbalance and image classification, implementation of reproducibility plots and supplementary functionalities (load, save, evaluate) in the original code, and an additional experiment on the reproduction of color imbalance.</li>
   <li>Dante Zegveld: Implementation of Hue shift equivariance and combining hue and shift equivariance on kernels and images, wrote color spaces, future research introduction and HSV equivariance </li>
