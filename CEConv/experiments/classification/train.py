@@ -81,6 +81,9 @@ class PL_model(pl.LightningModule):
         elif args.dataset == "stl10":
             self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
             self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+        elif args.dataset == "camelyon17":
+            self.train_acc = torchmetrics.Accuracy(task="binary")
+            self.test_acc = torchmetrics.Accuracy(task="binary")
         else:
             raise NotImplementedError
 
@@ -151,6 +154,8 @@ class PL_model(pl.LightningModule):
                     self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
                 elif args.dataset == "stl10":
                     self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                elif args.dataset == "camelyon17":
+                    self.test_acc_dict[f"test_acc_{i:.4f}_{j:.4f}"] = torchmetrics.Accuracy(task="binary")
                 else:
                     raise NotImplementedError
         else:
@@ -161,6 +166,8 @@ class PL_model(pl.LightningModule):
                     self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=102)
                 elif args.dataset == "stl10":
                     self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+                elif args.dataset == "camelyon17":
+                    self.test_acc_dict["test_acc_{:.4f}".format(i)] = torchmetrics.Accuracy(task="binary")
                 else:
                     raise NotImplementedError
             
@@ -243,6 +250,8 @@ class PL_model(pl.LightningModule):
 
     def training_step(self, batch, batch_idx) -> dict[str, torch.Tensor]:
         x, y = batch
+        print("TRAIN STEP X: ", x) #TODO
+        print("TRAIN STEP Y:", y) #TODO
         # Normalize images.
         if args.normalize:
             x = normalize(x, grayscale=self.args.grayscale or self.args.rotations > 1, lab=self.lab, hsv=self.hsv)
@@ -310,7 +319,7 @@ class PL_model(pl.LightningModule):
                 if self.hsv_test:
                     # Img in HSV space
                     if self.sat_shift:
-                        add_val = i.unsqueeze(0)[:, None,None] # 1, 1, 1 #TODO this reshaping is probably redundant if version below works as well...
+                        add_val = i.unsqueeze(0)[:, None,None] # 1, 1, 1
                         w = x.shape[2]
                         h = x.shape[3]
                         x = x.reshape((x.shape[0], 3, -1)) # B, C, H*W

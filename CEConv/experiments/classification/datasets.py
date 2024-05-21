@@ -2,13 +2,31 @@ import math
 import torch
 import os
 from kornia import color
-import numpy as np
+import torch.nn.functional as F
 
 from torchvision import datasets
 from torchvision import transforms as T
 
-from torch.utils.data import SubsetRandomSampler
+from torch.utils.data import SubsetRandomSampler, Dataset
 from torch.utils.data.dataloader import DataLoader
+
+
+class camelyon17(Dataset):
+    def __init__(self, data_dict, num_classes=2, transform=None):
+        self.images = data_dict['image']
+        self.labels = data_dict['label']
+        self.transform = transform
+        self.num_classes = num_classes
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, idx):
+        image = self.images[idx]
+        label = F.one_hot(torch.tensor(self.labels[idx]), self.num_classes).float()
+        if self.transform:
+            image = self.transform(image)
+        return image, label
 
 
 class rgb2lab(torch.nn.Module):
@@ -93,6 +111,21 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
         )
         # tr_test = T.Compose([T.ToTensor()])
         tr_test = T.Compose([])
+    elif args.dataset == "camelyon17":
+        # Small size images.
+        tr_train = T.Compose(
+            [
+                T.ColorJitter(
+                    brightness=args.value_jitter,
+                    contrast=0,
+                    saturation=args.sat_jitter,
+                    hue=args.jitter,
+                ),
+                T.RandomCrop(96, padding=4),
+                T.RandomHorizontalFlip(),
+            ]
+        )
+        tr_test = T.Compose([])
     else:
         # ImageNet-style preprocessing.
         tr_train = T.Compose(
@@ -107,7 +140,6 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
                 T.RandomHorizontalFlip(),
             ]
         )
-        # tr_test = T.Compose([T.Resize(256), T.CenterCrop(224), T.ToTensor()])
         tr_test = T.Compose([T.Resize(256), T.CenterCrop(224)])
     # Convert data to grayscale
     if args.grayscale is True:
@@ -202,23 +234,29 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
         )
         args.classes = x_train.classes
     elif args.dataset == "camelyon17":
+        from datasets import load_dataset, concatenate_datasets
         import subprocess
+        #TODO or use 1aurent/PatchCamelyon dataset instead could be fun
 
-        # Download camelyon17 dataset
-        if path[-1] == "/":
-            download_path = path + "camelyon17"
-        else:
-            download_path = path + "/camelyon17"
+        # Load Camelyon17 dataset from huggingface
+        subprocess.run(["pip", "install", "-q", "datasets"], check=True)
+        dataset = load_dataset("jxie/camelyon17")
 
-        subprocess.run(["pip", "install", "awscli"], check=True)
-        os.makedirs(download_path, exist_ok=True)
-        subprocess.run(["aws", "s3", "sync", "--no-sign-request", 
-                        "s3://camelyon-dataset/CAMELYON17/", download_path], check=True)
-    
-        # x_train = torch.utils.data.ConcatDataset([x_train, x_val])  # type: ignore
+        print("DATASET: ", dataset)
+        print(dataset["id_train"].features)
+        x_train_dict = concatenate_datasets([dataset["id_train"], dataset["id_val"]])
+        x_test_dict = concatenate_datasets([dataset["ood_val"], dataset["ood_test"]])
 
-        args.classes = 2 #TODO
-        raise NotImplementedError("MEH")
+        # x_train_dict.set_format(type='torch')
+        # x_test_dict.set_format(type='torch')
+
+        x_train = camelyon17(x_train_dict, transform=tr_train)
+        x_test = camelyon17(x_test_dict, transform=tr_test)
+
+        # x_train = (x_train_dict["image"], x_train_dict["label"])
+        # x_test = (x_test_dict["image"], x_test_dict["label"])
+
+        args.classes = torch.arange(2)
     else:
         raise AssertionError("Invalid value for args.dataset: ", args.dataset)
 
