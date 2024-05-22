@@ -3,6 +3,16 @@ import torch
 from argparse import Namespace
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from PIL import Image
+from matplotlib.colors import hsv_to_rgb
+import math
+from skimage import color
+import kornia
+import skimage as ski
+import torchvision
+import torch
+from PIL import Image
 
 
 def plot_figure_2(data_dir, print_stats=False):
@@ -376,9 +386,9 @@ def hue_shifts_plot():
 
     f, (ax1) = plt.subplots(1, 1, figsize=(14,7))
 
-    ax1.plot(x, y_1, color='#2469c8', label='CE-1', linewidth=3)
-    ax1.plot(x, y_5, color='#d52320', label='CE-5', linewidth=3)
-    ax1.plot(x, y_10, color='#23c34a', label='CE-10', linewidth=3)
+    ax1.plot(x, y_1, color='#2469c8', label=f'CE-1 ({np.mean(y_1)*100:.1f}%)', linewidth=3)
+    ax1.plot(x, y_5, color='#d52320', label=f'CE-5 ({np.mean(y_5)*100:.1f}%)', linewidth=3)
+    ax1.plot(x, y_10, color='#23c34a', label=f'CE-10 ({np.mean(y_10)*100:.1f}%)', linewidth=3)
     ax1.grid(axis="x")
     ax1.grid(axis="y")
     ax1.set_ylim(-0.05, 0.85)
@@ -403,14 +413,19 @@ def jitter_plot(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classifica
 
     ce_resnet_0_1 = np.load(f"{path}/flowers102-resnet18_3-true-jitter_0_1-split_1_0-seed_0-sat_jitter_1_1-val_jitter_1_1.npz")["acc"]
     ce_resnet_0_2 = np.load(f"{path}/flowers102-resnet18_3-true-jitter_0_2-split_1_0-seed_0-sat_jitter_1_1-val_jitter_1_1.npz")["acc"]
+    
+    ce_baseline = np.load(f"/home/arco/Downloads/Master AI/CEConvDL2/output/classification/npz/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0.npz")["acc"]
 
     f, (ax1) = plt.subplots(1, 1, figsize=(14,7))
     plt.subplots_adjust(wspace=0.4, hspace=0.3)
 
-    ax1.plot(x, resnet_0_2, color='#2469c8', label='ResNet-18 - jitter: 0.2', linewidth=3)
-    ax1.plot(x, resnet_0_4, color='#d52320', label='ResNet-18 - jitter: 0.4', linewidth=3)
-    ax1.plot(x, ce_resnet_0_1, color='#23c34a', label='CE-ResNet-18 - jitter 0.1', linewidth=3)
-    ax1.plot(x, ce_resnet_0_2, color='#a120d5', linestyle='dashed', label='CE-ResNet-18 - jitter 0.2', linewidth=3)
+    ax1.plot(x, resnet_0_2, color='#2469c8', label=f'ResNet-18 - jitter: 0.2 ({np.mean(resnet_0_2)*100:.1f}%)', linewidth=3)
+    ax1.plot(x, resnet_0_4, color='#d52320', label=f'ResNet-18 - jitter: 0.4 ({np.mean(resnet_0_4)*100:.1f}%)', linewidth=3)
+    plt.scatter(0, 0, 1, c="white", label="‎")
+    ax1.plot(x, ce_baseline, color="tab:orange", label=f'CE-ResNet-18 - no jitter ({np.mean(ce_baseline)*100:.1f}%)', linewidth=3)
+    ax1.plot(x, ce_resnet_0_1, color='#23c34a', label=f'CE-ResNet-18 - jitter 0.1 ({np.mean(ce_resnet_0_1)*100:.1f}%)', linewidth=3)
+    ax1.plot(x, ce_resnet_0_2, color='#a120d5', label=f'CE-ResNet-18 - jitter 0.2 ({np.mean(ce_resnet_0_2)*100:.1f}%)', linewidth=3)
+
     ax1.grid(axis="x")
     ax1.grid(axis="y")
     ax1.set_ylim(-0.1, 0.78)
@@ -438,13 +453,40 @@ def hue_kernel(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classificat
     hue_eq_jitter = np.load(f"{path}/hue_shift_kernel/hue_flowers102-resnet18_3-true-jitter_0_5-split_1_0-seed_0-hsv_space-hue_shift-sat_jitter_1_1-val_jitter_1_1-no_norm.npz")["acc"]
 
     fig, ax = plt.subplots(figsize=(14, 7))
-    plt.plot(x, baseline * 100, label="Resnet-18 (Baseline)", linewidth=3)
-    plt.plot(x, baseline_jitter * 100, label="Resnet-18 + jitter (Baseline)", linewidth=3)
-    plt.plot(x, hue_eq * 100, label="CE-Resnet-18", ls="--", linewidth=3)
-    plt.plot(x, hue_eq_jitter * 100, label="CE-Resnet-18 + jitter", ls="--", linewidth=3)
+    plt.plot(x, baseline * 100, label=f"Resnet-18 ({np.mean(baseline)*100:.1f}%)", linewidth=3)
+    plt.plot(x, baseline_jitter * 100, label=f"Resnet-18 + jitter ({np.mean(baseline_jitter)*100:.1f}%)", linewidth=3)
+    plt.plot(x, hue_eq * 100, label=f"CE-Resnet-18 ({np.mean(hue_eq)*100:.1f}%)", ls="--", linewidth=3)
+    plt.plot(x, hue_eq_jitter * 100, label=f"CE-Resnet-18 + jitter ({np.mean(hue_eq_jitter)*100:.1f}%)", ls="--", linewidth=3)
 
-    # plt.title("Hue equivariant network trainend in HSV color space\n Image Shift | Flowers-102 dataset", fontsize=22)
-    plt.title("Hue equivariant network trained in HSV color space\n Kernel Shift - Flowers-102 dataset", fontsize=22)
+    plt.title("Hue equivariant network trainend in HSV color space\n Kernel Shift | Flowers-102 dataset", fontsize=22)
+    # plt.title("Hue equivariant network in HSV\n Kernel Shift - Flowers-102 dataset", fontsize=22)
+    plt.ylabel("Test accuracy (%)", fontsize=18)
+    plt.yticks(fontsize=16,)
+    plt.xlabel("Test-time hue shift (°)", fontsize=18)
+    plt.xticks(fontsize=16,ticks=[-0.45, -0.3, -0.15, 0, 0.15, 0.3, 0.45],labels=["-150", "-100", "-50", "0", "50", "100", "150" ])
+    plt.legend(fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 0.99),
+                borderaxespad=0., ncol=2, fancybox=True, shadow=True,
+                columnspacing=0.7, handletextpad=0.2)
+    plt.grid(axis="both")
+    plt.ylim(-0.5, 85)
+    plt.show()
+
+def hue_image(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classification/npz"):
+
+    x = np.load(f"output/test_results/hue_shift_img/hue_baseline_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_shift-sat_jitter_1_1-val_jitter_1_1-img_shift-no_norm.npz")["hue"]
+    baseline = np.load(f"output/test_results/hue_shift_img/hue_baseline_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_shift-sat_jitter_1_1-val_jitter_1_1-img_shift-no_norm.npz")["acc"]
+    baseline_jitter = np.load(f"output/test_results/hue_shift_img/hue_baseline_jitter_flowers102-resnet18_1-true-jitter_0_5-split_1_0-seed_0-hsv_space-hue_shift-sat_jitter_1_1-val_jitter_1_1-img_shift-no_norm.npz")["acc"]
+    hue_eq = np.load(f"output/test_results/hue_shift_img/hue_flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_shift-sat_jitter_1_1-val_jitter_1_1-img_shift-no_norm.npz")["acc"]
+    hue_eq_jitter = np.load(f"output/test_results/hue_shift_img/hue_flowers102-resnet18_3-true-jitter_0_5-split_1_0-seed_0-hsv_space-hue_shift-sat_jitter_1_1-val_jitter_1_1-img_shift-no_norm.npz")["acc"]
+
+    fig, ax = plt.subplots(figsize=(14, 7))
+    plt.plot(x, baseline * 100, label=f"Resnet-18 ({np.mean(baseline)*100:.1f}%)", linewidth=3)
+    plt.plot(x, baseline_jitter * 100, label=f"Resnet-18 + jitter ({np.mean(baseline_jitter)*100:.1f}%)", linewidth=3)
+    plt.plot(x, hue_eq * 100, label=f"CE-Resnet-18 ({np.mean(hue_eq)*100:.1f}%)", ls="--", linewidth=3)
+    plt.plot(x, hue_eq_jitter * 100, label=f"CE-Resnet-18 + jitter ({np.mean(hue_eq_jitter)*100:.1f}%)", ls="--", linewidth=3)
+
+    plt.title("Hue equivariant network trainend in HSV color space\n Image Shift | Flowers-102 dataset", fontsize=22)
+    # plt.title("Hue equivariant network in HSV\n Kernel Shift - Flowers-102 dataset", fontsize=22)
     plt.ylabel("Test accuracy (%)", fontsize=18)
     plt.yticks(fontsize=16,)
     plt.xlabel("Test-time hue shift (°)", fontsize=18)
@@ -601,4 +643,235 @@ def plot_figure_22(data_dir, print_stats=False):
 
     plt.title('ColorMNIST - longtailed + Large Z2CNN', fontsize=22)
 
+    plt.show()
+
+
+def lab(npz_folder="./output/test_results/lab_shift"):
+    x = np.load(f"{npz_folder}/flowers102-resnet18_1-false-jitter_0_0-split_1_0-seed_0-lab_space-sat_jitter_1_1-val_jitter_1_1-no_norm.npz")["hue"]
+    y_base = np.load(f"{npz_folder}/flowers102-resnet18_1-false-jitter_0_0-split_1_0-seed_0-lab_space-sat_jitter_1_1-val_jitter_1_1-no_norm.npz")["acc"] * 100
+    y_base_jitter = np.load(f"{npz_folder}/flowers102-resnet18_1-false-jitter_0_5-split_1_0-seed_0-lab_space-sat_jitter_1_1-val_jitter_1_1-no_norm.npz")["acc"] * 100
+    y_ce_jitter = np.load(f"{npz_folder}/flowers102-resnet18_3-true-jitter_0_5-split_1_0-seed_0-lab_space-sat_jitter_1_1-val_jitter_1_1-no_norm.npz")["acc"] * 100
+    y_ce_lab = np.load(f"{npz_folder}/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-lab_space-sat_jitter_1_1-val_jitter_1_1-lab_test-no_norm.npz")["acc"] * 100
+    y_ce = np.load(f"{npz_folder}/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0-lab_space-sat_jitter_1_1-val_jitter_1_1-no_norm.npz")["acc"] * 100
+
+
+    fig, ax = plt.subplots(figsize=(14, 7))
+
+    plt.plot(x, y_base, label=f"Resnet-18 ({y_base.mean():.1f}%)", linewidth=3)
+    plt.plot(
+        x,
+        y_base_jitter,
+        label=f"Resnet-18 + Jitter ({y_base_jitter.mean():.1f}%)",
+        ls="--", linewidth=3
+    )
+    plt.scatter(0, 0, 1, c="white", label="‎")
+
+
+    plt.plot(x, y_ce, label=f"CE-Resnet-18 ({y_ce.mean():.1f}%)", linewidth=3)
+    plt.plot(
+        x,
+        y_ce_jitter,
+        label=f"CE-Resnet-18 + Jitter ({y_ce_jitter.mean():.1f}%)",
+        ls="--", linewidth=3
+    )
+
+    plt.plot(
+        x,
+        y_ce_lab,
+        label=f"CE-Resnet-18 + LAB shift ({y_ce_lab.mean():.1f}%)",
+        ls="dotted", linewidth=3
+    )
+
+    plt.title(
+        "LAB color space - Flowers-102 dataset",
+        fontsize=22,
+    )
+    plt.ylabel("Test accuracy (%)", fontsize=18)
+    plt.yticks(
+        fontsize=16,
+    )
+    plt.xlabel("Test-time hue shift (°)", fontsize=18)
+    plt.xticks(
+        fontsize=16,
+        ticks=[-0.45, -0.3, -0.15, 0, 0.15, 0.3, 0.45],
+        labels=["-150", "-100", "-50", "0", "50", "100", "150"],
+    )
+    plt.legend(fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 0.99),
+            borderaxespad=0., ncol=2, fancybox=True, shadow=True,
+            columnspacing=0.7, handletextpad=0.2)
+    plt.grid(axis="both")
+    plt.ylim(0, 110)
+    plt.show()
+    
+def value_image(path="./output/test_results"):
+    npz_folder = path
+    x = np.load(
+        f"{npz_folder}/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-value_shift-sat_jitter_1_1-val_jitter_0_100-img_shift-no_norm.npz"
+    )["hue"]
+
+    y_base = (
+        np.load(
+            f"{npz_folder}/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-value_shift-sat_jitter_1_1-val_jitter_1_1-img_shift-no_norm.npz"
+        )["acc"]
+        * 100
+    )
+    y_base_jitter = (
+        np.load(
+            f"{npz_folder}/maintest_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-value_shift-sat_jitter_1_1-val_jitter_0_100-img_shift-no_norm.npz"
+        )["acc"]
+        * 100
+    )
+
+    y_ce = (
+        np.load(
+            f"{npz_folder}/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-value_shift-sat_jitter_1_1-val_jitter_1_1-img_shift-no_norm.npz"
+        )["acc"]
+        * 100
+    )
+
+    y_ce_jitter = (
+        np.load(
+        f"{npz_folder}/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-value_shift-sat_jitter_1_1-val_jitter_0_100-img_shift-no_norm.npz"
+        )["acc"]
+        * 100
+    )
+
+    fig, ax = plt.subplots(figsize=(14, 7))
+
+    plt.plot(x, y_base, label=f"Resnet-18 ({y_base.mean():.1f}%)", linewidth=3)
+    plt.plot(
+        x, y_base_jitter, label=f"Resnet-18 + Jitter ({y_base_jitter.mean():.1f}%)", ls="--", linewidth=3
+    )
+
+    plt.plot(x, y_ce, label=f"CE-Resnet-18 ({y_ce.mean():.1f}%)", linewidth=3)
+
+    plt.plot(
+        x, y_ce_jitter, label=f"CE-Resnet-18 + jitter ({y_ce_jitter.mean():.1f}%)", ls="--", linewidth=3
+    )
+
+    plt.title(
+        "Value equivariant networks trained in HSV color space\nFlowers-102 - 5 shifts",
+        fontsize=22,
+    )
+    plt.ylabel("Test accuracy (%)", fontsize=18)
+    plt.yticks(
+        fontsize=16,
+    )
+    plt.xticks(fontsize=16)
+    plt.xlabel("Test-time value shift", fontsize=18)
+
+    plt.legend(fontsize=18, loc='upper center',bbox_to_anchor=(0.5, 0.99), 
+               borderaxespad=0., ncol=2, fancybox=True, shadow=True, 
+               columnspacing=0.7, handletextpad=0.2)
+    plt.grid(axis="both")
+    plt.ylim(0, 78)
+    print(x)
+    plt.show()
+    
+from PIL import Image
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import hsv_to_rgb
+import math
+from skimage import color
+import kornia
+import skimage as ski
+import torchvision
+import torch
+from PIL import Image
+
+
+def get_3Dmatrix(rotations):
+    cos = math.cos(2 * math.pi / rotations)
+    sin = math.sin(2 * math.pi / rotations)
+    const_a = 1 / 3 * (1.0 - cos)
+    const_b = math.sqrt(1 / 3) * sin
+
+    # Rotation matrix
+    return np.asarray(
+        [
+            [cos + const_a, const_a - const_b, const_a + const_b],
+            [const_a + const_b, cos + const_a, const_a - const_b],
+            [const_a - const_b, const_a + const_b, cos + const_a],
+        ]
+    )
+
+
+def get_2Dmatrix(angle):
+    # Rotation matrix
+    angle = (math.pi / 180) * angle
+    return np.asarray(
+        [
+            [math.cos(angle), -math.sin(angle)],
+            [math.sin(angle), math.cos(angle)],
+        ]
+    )
+
+
+def get_3Dhuematrix(num_rotations):
+    # Rotation matrix
+    angle = 2 * math.pi / num_rotations
+    return np.asarray(
+        [
+            [1, 0, 0],
+            [0, math.cos(angle), -math.sin(angle)],
+            [0, math.sin(angle), math.cos(angle)],
+        ]
+    )
+
+def colorspace_comparison():
+    PIL_img = Image.open("../blogpost_imgs/flower_example.jpg")  # Range 0-255
+    tensor_img = torchvision.transforms.functional.to_tensor(PIL_img)
+    lab_tensor = kornia.color.rgb_to_lab(tensor_img)
+    im = ski.io.imread("../blogpost_imgs/flower_example.jpg")  # Range 0-255
+    hsv = color.rgb2hsv(im)  # Range 0-1
+    lab = color.rgb2lab(im)  # Range 01, -127-128, -128, -127
+
+    shifts = 9
+    delta = 1 / shifts
+    angle_delta = 360 / shifts
+    matrix = get_3Dmatrix(shifts)
+    lab_matrix = get_3Dhuematrix(shifts)
+
+    fig, axs = plt.subplots(3, shifts, figsize=(15, 5))
+    for c in range(3):
+        for i in range(shifts):
+            if c == 0:
+                shift = i * delta
+                np_image = hsv.copy()
+                np_image[:, :, 0] -= shift
+                np_image[:, :, 0] = np_image[:, :, 0] % 1
+                axs[c, i].imshow(color.hsv2rgb(np_image))
+                if i == shifts//2:
+                    axs[c, i].set_title("HSV space", fontsize=20)
+                axs[c, i].axis("off")
+            elif c == 1:
+                np_image = im
+                # print(np_image[:, :, 1:].max(), np_image[:, :, 1:].min())
+                np_image = np_image @ np.linalg.matrix_power(matrix, i)
+                np_image = np_image / 255
+                np_image = np_image.clip(0, 1)
+                axs[c, i].imshow(np_image)
+                if i == shifts//2:
+                    axs[c, i].set_title("RGB space", fontsize=20)
+                axs[c, i].axis("off")
+            elif c == 2:
+                np_image = lab_tensor.clone().float().moveaxis(0, -1)
+                np_image = torch.einsum(
+                    "whc, cr->whr",
+                    np_image,
+                    torch.matrix_power(torch.from_numpy(lab_matrix), i).float(),
+                )
+                axs[c, i].imshow(
+                    np.moveaxis(
+                        kornia.color.lab_to_rgb(np_image.moveaxis(-1, 0)).numpy(), 0, -1
+                    )
+                )
+                if i == shifts//2:
+                    axs[c, i].set_title("LAB space", fontsize=20)
+                axs[c, i].axis("off")
+
+    fig.tight_layout()
+    fig.subplots_adjust(top=0.88)
+    fig.suptitle("Hue shift in HSV space / RGB space / LAB space", fontsize=24)
     plt.show()
