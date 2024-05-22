@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_sat_base(paths, shift="Kernel"):
+def plot_sat_base(paths, shift="Kernel", dataset="Flowers-102"):
     x = np.load(paths[0])["hue"]
     y_nonorm_baseline = np.load(paths[0])["acc"] * 100
     y_nonorm_baseline_jitter = np.load(paths[1])["acc"] * 100
@@ -23,7 +23,7 @@ def plot_sat_base(paths, shift="Kernel"):
     plt.plot(x, y_nonorm_baseline_jitter, label="Resnet-18 + Jitter", ls="--") 
     plt.plot(x, y_nonorm_jitter, label="CE-Resnet-18 + Jitter", ls="--")
 
-    plt.title(f"Saturation equivariant network trained in HSV space\n{shift} Shift | Flowers-102 dataset", fontsize=22, pad=10)
+    plt.title(f"Saturation equivariant network trained in HSV space\n{shift} Shift | {dataset} dataset", fontsize=22, pad=10)
     plt.ylabel("Test accuracy (%)", fontsize=18)
     plt.yticks(fontsize=16,)
     plt.xlabel("Test-time saturation shift", fontsize=18)
@@ -33,7 +33,7 @@ def plot_sat_base(paths, shift="Kernel"):
             columnspacing=0.7, handletextpad=0.2)
     plt.grid(axis="both")
     plt.ylim(0, 100)
-    plt.savefig(f"Sat_HSV_Fig9_satshift{shift}.jpg")
+    plt.savefig(f"Sat_HSV_Fig9_satshift{shift}_{dataset}.jpg")
 
 
 def plot_sat_jitters(paths_jit, shift="Kernel", filename="Sat_HSV_satshiftkernel_jitter.jpg"):
@@ -151,6 +151,13 @@ paths_sat_base = [
     "CEConv/output/test_results/sat/maintest_flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-no_norm.npz"
 ]
 
+paths_camelyon17 = [
+    "CEConv/output/test_results/camelyon17-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-val_jitter_1_1-hsv_test-no_norm.npz",
+    "CEConv/output/test_results/camelyon17-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-val_jitter_1_1-hsv_test-no_norm.npz",
+    "CEConv/output/test_results/camelyon17-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-val_jitter_1_1-hsv_test-no_norm.npz",
+    "CEConv/output/test_results/camelyon17-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-val_jitter_1_1-hsv_test-no_norm.npz"
+]
+
 plot_3d(paths_3d[0], saturations=25, rotations=25, num_shift="No", shift="Image", filename="HueSat_HSV_shiftImgBase_noNorm.jpg")
 plot_3d(paths_3d[1], saturations=25, rotations=25, num_shift="No", filename="HueSat_HSV_shiftKernelBase_noNorm.jpg")
 plot_3d(paths_3d[2], saturations=25, rotations=25, shift="Image", filename="HueSat_HSV_shiftImage_noNorm.jpg")
@@ -159,3 +166,4 @@ plot_sat_base(paths_sat_base[4:])
 plot_sat_base(paths_sat_base, shift="Image")
 plot_sat_shift(paths_sat_shifts)
 plot_sat_jitters(paths_jit)
+plot_sat_base(paths_camelyon17, dataset="Camelyon17")
