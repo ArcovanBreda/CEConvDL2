@@ -273,12 +273,12 @@ $$
 \tag{16}
 $$
 
-**saturation** is represented as a number between 0 and 1. Requiring a group that contains $n$ elements equally spaced between negative and positive one to model both an increase and decrease in saturation. This makes all group elements fall in the set:
+**Saturation** is represented as a number between 0 and 1. Requiring a group that contains $n$ elements equally spaced between negative and positive one to model both an increase and decrease in saturation. <!-- the previouss sentence is not a sentence, er is geen persoonsvorm-->This makes all group elements fall in the set:
 $H_n = \\{-1 +k\frac{2}{n-1} | n \geq 2, k = 0,1,2,...,n-1 \\}$. In HSV space this can be parameterized as the vector:
 
 $$
 H_n(k) = 
-\begin{bmatrix} -1 +k\frac{2}{n-1} \\\\ 0 \\\\ 0 
+\begin{bmatrix} 0 \\\\ -1 +k\frac{2}{n-1} \\\\ 0 
 \end{bmatrix} 
 \tag{17}
 $$
@@ -292,7 +292,7 @@ $$
 \tag{18}
 $$
 
-This clipping due to the acyclic nature of saturation might break equivariance, which will be tested with several experiments: applying the group action on the kernel and the image, and testing different values for $n$.
+This clipping due to the acyclic nature of saturation might break equivariance, which will be tested with several experiments: applying the group action on the kernel and the image, and testing different values for $n$. <!-- Hier moet echt een link naar waar dat is gedaan-->
 
 
 **Value** equivariance can be modeled in the same way as described for saturation where the group action is now acting upon the value channel:
