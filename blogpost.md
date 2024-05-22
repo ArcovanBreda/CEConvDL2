@@ -278,7 +278,7 @@ $H_n = \\{-1 +k\frac{2}{n-1} | n \geq 2, k = 0,1,2,...,n-1 \\}$. In HSV space th
 
 $$
 H_n(k) = 
-\begin{bmatrix} -1 +k\frac{2}{n-1} \\\\ 0 \\\\ 0 
+\begin{bmatrix} 0 \\\\ -1 +k\frac{2}{n-1} \\\\ 0 
 \end{bmatrix} 
 \tag{17}
 $$
