@@ -464,7 +464,7 @@ Ultimately, the only improvement from these experiments was for saturation equiv
 #### LAB
 To test hue equivariance implemented in LAB space the convolution layers of a ResNet-18 network were replaced by their equivariant counterpart. The equivariant layers are implemented using three discrete shifts of 0, 120, and 240 (-120) degrees. The network is trained with and without hue augmentations (jitter) on training images. <!--The same can be said for the baseline which has the same Resnet-18 architecture, however now with only a zero-degree rotation making it equal to a normal CNN. Ik hoop dat deze zin niet nodig is, want dit geldt al voor de hele blogpost--> The width of the layers of the baseline ResNet-18 model is increased to get an equal number of parameters.
 
-During test time different sets of hue space-shifted images are evaluated on accuracy. This hue space shift is either done in RGB space after which the RGB images are converted to LAB format, or directly in LAB space to test the impact of the difference outlined in the [LAB Equivariance](#lab-equivariance) section. The results of these experiments can be found in Figure 13
+During test time different sets of hue space-shifted images are evaluated on accuracy. This hue space shift is either done in RGB space after which the RGB images are converted to LAB format, or directly in LAB space to test the impact of the difference outlined in the [LAB Equivariance](#lab-equivariance) section. The results of these experiments can be found in Figure 13.
 
 <div align="center">
   <img src="blogpost_imgs/lab_equivariance.png" alt="LAB space hue equivariance" width="600px">
