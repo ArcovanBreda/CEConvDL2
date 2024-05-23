@@ -164,7 +164,7 @@ Similar to the original paper’s results, the color-selective dataset seems to 
 
 ### Color Equivariance in Image Classification and impact of hyperparameters
 
-We will now explore the reproduction of the main results along with a small insight into the hyperparameters. These results are all limited to the Flowers102 dataset since it has the largest color discrepancy and the ResNet18 model, aligning with the original paper. The final experiment is an ablation study investigating the impact of varying the number of rotations. This aspect is altered across different experiments, highlighting its importance.
+We will now explore the reproduction of the main results along with a small insight into the hyperparameters. These results are all limited to the Flowers102 dataset since it has the largest color discrepancy and the ResNet-18 model, aligning with the original paper. The final experiment is an ablation study investigating the impact of varying the number of discrete hue rotations. This aspect is altered across different experiments, highlighting its importance.
 <!-- The results were placed in the appendix of the original paper. However, we decided that the reproduction of the figure on one dataset is more insightful than an enormous table. ---> <!-- omg hahah dat laatste in die comment klinkt als een uithaal naar de original paper :'D -->
 
 #### Image Classification
