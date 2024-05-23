@@ -80,8 +80,7 @@ class CNN(nn.Module):
 
 ## Experiments
 The experiments from our blog post can be reproduced by running the following commands from the CEConv folder:
-```
-bash
+```bash
 cd CEConv
 ```
 ### Reproduction
