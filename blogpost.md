@@ -363,7 +363,7 @@ H_n =
 \tag{22}
 $$
 
-In which $n$ represents the number of discrete rotations in the group and $k$ indexes the rotation to be applied. The group operation is now a matrix multiplication on the $\mathbb{R}^3$ space of LAB pixel values. The rest of the operations can be left the same. Because we are rotating on a rectangular plane we can never fall out of the lab space. Thus, there is no need for reprojection.
+In which $n$ represents the number of discrete rotations in the group and $k$ indexes the rotation to be applied. The group operation is now a matrix multiplication on the $\mathbb{R}^3$ space of LAB pixel values. The rest of the operations can be left the same. Because we are rotating on a circular plane we can never fall out of the lab space. Thus, there is no need for reprojection.
 
 ### Results of Additional Experiments
 The experiments of the various color spaces are conducted on the Flowers102 dataset, similar to section [Image Classification](#image-classification).
