@@ -292,8 +292,7 @@ $$
 \tag{18}
 $$
 
-This clipping due to the acyclic nature of saturation might break equivariance, which will be tested with several experiments: applying the group action on the kernel and the image, and testing different values for $n$. <!-- Hier moet echt een link naar waar dat is gedaan-->
-
+This clipping due to the acyclic nature of saturation might break equivariance, which will be tested with several experiments: applying the group action on the kernel and the image ([saturation equivariance](#saturation-equivariance)), and testing different values for $n$ ([ablation study](#b-ablation-study-saturation-equivariance)).
 
 **Value** equivariance can be modeled in the same way as described for saturation where the group action is now acting upon the value channel:
 
