@@ -243,14 +243,11 @@ def get_dataset(args, path=None, download=True, num_workers=4) -> tuple[DataLoad
         subprocess.run(["pip", "install", "-q", "datasets"], check=True)
 
         # Load Camelyon17 dataset from huggingface
-        from datasets import load_dataset, concatenate_datasets
+        from datasets import load_dataset
         dataset = load_dataset("jxie/camelyon17")
 
-        x_train_dict = concatenate_datasets([dataset["id_train"], dataset["id_val"]])
-        x_test_dict = concatenate_datasets([dataset["ood_val"], dataset["ood_test"]])
-
-        x_train = camelyon17(x_train_dict, transform=tr_train)
-        x_test = camelyon17(x_test_dict, transform=tr_test)
+        x_train = camelyon17(dataset["id_train"], transform=tr_train)
+        x_test = camelyon17(dataset["id_val"], transform=tr_test)
 
         args.classes = torch.arange(2)
     else:
