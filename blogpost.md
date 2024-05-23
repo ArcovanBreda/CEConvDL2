@@ -233,7 +233,7 @@ $$
 \tag{11}
 $$
 
-with $f(x)_{h,s,v}$ indicating the respective hue, saturation, or value at pixel value $x$ in input image $f$. [[5]](#main) applies this transformation on the kernel made possible by the use of the inverse of the rotation matrix. However, in hue space a shift is defined as an addition, which alleviates the problem of reprojection but is a non-linear operation, and therefore: <!-- I thought the modulo was the problem not the addition-->
+with $f(x)_{h,s,v}$ indicating the respective hue, saturation, or value at pixel value $x$ in input image $f$. [[5]](#main) applies this transformation on the kernel made possible by the use of the inverse of the rotation matrix. However, in hue space a shift is defined as a translation, which alleviates the problem of reprojection but is a non-linear operation, and therefore: <!-- I thought the modulo was the problem not the addition-->
 
 $$
 \[H_n(k)f\] (x) \cdot \psi(y) \neq f(x) \cdot \[H_n(-k)\psi\](y)
