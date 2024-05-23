@@ -79,7 +79,11 @@ class CNN(nn.Module):
 ```
 
 ## Experiments
-The experiments from our blog post can be reproduced by running the following commands.
+The experiments from our blog post can be reproduced by running the following commands from the CEConv folder:
+```
+bash
+cd CEConv
+```
 ### Reproduction
 #### ColorMNIST
 **Generate ColorMNIST datasets**
