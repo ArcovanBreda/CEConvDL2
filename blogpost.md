@@ -349,7 +349,7 @@ Hue equivariance in the LAB color space can be modeled as a 2D rotation on the *
   *Figure 5: An example image (original far left) hue space shifted multiple times in HSV (angular addition), RGB (3D rotation), and LAB (2D rotation) space, thereafter converted to RGB space for visualization. ([source](CEConv/plot_hue_comparison.py))*
 </div>
 
-Figure 5 shows this difference with a hue shift in RGB and HSV space resulting in the same image. However, performing the same shift in LAB space and converting it back to RGB space afterward, results in a slightly different colored image.
+Figure 5 shows that a hue shift in RGB and HSV space result in the same image. However, performing the same shift in LAB space and converting it back to RGB space afterward, results in a slightly different colored image.
 
 For the LAB space, only a hue shift equivariant model is implemented. For this, the theory in Section [Color Equivariance](#color-equivariance) is applicable with the only exception being the reparameterization of <!--the group--> $H_n$:
 
