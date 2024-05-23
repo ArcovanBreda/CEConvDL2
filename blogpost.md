@@ -341,7 +341,7 @@ $$
 -->
 
 #### LAB Equivariance 
-Hue equivariance in the LAB color space can be modeled as a 2D rotation on the *a* and *b* channels representing the color of an LAB pixel. However, due to the differences that arise when converting between RGB/HSV and LAB space as outlined below, it could be difficult for a hue equivariant model trained on LAB space to also become equivariant to hue space shifted images in RGB/HSV format which are thereafter converted to LAB format.
+Hue equivariance in the LAB color space can be modeled as a 2D rotation on the *a* and *b* channels which represent the color of an LAB pixel. However, due to the differences that arise when converting between RGB/HSV and LAB space as outlined below, it could be difficult for a hue equivariant model trained on LAB space to also become equivariant to hue space shifted images in RGB/HSV format which are thereafter converted to LAB format.
 
 <div align="center">
   <img src="blogpost_imgs/hue_shift_comparison.png" alt="Hue shift in different image spaces" width="600px">
