@@ -73,7 +73,7 @@ $$\begin{align}
 
 The original paper exploits the concept of group equivariant convolutions to achieve color equivariance, defined as equivariance to hue shifts. In the HSV (Hue-Saturation-Value) color space, hue is represented as an angular scalar value. The hue value is shifted by adding an offset after which the modulo is taken to ensure a valid range. The HSV space is reprojected to the RGB color space such that the hue shifts correspond to a rotation along the diagonal vector [1, 1, 1]. 
 
-This definition is extended to group theory, by defining the group $H_n$ as a subgroup of the $SO(3)$ group. Specifically, $H_n$ consists of multiples of $\frac{360}{n}$-degree rotations about the [1, 1, 1] diagonal vector in $\mathbb{R}^3$ space. 
+This definition is extended to group theory, by defining the group $H_n$ as a subgroup of the $SO(3)$ group. Specifically, $H_n$ consists of multiples of $\frac{360}{n}$-degree rotations along the [1, 1, 1] diagonal vector in $\mathbb{R}^3$ space. 
 <!--- The rotation around a unit vector $\mathbf{u}$ by angle $\theta$ is defined in 5 steps: 
 
 1. Rotate the vector such that it lies in one of the coordinate planes (e.g. $xz$)
@@ -81,7 +81,7 @@ This definition is extended to group theory, by defining the group $H_n$ as a su
 1. Rotate the point around vector $\mathbf{u}$ on the x-axis
 1. Reverse the rotation in step 2
 1. Reverse the rotation in step 1 -->
-This leads to the following parameterization of $H_n$, with $n$ the number of rotations (discrete), $k$ the rotation, $a = \frac{1}{3} - \frac{1}{3}\cos (\frac{2k\pi}{n})$ and $b = \sqrt{\frac{1}{3}} \cdot \sin (\frac{2k\pi}{n})$:
+This leads to the following parameterization of $H_n$, with $n$ identifying the total number of discrete rotations, $k$ encoding a specific rotation, $a = \frac{1}{3} - \frac{1}{3}\cos (\frac{2k\pi}{n})$ and $b = \sqrt{\frac{1}{3}} \cdot \sin (\frac{2k\pi}{n})$:
 
 $$ 
 H_n = 
@@ -112,7 +112,7 @@ $$
 \tag{8}
 $$
 
-This change does not impact the derivation of the equivariance of the CEConv layer, as given in the original paper [[5]](#main).
+However, this change does not impact the derivation of the equivariance of the CEConv layer, as given in the original paper [[5]](#main).
 
 For the hidden layers, the feature map $[f \star \psi]$ is a function on $G$ parameterized by $x$ and $k$. The CEConv hidden layers are defined as:
 
