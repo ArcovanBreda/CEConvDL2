@@ -14,7 +14,7 @@ git clone https://github.com/ArcovanBreda/CEConvDL2.git
 ```
 Create and activate a conda environment:
 ```bash
-conda create -n CEConv python=3.12 
+conda create -n CEConv python=3.10
 conda activate CEConv 
 ```
 See `requirements.txt` for the required Python packages. You can install them using:
