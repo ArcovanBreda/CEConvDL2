@@ -123,7 +123,7 @@ $$\begin{align}
 
 ## Reproduction of Experiments
 
-The reproduction of (a selection of) the experiments is primarily achieved through the code provided along with the original paper. However, it does not include the code to reproduce the plots which had to be written manually. Moreover, supplementing functionalities such as saving, loading, and evaluation of the results needed to be integrated for sufficient reproduction. Lastly, not all commands are provided/explained in the READme file to easily run all experiments. Therefore, some investigation of the code was needed to run the exact experiments.
+The reproduction of (a selection of) the experiments is primarily achieved through the code provided along with the original paper. However, it did not include the code to reproduce the plots which had to be written manually. Moreover, it was necessary to supplement functionalities such as saving, loading, and evaluating results to achieve a sufficient reproduction. Lastly, running all experiments was not easy, as not all commands were provided or explained in the READme file. Therefore, reproducing the experiments exactly required some investigation of the code.
 
 ### When is color equivariance useful? 
 
