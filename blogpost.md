@@ -240,7 +240,7 @@ $$
 \tag{12}
 $$
 
-To see this difference some models are trained in which the kernels are naively shifted as if they were an image and compared to models in which the shift is applied to the images. Shifting the image is done following the approach of [[10]](#lifting) using the semigroup correlation. In standard group convolutions, the change of variable needed to apply the group transformation to the kernel requires an inverse which is not always available in a semigroup. Therefore [[10]](#lifting) applies the action to the signal (image)  allowing for more general transformation that can change pixel values instead of using the group correlation of [[1]](#group_convs) that can only change pixel locations.
+To see this difference some models are trained in which the kernels are naively shifted as if they were an image and compared to models in which the shift is applied to the images. **Shifting the image** is done following the approach of [[10]](#lifting) using the semigroup correlation. In standard group convolutions, the change of variable needed to apply the group transformation to the kernel requires an inverse which is not always available in a semigroup. Therefore [[10]](#lifting) applies the action to the signal (image)  allowing for more general transformation that can change pixel values instead of using the group correlation of [[1]](#group_convs) that can only change pixel locations.
 
 We can now define the group $G = \\mathbb{Z}^2 \\times H_n$ as the product of the 2D integers translation group and the HSV hue shift group. With $\\%$ as the modulo operator and $\\mathcal{L}_{t, m}$ defining a translation and hue shift:
 
