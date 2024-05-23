@@ -233,7 +233,7 @@ $$
 \tag{11}
 $$
 
-with $f(x)_{h,s,v}$ indicating the respective hue, saturation, or value at pixel value $x$ in input image $f$. [[5]](#main) applies this transformation on the kernel made possible by the use of the inverse of the rotation matrix. However, in hue space a shift is defined as an addition, which alleviates the problem of reprojection but is a non-linear operation, and therefore:
+with $f(x)_{h,s,v}$ indicating the respective hue, saturation, or value at pixel value $x$ in input image $f$. [[5]](#main) applies this transformation on the kernel made possible by the use of the inverse of the rotation matrix. However, in hue space a shift is defined as an addition, which alleviates the problem of reprojection but is a non-linear operation, and therefore: <!-- I thought the modulo was the problem not the addition-->
 
 $$
 \[H_n(k)f\] (x) \cdot \psi(y) \neq f(x) \cdot \[H_n(-k)\psi\](y)
@@ -273,7 +273,7 @@ $$
 \tag{16}
 $$
 
-**Saturation** is represented as a number between 0 and 1. Requiring a group that contains $n$ elements equally spaced between negative and positive one to model both an increase and decrease in saturation. <!-- the previouss sentence is not a sentence, er is geen persoonsvorm-->This makes all group elements fall in the set:
+**Saturation** is represented as a number between 0 and 1, requiring a group that contains $n$ elements equally spaced between -1 and 1 to model both an increase and decrease in saturation. This makes all group elements fall in the set:
 $H_n = \\{-1 +k\frac{2}{n-1} | n \geq 2, k = 0,1,2,...,n-1 \\}$. In HSV space this can be parameterized as the vector:
 
 $$
