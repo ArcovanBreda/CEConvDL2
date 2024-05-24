@@ -878,14 +878,18 @@ def colorspace_comparison():
     plt.show()
 
 
-def plot_sat_base(paths, shift="Kernel", dataset="Flowers-102"):
+def plot_sat_base(paths, shift="Kernel", dataset="Flowers-102", top=85):
     x = np.load(paths[0])["hue"]
     y_nonorm_baseline = np.load(paths[0])["acc"] * 100
     y_nonorm_baseline_jitter = np.load(paths[1])["acc"] * 100
     y_nonorm = np.load(paths[2])["acc"] * 100
     y_nonorm_jitter = np.load(paths[3])["acc"] * 100
 
-    fig, ax = plt.subplots(figsize=(14, 7))
+    if not dataset == "Camelyon17":
+        fig, ax = plt.subplots(figsize=(14, 7))
+    else:
+        fig, ax = plt.subplots(figsize=(14, 9))
+
     plt.plot(x, y_nonorm_baseline, label=f"Resnet-18 ({np.mean(y_nonorm_baseline):.1f}%)",  linewidth=3)
     plt.plot(x, y_nonorm, label=f"CE-Resnet-18 ({np.mean(y_nonorm):.1f}%)",  linewidth=3)
     plt.plot(x, y_nonorm_baseline_jitter, label=f"Resnet-18 + Jitter ({np.mean(y_nonorm_baseline_jitter):.1f}%)", ls="--", linewidth=3)  
@@ -896,11 +900,20 @@ def plot_sat_base(paths, shift="Kernel", dataset="Flowers-102"):
     plt.yticks(fontsize=16,)
     plt.xlabel("Test-time saturation shift", fontsize=18)
     plt.xticks(fontsize=16,)
-    plt.legend(fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 0.99),
-                borderaxespad=0., ncol=2, fancybox=True, shadow=True,
+
+    if not dataset == "Camelyon17":
+        plt.legend(fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 0.99),
+                    borderaxespad=0., ncol=2, fancybox=True, shadow=True,
+                    columnspacing=0.7, handletextpad=0.2)
+    else:
+        plt.plot(x, np.array([50.] * x.shape[0]), label=f"Random baseline", linewidth=3, ls=":")
+        plt.legend(fontsize=18, loc='upper center', bbox_to_anchor=(0.5, -0.1),
+                borderaxespad=0., ncol=3, fancybox=True, shadow=True,
                 columnspacing=0.7, handletextpad=0.2)
+        fig.tight_layout()
+
     plt.grid(axis="both")
-    plt.ylim(top=85)
+    plt.ylim(top=top)
     plt.savefig(f"Sat_HSV_Fig9_satshift{shift}_{dataset}.jpg")
 
 
@@ -945,7 +958,11 @@ def plot_3d(paths_3d, saturations=50, rotations=37, num_shift=3, shift="Kernel",
     surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,
                         linewidth=0, antialiased=False)
 
-    ax.set_title(f"Hue and Saturation Equivariant Network trained in HSV Space\nFlowers-102 dataset [{num_shift} Hue and Sat Shifts on {shift}]", fontsize=15)
+    if num_shift > 0:
+        ax.set_title(f"Hue and Saturation Equivariant Network trained in HSV Space\nFlowers-102 dataset [{num_shift} Hue and Sat Shifts on {shift}]", fontsize=15)
+    else:
+        ax.set_title(f"Hue and Saturation Equivariant Network trained in HSV Space\nFlowers-102 dataset [Baseline for {shift} Shifts]", fontsize=15)
+
     ax.set_xlabel("Hue shift (°)", labelpad=10, fontsize=11)
     ax.set_xticks(ticks=[-0.45, -0.3, -0.15, 0, 0.15, 0.3, 0.45],labels=["-150", "-100", "-50", "0", "50", "100", "150" ])
     ax.set_ylabel("Saturation shift", labelpad=10, fontsize=11)
