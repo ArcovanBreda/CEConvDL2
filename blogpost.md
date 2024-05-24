@@ -3,7 +3,7 @@
 **Authors:** *S.R. Abbring, H.C. van den Bos, R. den Braber, A.J. van Breda, D. Zegveld*
 
 ---
-x
+
 In this blog post, we discuss, analyze, and extend upon the findings of the paper titled *Color Equivariant Convolutional Networks* [[5]](#main). The paper introduces Color Equivariant Convolutions (CEConvs) that leverage parameter sharing over hue shifts. The authors demonstrate the benefits of the novel model in terms of robustness to color alterations and classification accuracy when confronted with test-time hue shifts.
 The objectives of this blog post are to:
 
@@ -343,7 +343,7 @@ The experiments of the various color spaces are conducted on the Flowers102 data
 We separate 2 cases where we train the potential equivariant network (CE-ResNet-18) with hue jitter, randomly applying a hue shift with a uniformly chosen hue factor between -0.5 and 0.5, and without any hue jitter. Additionally, for comparison we train 2 baseline models of a ResNet-18 network with and without hue jitter, where the width of the network is increased such that the number of parameters between the equivariant and baseline networks is equal.
 
 <div align="center">
-  <img src="blogpost_imgs/hsv_hue_shift_kernel.png" alt="Results of HSV space hue equivariance, when lifting operation is performed by naively hue shifting the kernel" width="600px">
+  <img src="blogpost_imgs/HSV_hue_shift_kernel.png" alt="Results of HSV space hue equivariance, when lifting operation is performed by naively hue shifting the kernel" width="600px">
 
   *Figure 6: Illustrates the test accuracy scores of a variety of models evaluated with 37 Test-time hue shifts spanning the full range of -180° to 180° hue rotations. The CE-ResNet-18 models are trained for 3 discrete hue rotations of 0°, 120°, and 240° applied to the kernel during the lifting convolution. The baseline models are standard ResNet-18 CNNs without any group convolutional layers. ([source](CEConv/plot_fig9_hue.py))* 
 </div>
@@ -353,7 +353,7 @@ As expected, naively shifting the kernel does not work. In Figure 6, both the CE
 **Shifting the Input Image -** Instead of naively hue-shifting the kernel we now perform the lifting convolution by shifting the input image effectively creating a hue-shifted image stack. Thus we transform the signal rather than the kernel. The experimental setup is identical to the previous experiment.
 
 <div align="center">
-  <img src="blogpost_imgs/hsv_hue_shift_img.png" alt="Results of HSV space hue equivariance, when lifting operation is performed by hue shifting the input image" width="600px">
+  <img src="blogpost_imgs/HSV_hue_shift_img.png" alt="Results of HSV space hue equivariance, when lifting operation is performed by hue shifting the input image" width="600px">
 
   *Figure 7: Illustrates the test accuracy scores of a variety of models evaluated with 37 Test-time hue shifts spanning the full range of -180° to 180° hue rotations. The CE-ResNet-18 models are trained for 3 discrete hue rotations of 0°, 120°, and 240° applied to the input image during the lifting convolution. The baseline models are standard ResNet-18 CNNs without any group convolutional layers. ([source](CEConv/plot_fig9_hue.py))*  
 </div>
