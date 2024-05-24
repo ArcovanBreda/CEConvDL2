@@ -423,6 +423,8 @@ In Figure 8, we again find that shifting the kernel doesn't lead to equivariant 
 
 As opposed to hue equivariance shifting the image here doesn't lead to equivariant performance (Figure 9), we expect this occurs due to the clipping and the non-cyclic nature of saturation. Compared to the equivariance implemented by transforming the kernel, there are some changes. The peak around no saturation shift have now become wider and lower for CE-ResNet-18 and towards the ends of the test-time saturation shifts, it manages to outperform the baseline. Furthermore, CE-ResNet-18 with jitter now outperforms the baseline with jitter for positive saturation shifts. However, all of these variations only lead to an insignificant change in test accuracy. Therefore, there is no clear preference for one over the other.
 
+Furthermore, both experiments were conducted on the Camelyon17 dataset as well. Similar trends were observed, which are discussed in Appendix [Saturation Equivariance Camelyon17](#e-saturation-equivariance-camelyon17).
+
 ##### Value Equivariance
 For value equivariance, we only tested shifting the input images with 5 shifts. Initially, we tested with a shift range starting at minus one however in RGB space this results in totally black images with a complete loss of information, therefore, we decided to replace this minus one with minus a half. The results can be found in Figure 10.
 <div align="center">
@@ -627,3 +629,20 @@ During the reproduction of "Color Imbalance" we observed a significant discrepan
 </div>
 
 The figure clearly demonstrates even when training a standard CNN model with significantly more parameters and comparable training time, the CECNN consistently outperforms both models. The CNN model with a width of 70 performed 0.1 percentage point higher over the original 20-width model. This shows that a width of 20 is sufficient to capture the trends in the data for this model, and adding more parameters does not enhance performance. This experiment gives more evidence to the conclusion that a weight-sharing network is more effective in scenarios where color data is limited but shape data is abundant.
+
+### E. Saturation Equivariance Camelyon17
+...
+
+**Shifting the Kernel -** ..
+<div align="center">
+  <img src="blogpost_imgs/placeholder.png" alt="..." width="70%">
+
+  *Figure E.1: ...* 
+</div>
+
+**Shifting the Input Image -** ...
+<div align="center">
+  <img src="blogpost_imgs/placeholder.png" alt="..." width="70%">
+
+  *Figure E.2: ...* 
+</div>
