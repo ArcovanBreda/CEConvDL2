@@ -188,7 +188,7 @@ Comparing training and testing times, the baseline model completes its training 
 
 #### Number of Rotations
 
-The main implementation of color-equivariance consists of adding three rotations of 120 degrees, whereas the baseline model (not-equivariant) can be expressed as having 1 rotation. In Figure 4, we reproduced the experiments examining the effect of additional rotations. In order to save computational power, we limited the experiments to 1, 5, and 10 rotations (instead of 1-10 in the original paper)<!--van mij hoeft het deel tussen haakjes niet per se in dit geval want vanuit "we limited" blijkt al dat we het hebben aangepast-->. The models are evaulated across 37 discrete hue shifts during test time, similarly to the previous experiment.
+The main implementation of color-equivariance consists of adding three rotations of 120 degrees, whereas the baseline model (not-equivariant) can be expressed as having 1 rotation. In Figure 4, we reproduced the experiments examining the effect of additional rotations. In order to save computational power, we limited the experiments to 1, 5, and 10 rotations (instead of 1-10 in the original paper)<!--van mij hoeft het deel tussen haakjes niet per se in dit geval want vanuit "we limited" blijkt al dat we het hebben aangepast-->. The models are evaulated across 37 discrete hue shifts during test time, similar to the previous experiment.
 
 <div align="center">
   <img src="blogpost_imgs/rotations.png" alt="Hue rotations" width="600">
