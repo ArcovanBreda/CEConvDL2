@@ -459,7 +459,7 @@ def hue_kernel(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classificat
     plt.plot(x, hue_eq * 100, label=f"CE-Resnet-18 ({np.mean(hue_eq)*100:.1f}%)", ls="--", linewidth=3)
     plt.plot(x, hue_eq_jitter * 100, label=f"CE-Resnet-18 + jitter ({np.mean(hue_eq_jitter)*100:.1f}%)", ls="--", linewidth=3)
 
-    plt.title("Hue equivariant network trainend in HSV color space\n Kernel Shift | Flowers-102 dataset", fontsize=22)
+    plt.title("Hue equivariant network trained in HSV color space\n Kernel Shift | Flowers-102 dataset", fontsize=22)
     # plt.title("Hue equivariant network in HSV\n Kernel Shift - Flowers-102 dataset", fontsize=22)
     plt.ylabel("Test accuracy (%)", fontsize=18)
     plt.yticks(fontsize=16,)
@@ -486,7 +486,7 @@ def hue_image(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classificati
     plt.plot(x, hue_eq * 100, label=f"CE-Resnet-18 ({np.mean(hue_eq)*100:.1f}%)", ls="--", linewidth=3)
     plt.plot(x, hue_eq_jitter * 100, label=f"CE-Resnet-18 + jitter ({np.mean(hue_eq_jitter)*100:.1f}%)", ls="--", linewidth=3)
 
-    plt.title("Hue equivariant network trainend in HSV color space\n Image Shift | Flowers-102 dataset", fontsize=22)
+    plt.title("Hue equivariant network trained in HSV color space\n Image Shift | Flowers-102 dataset", fontsize=22)
     # plt.title("Hue equivariant network in HSV\n Kernel Shift - Flowers-102 dataset", fontsize=22)
     plt.ylabel("Test accuracy (%)", fontsize=18)
     plt.yticks(fontsize=16,)
