@@ -484,15 +484,16 @@ Figure 13 displays that the hue equivariant network (CE) tested with hue space s
 <!-- Interestingly, training the CE-ResNet with jitter results in an average increase of six percentage points in performance over the baseline jitter model. This results in the highest accuracy over all models, outperforming the reproduced CE-ResNet-18 with jitter model with approximately three percentage points. This indicates that not only does training with jitter and an equivariant model combine the best of both worlds, but additionally training in LAB space can lead to a small performance increase in line with the findings of [[2]](#color_net) and [[6]](#color_segmentation). -->
 
 ### Comparison of different color spaces
-This blog post explored three different color spaces to represent hue (and saturation) equivariance. In the figure below we display the color equivariant models trained in different color spaces.
+This blog post explored three different color spaces to represent hue (and saturation) equivariance. In the figure 14 we display the color equivariant models trained in the different color spaces.
 <div align="center">
   <img src="blogpost_imgs/comparison.png" alt="color equivariant models trained in different color spaces" width="600">
 
   *Figure 14: Color equivariant models trained in different color spaces and tested in the RGB color space, with and without jitter.*
 </div>
-Results illustrate the RGB color space trained model to have the best overall performance when not trained with jitter augmentation. The LAB model does not display equivariant properties on the test set, which can be explained by the unidentical conversion from LAB to RGB space (see Figure 5). Saturation and hue equivariance did not increase performance when compared to hue alone. This is hypothesized to be because the model does not have many more parameters than the baseline model (11.2 M vs 11.6 M) but did need to encode some part of the network to learn the equivariance.<br></br>
+The results illustrate that the model trained in the RGB color space has the best overall performance when not trained with jitter. The LAB model does not display equivariant properties on the hue shifted test set, which can be explained by a hue shifts performed in RGB space affect LAB images differently (see Figure 5). Combining saturation and hue equivariance did not increase performance when compared to hue alone. We hypothesize that this happens because the number of parameters increases substantially when combining multiple groups. Thus, to ensure a fair comparison, the network's width is reduced, limiting its expressiveness. 
+<br></br>
 
-When including jitter, LAB space outperforms RGB and HSV. Training the CE model with jitter results in an average increase of six percentage points in performance over the RGB jitter model. This results in the highest accuracy over all models, outperforming all reproduced and additional models. This indicates that not only does training with jitter and an equivariant model combine the best of both worlds, but additionally training in LAB space can lead to a small performance increase in line with the findings of [[2]](#color_net) and [[6]](#color_segmentation). 
+When including jitter, the LAB space model outperforms both the RGB and HSV space models. Training the LAB CE model with jitter results in an increased average accuracy of six percentage points over the RGB jitter model. Outperforming all trained models for reproduction and additional experiments, the LAB CE model achieves highest accuracy. This indicates that training an equivaraint model with jitter combines the best of both worlds, and confirms the findings of [[2]](#color_net) and [[6]](#color_segmentation) that training in LAB space can lead to a small performance increase.  
 
 ## Concluding Remarks
 
