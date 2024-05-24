@@ -581,18 +581,24 @@ During the reproduction of "Color Imbalance" we observed a significant discrepan
 The figure clearly demonstrates even when training a standard CNN model with significantly more parameters and comparable training time, the CECNN consistently outperforms both models. The CNN model with a width of 70 performed 0.1 percentage points higher than the original 20-width model. This shows that a width of 20 is sufficient to capture the trends in the data for this model, and adding more parameters does not enhance performance. This experiment gives more evidence to the conclusion that a weight-sharing network is more effective in scenarios where color data is limited but shape data is abundant.
 
 ### E. Saturation Equivariance Camelyon17
-...
+In order to further explore the cause for the trends as observed in Figure 8 and 9, we ran the same experiments on the Camelyon17 dataset. Namely, adjusting the saturation of flowers could change the actual class of the flower which would explain why the model did not become fully equivariant. However, changing the saturation of an image containing a tumor does not change the tumor's category. The setup and results on the Camelyon17 dataset will be discussed here.
 
-**Shifting the Kernel -** ..
+**Shifting the Kernel -** This experiment followed the same setup as the saturation equivariant one with the Flowers102 dataset. The results are displayed in the figure below. 
 <div align="center">
-  <img src="blogpost_imgs/placeholder.png" alt="..." width="70%">
+  <img src="blogpost_imgs/Sat_HSV_Fig9_satshiftKernel_Camelyon17.jpg" alt="..." width="70%">
 
-  *Figure E.1: ...* 
+  *Figure E.1: Test accuracy over test-time saturation shift for saturation equivariant networks trained using input images from Camelyon17 dataset in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, jitter indicates training time saturation augmentation set to be in [0, 20], and random baseline displays what the test accuracy would be if a class was randomly picked. The CE-Resnet-18 models are trained for 5 saturation shifts of -1, -0.5, 0, 0.5, and 1. ([source](CEConv/plot_saturation.py))*
 </div>
 
-**Shifting the Input Image -** ...
-<div align="center">
-  <img src="blogpost_imgs/placeholder.png" alt="..." width="70%">
+The figure above displays a clear peak around no saturation shifts for all settings, indicating a lack of equivariance. Nonetheless, CE-ResNet-18 outperforms ResNet-18 on average. Furthermore, the models with jitter showcase more equivariance than the models without. Notably, the jitter mainly aided them in becoming robuster to decreases in saturation. However, even for positive saturation shifts, the test accuracy decreases slower than for the models without jitter.
 
-  *Figure E.2: ...* 
+**Shifting the Input Image -** An equivalent setup to the saturation equivariant network trained on the Flowers102 dataset with the transformations applied to the input image was chosen in order to conduct this experiment with Camelyon17 instead.
+<div align="center">
+  <img src="blogpost_imgs/Sat_HSV_Fig9_satshiftImage_Camelyon17.jpg" alt="..." width="70%">
+
+  *Figure E.2: Test accuracy over test-time saturation shift for saturation equivariant networks trained using input images from Camelyon17 dataset in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, jitter indicates training time saturation augmentation set to be in [0, 20], and random baseline displays what the test accuracy would be if a class was randomly picked. The CE-Resnet-18 models are trained for 5 saturation shifts of -1, -0.5, 0, 0.5, and 1 that were applied on the input image. ([source](CEConv/plot_saturation.py))*
 </div>
+
+Figure E.2 is similar to E.1. A difference concerns the peaks: they have become narrower for all models, indicating a lack of equivariance. However, CE-ResNet-18 without jitter obtained a higher test accuracy on average, where the performance especially increased for negative saturation shifts. CE-ResMet-18 with jitter obtained the highest mean test accuracy, which was still 0.8 percentage point lower than when the same operations were applied to the kernel instead.
+
+Generally, the trends are similar to the ones on the Flowers102 dataset. This could indicate that the saturation equivariance gets broken in the network. We hypothesize this is due to the clipping operation. In the case of applying this operation on the kernel, the weights that the model can learn are heavily restricted, which in turn could hurt performance. However, when applying the clipping operation on the input image, this should not be a restriction alone since the saturation channel is in the same range as the range it is being clipped to. Regardless, clipping could still be an issue due to the loss of information that the model cannot recover from.
