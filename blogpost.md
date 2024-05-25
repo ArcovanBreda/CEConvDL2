@@ -19,7 +19,7 @@ Color is a crucial feature in how people identify and recognize objects. For exa
 
 Although color invariance has been achieved in various research areas, such as in facial recognition to mitigate the influence of lighting conditions [[7]](#color_invariance), some classification problems are color-dependent. Therefore, instead of training CNNs to classify images regardless of their color (invariance), it might be more beneficial to classify them using a color equivariant network. 
 
-The Color Equivariant Convolutions (CEConvs) introduced in [[5]](#main) achieve equivariance to discrete hue shifts. Hue is represented in RGB space as a 3D rotation around the [1, 1, 1] axis. This approach utilizes group convolutions as introduced by [[1]](#group_convs) which can be equivariant to 3D rotations. We reproduce the results showing the effectiveness of CEConvs on color-imbalanced and color-selective datasets, as well as their impact on image classification. We examine an ablation study to understand the impact of the number of discrete hue rotations on CEConvs, while also providing additional insights into the computational requirements. Finally, we extend the notion of color equivariance to different color spaces to overcome some limitations of the CEConvs.
+The Color Equivariant Convolutions (CEConvs) introduced in [[5]](#main) achieve equivariance to discrete hue shifts. Hue is represented in RGB space as a 3D rotation around the [1, 1, 1] axis. This approach utilizes group convolutions as proposed by [[1]](#group_convs) which can be equivariant to 3D rotations. We reproduce the results showing the effectiveness of CEConvs on color-imbalanced and color-selective datasets, as well as their impact on image classification. We examine an ablation study to understand the impact of the number of discrete hue rotations on CEConvs, while also providing additional insights into the computational requirements. Finally, we extend the notion of color equivariance to different color spaces to overcome some limitations of the CEConvs.
 
 
 ## Recap on Group Equivariant Convolutions
@@ -27,7 +27,7 @@ The Color Equivariant Convolutions (CEConvs) introduced in [[5]](#main) achieve 
 Deep Convolutional Neural Networks have been proven to be highly effective for image classification [[10]](#DCNN). Empirical evidence shows the importance of depth for good performance and convolutional weight-sharing for parameter reduction. The latter is effective due to the translation symmetry inherent in most image data, whereby the data is roughly invariant to shifts. In this manner, the same weights can be utilized to convolve different parts of the image [[1]](#group_convs). 
 As a result, the convolutional layers in a deep network are translation equivariant: the output shifts relative to shifts in the input. 
 
-Translation equivariance can be extended to larger groups, including rotation. This generalization is achieved through Group Convolutional Neural Networks (G-CNN). A CNN layer is equivariant to a group if for all transformations $g \in G$, doing the transformation $T_g$ on the input and then the feature mapping $\Phi (x)$ is similar to doing the feature mapping on the input and the transformation $T'_g$ thereafter: 
+Translation equivariance can be extended to larger groups, including rotation. This generalization is achieved through Group Convolutional Neural Networks (G-CNN). A CNN layer is equivariant to a group if transforming the input $x$ by transformation $g \in G$ ($T_g$) followed by the feature mapping $\Phi$ is similar to doing the feature mapping on the input and the transformation $T'_g$ thereafter: 
 
 $$\begin{align*} 
 \Phi (T_g x) = T'_g \Phi (x) & \qquad \qquad \forall g \in G, \\
@@ -49,14 +49,14 @@ $$\begin{align}
 \end{align}
 \tag{3}$$
 
-Using the substitution $h \rightarrow uh$ and the notation defining the left regular representation, whereby the group is acting on the transitive input space of the function $f: X \rightarrow Y$:
+We define the left regular representation, whereby the group is acting on the transitive input space of the function $f: X \rightarrow Y$:
 
 $$\begin{align} 
 \[ L_g f \](x) = \[ f \circ g^{-1} \](x) = f(g^{-1}x)
 \end{align} 
 \tag{4}$$
 
-The equivariance of the correlation can be derived such that a translation followed by a correlation is equivalent to a correlation followed by a translation:
+Using this representation and the substitution $h \rightarrow uh$, the equivariance of the correlation can be derived such that a translation followed by a correlation is equivalent to a correlation followed by a translation:
 
 $$\begin{align} 
 \[\[L_uf\] \star \psi\](g) &= \sum_{h \in G}\sum_k f_k(u^{-1}h)\psi(g^{-1}h)\\ 
