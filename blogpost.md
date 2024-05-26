@@ -129,7 +129,7 @@ Two models were tested; the Z2CNN [[1]](#group_convs), a vanilla 7-layer CNN mod
 <div align="center">
   <img src="blogpost_imgs/Longtailed.png" alt="Longtailed dataset results" width="600">
 
-  *Figure 1: Classification performance of a normal CNN (Z2CNN) and the color equivariant CNN (CECNN) on a long-tailed, unequally distributed dataset, illustrating the impact of weight sharing in the color domain.*
+  *Figure 1: Classification performance of a normal CNN (Z2CNN) and the color equivariant CNN (CECNN) on a long-tailed, unequally distributed dataset, illustrating the impact of weight sharing in the color domain. On the x-axis classes are displayed as color-shape. For example, G7 is a green 7. the y-axis displays the test performance of the model and the relative frequency that a class occurs in the training set.*
 </div>
 
 The x-axis of Figure 1 is ordered based on the availability of training samples for every class. The shape-sharing CECNN consistently outperforms the baseline Z2CNN, where the average performance of Z2CNN is 66.8% $\pm$ 0.6% and CECNN is 85.2% $\pm$ 1.2%. The greatest performance improvement can be seen for classes with smaller amounts of training data, confirming the hypothesis that the CECNN is able to share shape information effectively. These results are in line with the findings of the original authors, who also describe a large performance increase. A difference in findings is the standard deviation of the CECNN which is larger than that of the Z2CNN. However, this could be due to the randomness when generating the data* which resulted in a different data distribution for our experiment.
