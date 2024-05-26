@@ -124,7 +124,7 @@ First, the experiments that show the importance of color equivariance are reprod
 
 To verify that color equivariance can share shape information across classes, we reproduced the long-tailed ColorMNIST experiment. In this experiment, a 30-way classification is performed on a power law distributed dataset where 10 shapes (digits 0-9) and 3 colors (Red, Green, Blue) need to be distinguished. During training, classes are not equally distributed. During testing, all classes are evaluated on 250 examples. The hypothesis is that sharing shape information across colors is beneficial as a certain digit may occur more frequently in one color than in another. 
 
-Two models were tested; the Z2CNN [[1]](#group_convs), a vanilla 7-layer CNN model, consisting of 25,990 trainable parameters, and the CECNN model, a corresponding color equivariance version consisting of 25,207 trainable parameters. To ensure the same amount of parameters were trained for both models, the width of the CECNN is smaller, which was a priority of the original authors to have a level comparison. However, the training time of the two models differed significantly with the Z2CNN model training 59% $\pm$ 4 faster than the CECNN network. Therefore, we conducted an additional experiment where we adjusted the number of parameters to keep the training times consistent. This experiment is done in Appendix [Training time study](#d-training-time-study). 
+Two models were tested; the Z2CNN [[1]](#group_convs), a vanilla 7-layer ResNet-18 CNN model, consisting of 25,990 trainable parameters, and the CECNN model, a corresponding 7-layer ResNet-18 cnn that employs color equivariance layers, consisting of 25,207 trainable parameters. To ensure the same amount of parameters were trained for both models, the width of the CECNN is smaller, which was a priority of the original authors to have a level comparison. However, the training time of the two models differed significantly with the Z2CNN model training 59% $\pm$ 4 faster than the CECNN network. Therefore, we conducted an additional experiment where we adjusted the number of parameters to keep the training times consistent. This experiment is done in Appendix [Training time study](#d-training-time-study). 
 
 <div align="center">
   <img src="blogpost_imgs/Longtailed.png" alt="Longtailed dataset results" width="600">
@@ -134,7 +134,6 @@ Two models were tested; the Z2CNN [[1]](#group_convs), a vanilla 7-layer CNN mod
 
 The x-axis of Figure 1 is ordered based on the availability of training samples for every class. The shape-sharing CECNN consistently outperforms the baseline Z2CNN, where the average performance of Z2CNN is 66.8% $\pm$ 0.6% and CECNN is 85.2% $\pm$ 1.2%. The greatest performance improvement can be seen for classes with smaller amounts of training data, confirming the hypothesis that the CECNN is able to share shape information effectively. These results are in line with the findings of the original authors, who also describe a large performance increase. A difference in findings is the standard deviation of the CECNN which is larger than that of the Z2CNN. However, this could be due to the randomness when generating the data* which resulted in a different data distribution for our experiment.
 
-<!--<span style="color:grey">* We made the data generation deterministic by setting a seed, and recreating our experiment would return the same data distribution.</span>-->
 \* *We made the data generation deterministic by setting a seed, and recreating our experiment would return the same data distribution.*
 
 
@@ -158,7 +157,7 @@ We will now explore the reproduction of the main results along with a small insi
 
 #### Image Classification
 
-To evaluate the image classification performance, we trained a baseline ResNet-18 model comprising approximately 11,390,000 parameters, alongside the novel color equivariant ResNet-18 (CE-ResNet-18) trained with three rotations. Both models were trained with and without jitter (augmenting the training data with varying hue-intensity images). Subsequently, we assessed their performance on test sets subjected to gradual hue shifts ranging from -180° to 180°.
+To evaluate the image classification performance, we trained a baseline ResNet-18 model comprising approximately 11.4M parameters, alongside the novel color equivariant ResNet-18 (CE-ResNet-18) trained with three hue shifts: 0°, 120°, and 240° (-120°). Both models were trained with and without jitter (augmenting the training data with varying hue-intensity images). Subsequently, we assessed their performance on test sets subjected to 37 gradual hue shifts ranging from -180° to 180°.
 
 <div align="center">
   <img src="blogpost_imgs/Test-time_Hue_Shifts.png" alt="Classification Test-time Hue Shifts" width="600">
@@ -166,7 +165,7 @@ To evaluate the image classification performance, we trained a baseline ResNet-1
   *Figure 3: Image classification performance (test accuracy) on flowers classification dataset under a test-time hue shift*
 </div>
 
-In Figure 3, both the baseline ResNet-18 and the CE-ResNet-18 demonstrate good performance when no hue shift is applied (test-time hue shift of 0 degrees). The average accuracy across all test-time shifts of all models is reported in the legend. The CE-ResNet-18 displays optimal performance in three specific hue areas, which correspond to the three discrete orientations it is trained on. Moreover, the CE-ResNet-18 consistently maintains performance levels above or equal to the original ResNet-18 across almost all hue shifts, indicating its dominance across distributional changes.
+In Figure 3, both the baseline ResNet-18 and the CE-ResNet-18 demonstrate good performance when no hue shift is applied (test-time hue shift of 0 degrees). The average accuracy across all test-time shifts of all models is reported in the legend. The CE-ResNet-18 displays optimal performance in three specific hue areas, which correspond to the three discrete rotations it is trained on. Moreover, the CE-ResNet-18 consistently maintains performance levels above or equal to the original ResNet-18 across almost all hue shifts, indicating its dominance across distributional changes.
 
 When trained with jitter, both models exhibit robustness against distributional shifts, in line with the original author's findings, with the CE-ResNet-18 showing slightly better performance. This advantage is attributed to more efficient weight sharing, meaning that more information about other features could be stored. Additional insight into the relation between jitter and the CE-ResNet-18 model in terms of accuracy is provided in Appendix [Reproduction of Jitter Ablation Study](#c-reproduction-of-jitter-ablation-study). Notably, these models take around six times longer to train than the non-jittered models. The extended training duration of these models could be attributed to the convoluted sampling process involved in generating jittered images.
 
@@ -358,14 +357,14 @@ As expected, naively shifting the kernel does not work. In Figure 6, both the CE
 </div>
 
 Figure 7 shows clear peaks at the 0°, 120°, and 240° (-120°) hue rotation angles for the CE-ResNet-18, effectively exploiting its hue shift equivariance. However, this equivariance is limited due to the three trained discrete rotations, such that hue jitter is necessary to achieve better, more robust performances. As seen in [Number of Rotations](#number-of-rotations) an increase in rotations can negate the difference but does suffer from a parameter increase. Alternatively, a severe decrease in network width can be implemented to keep the number of parameters equal. 
-For our experiment, we have opted to decrease the network width such that both models have approximately 11.2M parameters, resulting in a less expressive CE-ResNet-18 when compared to the baseline. Thus, the ever-so-slight decrease in peak performance between the baseline and CE-Resnet-18 for 0° hue shifts can be explained by this trade-off.
+For our experiment, we have opted to decrease the network width such that both models have approximately 11.2M parameters, resulting in a less expressive CE-ResNet-18 when compared to the baseline. Thus, the ever-so-slight decrease in peak performance between the baseline and CE-ResNet-18 for 0° hue shifts can be explained by this trade-off.
 
 ##### Saturation Equivariance
 **Shifting the Kernel -** This experiment largely follows the setup from the hue equivariant network in HSV space. However, five saturation shifts were applied on the kernel and 50 saturation shifts were applied to the test dataset in order to measure performance. Finally, jitter in this case implies saturation jitter, which was applied during training. In Appendix [Ablation Study Saturation Equivariance](#b-ablation-study-saturation-equivariance), further details can be found on how the number of kernel shifts and degree of jitter was determined.
 <div align="center">
   <img src="blogpost_imgs/Sat_HSV_Fig9_satshiftKernel.png" alt="Results of HSV space saturation equivariance, when lifting operation is performed by naively saturation shifting the kernel" width="600px">
   
-  *Figure 8: Accuracy over test-time saturation shift for saturation equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, and jitter indicates training time saturation augmentation, which was set to be in [0, 20]. The CE-Resnet-18 models are trained for five saturation shifts of -1, -0.5, 0, 0.5, and 1. ([source](CEConv/plot_saturation.py))*  
+  *Figure 8: Accuracy over test-time saturation shift for saturation equivariant networks trained using input images in HSV color space format. ResNet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, and jitter indicates training time saturation augmentation, which was set to be in [0, 20]. The CE-ResNet-18 models are trained for five saturation shifts of -1, -0.5, 0, 0.5, and 1. ([source](CEConv/plot_saturation.py))*  
 </div>
 
 In Figure 8, we again find that shifting the kernel does not lead to equivariant performance as no clear peaks can be observed. However, the equivariant model outperforms the baseline when no shift occurs, as the saturation shifts become extreme the baseline model achieves a higher test accuracy. Another trend is that these models obtain a higher test accuracy for positive saturation shifts than for negative ones, which could be due to the fact that the latter results in information loss as the images gradually become black and white. Once jitter is added, the opposite occurs. Perhaps due to this data augmentation, the model was able to approximate what these images look like in grayscale. We also find that jitter enables the models to become more robust to shifts, where the equivariant model outperforms both baselines except near the ends of the saturation spectrum.
@@ -374,7 +373,7 @@ In Figure 8, we again find that shifting the kernel does not lead to equivariant
 <div align="center">
   <img src="blogpost_imgs/Sat_HSV_Fig9_satshiftImage.png" alt="Results of HSV space saturation equivariance, when lifting operation is performed by saturation shifting the input image" width="600px">
   
-  *Figure 9: Accuracy over test-time saturation shifts for saturation equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, and jitter indicates training time saturation augmentation, which was set to be in [0, 20]. The CE-Resnet-18 models are trained for 5 saturation shifts of -1, -0.5, 0, 0.5, and 1 that were applied to the input image. ([source](CEConv/plot_saturation.py))*  
+  *Figure 9: Accuracy over test-time saturation shifts for saturation equivariant networks trained using input images in HSV color space format. ResNet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, and jitter indicates training time saturation augmentation, which was set to be in [0, 20]. The CE-ResNet-18 models are trained for 5 saturation shifts of -1, -0.5, 0, 0.5, and 1 that were applied to the input image. ([source](CEConv/plot_saturation.py))*  
 </div>
 
 As opposed to hue equivariance, shifting the image does not lead to equivariant performance for saturation (Figure 9). We suspect that this occurs due to the clipping and the non-cyclic nature of saturation. However, there are some differences compared to the equivariance implemented by transforming the kernel. The peaks around no saturation shift are wider and lower for CE-ResNet-18 and it manages to outperform the baseline towards the ends of the test-time saturation shifts. Furthermore, CE-ResNet-18 with jitter outperforms the baseline with jitter for positive saturation shifts. However, all of these variations only lead to an insignificant change in test accuracy. Therefore, there is no clear preference for one over the other.
@@ -386,10 +385,10 @@ For value equivariance, we only tested shifting the input images. Initially, we 
 <div align="center">
   <img src="blogpost_imgs/value_equivariance.png" alt="HSV space value equivariance" width="600px">
 
-  *Figure 10: Accuracy over test-time value shifts for value equivariant networks trained using input images in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (value) Equivariant networks, and jitter indicates training time value augmentation. ([source](CEConv/plot_fig9_value.py))* 
+  *Figure 10: Accuracy over test-time value shifts for value equivariant networks trained using input images in HSV color space format. ResNet-18 indicates a baseline model, CE indicates Color (value) Equivariant networks, and jitter indicates training time value augmentation. ([source](CEConv/plot_fig9_value.py))* 
 </div>
 
-While being trained with five different shifts the model is not able to show equivariance, similar to the saturation results, and follows the performance of the baseline Resnet-18. Training with jitter increases performance at the extremes of the shifted images but decreases performance around the original non-shifted images.
+While being trained with five different shifts the model is not able to show equivariance, similar to the saturation results, and follows the performance of the baseline ResNet-18. Training with jitter increases performance at the extremes of the shifted images but decreases performance around the original non-shifted images.
 
 ##### Combining Hue and Saturation Equivariance
 
@@ -425,7 +424,7 @@ During test time, different sets of hue-shifted images are evaluated on accuracy
 <div align="center">
   <img src="blogpost_imgs/lab_equivariance.png" alt="LAB space hue equivariance" width="600px">
 
-  *Figure 13: Accuracy over test-time hue shifts for hue equivariant networks trained using input images in LAB color space format. Resnet-18 indicates a baseline model, CE indicates Color (hue) Equivariant networks, jitter indicates training time hue augmentation, and LAB shift indicates that the test-time hue shift is performed in LAB space instead of HSV/RGB space. ([source](CEConv/plot_fig9_lab.py))* 
+  *Figure 13: Accuracy over test-time hue shifts for hue equivariant networks trained using input images in LAB color space format. ResNet-18 indicates a baseline model, CE indicates Color (hue) Equivariant networks, jitter indicates training time hue augmentation, and LAB shift indicates that the test-time hue shift is performed in LAB space instead of HSV/RGB space. ([source](CEConv/plot_fig9_lab.py))* 
 </div>
 
 Figure 13 displays that the hue equivariant network (CE) tested with hue space shifts in RGB/HSV space shows small bumps around ±120°, demonstrating a slight improvement over the ResNet-18 baseline. However, the same model evaluated with hue space shift applied in LAB space performs not only similarly to the baseline at 0°, but also at ±120°, leading to LAB space hue shift equivariance. This means that there is a significant gap between hue shifts performed in LAB space and RGB/HSV space, showing that the model is not able to generalize to RGB/HSV space.
@@ -586,7 +585,7 @@ In order to further explore the cause for the trends as observed in Figure 8 and
 <div align="center">
   <img src="blogpost_imgs/Sat_HSV_Fig9_satshiftKernel_Camelyon17.jpg" alt="..." width="70%">
 
-  *Figure E.1: Test accuracy over test-time saturation shift for saturation equivariant networks trained using input images from Camelyon17 dataset in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, jitter indicates training time saturation augmentation set to be in [0, 20], and random baseline displays what the test accuracy would be if a class was randomly picked. The CE-Resnet-18 models are trained for 5 saturation shifts of -1, -0.5, 0, 0.5, and 1. ([source](CEConv/plot_saturation.py))*
+  *Figure E.1: Test accuracy over test-time saturation shift for saturation equivariant networks trained using input images from Camelyon17 dataset in HSV color space format. ResNet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, jitter indicates training time saturation augmentation set to be in [0, 20], and random baseline displays what the test accuracy would be if a class was randomly picked. The CE-ResNet-18 models are trained for 5 saturation shifts of -1, -0.5, 0, 0.5, and 1. ([source](CEConv/plot_saturation.py))*
 </div>
 
 The figure above displays a clear peak around no saturation shifts for all settings, indicating a lack of equivariance. Nonetheless, CE-ResNet-18 outperforms ResNet-18 on average. Furthermore, the models with jitter showcase more equivariance than the models without. Notably, the jitter mainly aided them in becoming robuster to decreases in saturation. However, even for positive saturation shifts, the test accuracy decreases slower than for the models without jitter.
@@ -595,7 +594,7 @@ The figure above displays a clear peak around no saturation shifts for all setti
 <div align="center">
   <img src="blogpost_imgs/Sat_HSV_Fig9_satshiftImage_Camelyon17.jpg" alt="..." width="70%">
 
-  *Figure E.2: Test accuracy over test-time saturation shift for saturation equivariant networks trained using input images from Camelyon17 dataset in HSV color space format. Resnet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, jitter indicates training time saturation augmentation set to be in [0, 20], and random baseline displays what the test accuracy would be if a class was randomly picked. The CE-Resnet-18 models are trained for 5 saturation shifts of -1, -0.5, 0, 0.5, and 1 that were applied on the input image. ([source](CEConv/plot_saturation.py))*
+  *Figure E.2: Test accuracy over test-time saturation shift for saturation equivariant networks trained using input images from Camelyon17 dataset in HSV color space format. ResNet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, jitter indicates training time saturation augmentation set to be in [0, 20], and random baseline displays what the test accuracy would be if a class was randomly picked. The CE-ResNet-18 models are trained for 5 saturation shifts of -1, -0.5, 0, 0.5, and 1 that were applied on the input image. ([source](CEConv/plot_saturation.py))*
 </div>
 
 Figure E.2 is similar to E.1. A difference concerns the peaks: they have become narrower for all models, indicating a lack of equivariance. However, CE-ResNet-18 without jitter obtained a higher test accuracy on average, where the performance especially increased for negative saturation shifts. CE-ResMet-18 with jitter obtained the highest mean test accuracy, which was still 0.8 percentage point lower than when the same operations were applied to the kernel instead.
