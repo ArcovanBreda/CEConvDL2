@@ -68,7 +68,7 @@ $$\begin{align}
 
 ## Color Equivariance
 
-The original paper exploits the concept of group equivariant convolutions to achieve color equivariance, defined as equivariance to hue shifts. In the HSV (Hue-Saturation-Value) color space, hue is represented as an angular scalar value. The hue value is shifted by adding an offset after which the modulo is taken to ensure a valid range. The HSV space is reprojected to the RGB color space such that the hue shifts correspond to a rotation along the diagonal vector [1, 1, 1]. 
+The original paper exploits the concept of group equivariant convolutions to achieve color equivariance, defined as equivariance to hue shifts. In the HSV (Hue-Saturation-Value) color space, hue is represented as an angular scalar value between $0$ and $2\pi$. The hue value can be shifted by adding an offset after which the modulo $2\pi$ is taken to ensure a valid range. When converting this process to the RGB space a hue shift corresponds to a rotation along the diagonal vector [1, 1, 1]. 
 
 This definition is extended to group theory, by defining the group $H_n$ as a subgroup of the $SO(3)$ group. Specifically, $H_n$ consists of multiples of $\frac{360}{n}$-degree rotations along the [1, 1, 1] diagonal vector in $\mathbb{R}^3$ space. 
 
