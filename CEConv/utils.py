@@ -181,7 +181,7 @@ def plot_figure_9(data_dir,verbose=False):
     plt.show()
 
 
-def evaluate_classify(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classification/flowers102-resnet18_1-false-jitter_0_0-split_1_0-seed_0.pth.tar.ckpt", 
+def evaluate_classify(path, 
                       ce_stages=None, seperable=True, width=None, verbose=True,
                       save_npz=True):
     import pytorch_lightning as pl
@@ -275,7 +275,6 @@ def evaluate_classify(path="/home/arco/Downloads/Master AI/CEConvDL2/output/clas
     np.savez(file=f'{"/".join(path.split("/")[:-1])}/npz/{run_name}', hue=model.results["hue"], acc=model.results["acc"])
     return model.results
 
-# print(evaluate_classify("/home/arco/Downloads/Master AI/CEConvDL2/CEConv/output/flowers102-resnet18_10-true-jitter_0_0-split_1_0-seed_0.pth.tar.ckpt"))
 
 def preprocess_data(stages):
     zero_stages, one_stage, two_stages, three_stages, four_stages = stages
@@ -289,7 +288,7 @@ def preprocess_data(stages):
 
     return values
 
-def color_selective_datasets_plot(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classification/npz"):
+def color_selective_datasets_plot(path):
 
     flower_names = [
         "flowers102-resnet18_1-false-jitter_0_0-split_1_0-seed_0-sat_jitter_1_1-val_jitter_1_1.npz",
@@ -371,11 +370,10 @@ def color_selective_datasets_plot(path="/home/arco/Downloads/Master AI/CEConvDL2
 
 
 def hue_shifts_plot():
-    x = [-0.5, -0.4722222222222222, -0.4444444444444444, -0.4166666666666667, -0.3888888888888889, -0.3611111111111111, -0.33333333333333337, -0.3055555555555556, -0.2777777777777778, -0.25, -0.2222222222222222, -0.19444444444444448, -0.16666666666666669, -0.1388888888888889, -0.11111111111111116, -0.08333333333333337, -0.05555555555555558, -0.02777777777777779, 0.0, 0.02777777777777779, 0.05555555555555558, 0.08333333333333326, 0.11111111111111105, 0.13888888888888884, 0.16666666666666663, 0.19444444444444442, 0.2222222222222222, 0.25, 0.2777777777777777, 0.30555555555555547, 0.33333333333333326, 0.36111111111111105, 0.38888888888888884, 0.41666666666666663, 0.4444444444444444, 0.4722222222222222, 0.5]
-
-    y_1 = [0.04602374508976936, 0.045047976076602936, 0.043584324419498444, 0.04651162773370743, 0.04586111381649971, 0.04228329658508301, 0.036916572600603104, 0.032037731260061264, 0.028947796672582626, 0.030248820781707764, 0.034802407026290894, 0.04683688282966614, 0.07058057934045792, 0.12701252102851868, 0.21092860400676727, 0.3407058119773865, 0.5132541656494141, 0.6563668847084045, 0.7025532722473145, 0.6407545804977417, 0.4532444179058075, 0.2693120837211609, 0.1771019697189331, 0.12408521771430969, 0.09773947298526764, 0.07513416558504105, 0.06017238646745682, 0.04976418986916542, 0.043584324419498444, 0.03984387591481209, 0.04212066903710365, 0.04521060362458229, 0.045373231172561646, 0.04456008970737457, 0.042933810502290726, 0.042933810502290726, 0.04602374508976936]
-    y_5 = [0.3283460736274719, 0.383964866399765, 0.5194340348243713, 0.655879020690918, 0.6783216595649719, 0.5670840740203857, 0.41827940940856934, 0.34981298446655273, 0.361847460269928, 0.47747600078582764, 0.59895920753479, 0.6179866790771484, 0.5147178173065186, 0.3740445673465729, 0.3309481143951416, 0.3746950626373291, 0.5267522931098938, 0.6779963970184326, 0.7243454456329346, 0.6521385312080383, 0.4750365912914276, 0.3420068323612213, 0.32281672954559326, 0.406570166349411, 0.5300048589706421, 0.5992844104766846, 0.58204585313797, 0.4561717212200165, 0.3631484806537628, 0.36119693517684937, 0.4467393159866333, 0.576353907585144, 0.6713286638259888, 0.6459587216377258, 0.4815417230129242, 0.3545292019844055, 0.3283460736274719]
-    y_10 = [0.5981460213661194, 0.5615547299385071, 0.573263943195343, 0.6586436629295349, 0.70596843957901, 0.689380407333374, 0.7240201830863953, 0.7355667352676392, 0.6989754438400269, 0.6266059279441833, 0.630183756351471, 0.6105057597160339, 0.5467555522918701, 0.5469182133674622, 0.6035127639770508, 0.6456334590911865, 0.6483981013298035, 0.7173523902893066, 0.746300220489502, 0.714913010597229, 0.6601073145866394, 0.6605952382087708, 0.6358757615089417, 0.564319372177124, 0.5607416033744812, 0.58806312084198, 0.5942429900169373, 0.6083915829658508, 0.695235013961792, 0.734428346157074, 0.7106846570968628, 0.6988128423690796, 0.7046674489974976, 0.6677508354187012, 0.5961945056915283, 0.5978207588195801, 0.5981460213661194]
+    x = np.load("output/test_results/hue_shift_RGB/flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-sat_jitter_1_1-val_jitter_1_1.npz")["hue"]
+    y_1 = np.load("./output/test_results/hue_shift_RGB/flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-sat_jitter_1_1-val_jitter_1_1.npz")["acc"]
+    y_5 = np.load("./output/test_results/hue_shift_RGB/flowers102-resnet18_5-true-jitter_0_0-split_1_0-seed_0-sat_jitter_1_1-val_jitter_1_1.npz")["acc"]
+    y_10 = np.load("./output/test_results/hue_shift_RGB/flowers102-resnet18_10-true-jitter_0_0-split_1_0-seed_0-sat_jitter_1_1-val_jitter_1_1.npz")["acc"]
     
     print("Max accuracy 1 rot: ", max(y_1))
     print("Max accuracy 5 rot: ", max(y_5))
@@ -403,7 +401,7 @@ def hue_shifts_plot():
 
     plt.show()
 
-def jitter_plot(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classification/npz"):
+def jitter_plot(path):
     x = np.load(f"{path}/flowers102-resnet18_1-false-jitter_0_2-split_1_0-seed_0-sat_jitter_1_1-val_jitter_1_1.npz")["hue"]
     resnet_0_2 = np.load(f"{path}/flowers102-resnet18_1-false-jitter_0_2-split_1_0-seed_0-sat_jitter_1_1-val_jitter_1_1.npz")["acc"]
     resnet_0_4 = np.load(f"{path}/flowers102-resnet18_1-false-jitter_0_4-split_1_0-seed_0-sat_jitter_1_1-val_jitter_1_1.npz")["acc"]
@@ -441,7 +439,7 @@ def jitter_plot(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classifica
     plt.show()
 
 
-def hue_kernel(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classification/npz"):
+def hue_kernel(path):
 
     x = np.load(f"{path}/hue_shift_img/hue_baseline_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_shift-sat_jitter_1_1-val_jitter_1_1-img_shift-no_norm.npz")["hue"]
     baseline = np.load(f"{path}/hue_shift_kernel/hue_baseline_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_shift-sat_jitter_1_1-val_jitter_1_1-no_norm.npz")["acc"]
@@ -468,7 +466,7 @@ def hue_kernel(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classificat
     plt.ylim(-0.5, 85)
     plt.show()
 
-def hue_image(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classification/npz"):
+def hue_image(path):
 
     x = np.load(f"output/test_results/hue_shift_img/hue_baseline_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_shift-sat_jitter_1_1-val_jitter_1_1-img_shift-no_norm.npz")["hue"]
     baseline = np.load(f"output/test_results/hue_shift_img/hue_baseline_flowers102-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-hue_shift-sat_jitter_1_1-val_jitter_1_1-img_shift-no_norm.npz")["acc"]
@@ -699,7 +697,8 @@ def lab(npz_folder="./output/test_results/lab_shift"):
     plt.grid(axis="both")
     plt.ylim(0, 110)
     plt.show()
-    
+
+
 def value_image(path="./output/test_results"):
     npz_folder = path
     x = np.load(
@@ -764,19 +763,6 @@ def value_image(path="./output/test_results"):
     plt.ylim(0, 78)
     print(x)
     plt.show()
-    
-from PIL import Image
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.colors import hsv_to_rgb
-import math
-from skimage import color
-import kornia
-import skimage as ski
-import torchvision
-import torch
-from PIL import Image
-
 
 def get_3Dmatrix(rotations):
     cos = math.cos(2 * math.pi / rotations)
