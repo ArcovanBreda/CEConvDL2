@@ -410,8 +410,8 @@ def jitter_plot(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classifica
 
     ce_resnet_0_1 = np.load(f"{path}/flowers102-resnet18_3-true-jitter_0_1-split_1_0-seed_0-sat_jitter_1_1-val_jitter_1_1.npz")["acc"]
     ce_resnet_0_2 = np.load(f"{path}/flowers102-resnet18_3-true-jitter_0_2-split_1_0-seed_0-sat_jitter_1_1-val_jitter_1_1.npz")["acc"]
-    
-    ce_baseline = np.load(f"/home/arco/Downloads/Master AI/CEConvDL2/output/classification/npz/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0.npz")["acc"]
+
+    ce_baseline = np.load(f"{path}/flowers102-resnet18_3-true-jitter_0_0-split_1_0-seed_0.npz")["acc"]
 
     f, (ax1) = plt.subplots(1, 1, figsize=(14,7))
     plt.subplots_adjust(wspace=0.4, hspace=0.3)
@@ -430,7 +430,7 @@ def jitter_plot(path="/home/arco/Downloads/Master AI/CEConvDL2/output/classifica
     ax1.set_yticklabels([0, 10, 20, 30, 40, 50, 60, 70], fontsize=16)
     ax1.set_xticks([-0.45, -0.3, -0.15, 0.0, 0.15, 0.3, 0.45])
     ax1.set_xticklabels([-150, -100, -50, 0, 50, 100, 150], fontsize=16)
-    ax1.set_title('Effect of hue rotations with reprojection - Flowers-102', fontsize=22)
+    ax1.set_title('Effect of jitter on ResNet-18 and CE-ResNet-18', fontsize=22)
     ax1.set_xlabel('Test-time hue shift (°)', fontsize=18)
     ax1.set_ylabel('Test accuracy (%)', fontsize=18)
 
