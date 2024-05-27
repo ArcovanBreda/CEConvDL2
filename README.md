@@ -240,6 +240,20 @@ python -m experiments.classification.train --rotations 5 --dataset flowers102 --
 # Saturation equivariant network + jitter
 python -m experiments.classification.train --rotations 5 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --sat_jitter 0 100 --separable --hsv --sat_shift --hsv_test --nonorm
 ```
+**Saturation on Camelyon17 dataset**
+```bash
+# Kernel shift baseline (--rotations 1), with 5 shifts (--rotations 5), without jitter (--jitter 1 1) and with jitter (--jitter 0 20)
+python -m experiments.classification.train --rotations 1 --dataset camelyon17 --bs 2048 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hsv_test --sat_jitter 1 1 --nonorm
+python -m experiments.classification.train --rotations 1 --dataset camelyon17 --bs 2048 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hsv_test --sat_jitter 0 20 --nonorm
+python -m experiments.classification.train --rotations 5 --dataset camelyon17 --bs 2048 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hsv_test --sat_jitter 1 1 --nonorm
+python -m experiments.classification.train --rotations 5 --dataset camelyon17 --bs 2048 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hsv_test --sat_jitter 0 20 --nonorm
+
+# Image shift baseline (--rotations 1), with 5 shifts (--rotations 5), without jitter (--jitter 1 1) and with jitter (--jitter 0 20)
+python -m experiments.classification.train --rotations 1 --dataset camelyon17 --bs 2048 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hsv_test --sat_jitter 1 1 --nonorm --img_shift
+python -m experiments.classification.train --rotations 1 --dataset camelyon17 --bs 2048 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hsv_test --sat_jitter 0 20 --nonorm --img_shift
+python -m experiments.classification.train --rotations 5 --dataset camelyon17 --bs 2048 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hsv_test --sat_jitter 1 1 --nonorm --img_shift
+python -m experiments.classification.train --rotations 5 --dataset camelyon17 --bs 2048 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hsv_test --sat_jitter 0 20 --nonorm --img_shift
+```
 **Value**
 ```bash
 # Baseline
@@ -252,13 +266,16 @@ python -m experiments.classification.train --rotations 5 --dataset flowers102 --
 # Value equivariance + jitter
 python -m experiments.classification.train --rotations 5 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --img_shift --value_shift --epochs 200 --nonorm --hsv_test --value_jitter 0 100
 ```
-<!-- **Hue and Saturation**
+**Hue and Saturation**
 ```bash
-# Image shift, 3 rotations for hue and 3 shifts for saturation
-python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hue_shift --hsv_test --nonorm
+# Baseline Kernel and Image shift respectively
+python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hue_shift --hsv_test --nonorm
+python -m experiments.classification.train --rotations 1 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hue_shift --hsv_test --nonorm --img_shift
 # Kernel shift, 3 rotations for hue and 3 shifts for saturation
+python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hue_shift --hsv_test --nonorm
+# Image shift, 3 rotations for hue and 3 shifts for saturation
 python -m experiments.classification.train --rotations 3 --dataset flowers102 --bs 64 --epoch 200 --architecture resnet18 --groupcosetmaxpool --separable --hsv --sat_shift --hue_shift --hsv_test --img_shift --nonorm
-``` -->
+```
 #### LAB 
 **Hue**
 ```bash
