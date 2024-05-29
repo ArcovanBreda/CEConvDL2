@@ -592,7 +592,7 @@ The figure above displays a clear peak around no saturation shifts for all setti
 
 **Shifting the Input Image -** An equivalent setup to the saturation equivariant network trained on the Flowers102 dataset with the transformations applied to the input image was chosen in order to conduct this experiment with Camelyon17 instead.
 <div align="center">
-  <img src="blogpost_imgs/Sat_HSV_Fig9_satshiftImage_Camelyon17.jpg" alt="Saturation equivariance on Camelyon17 dataset with transformations applied on image" width="70%">
+  <img src="blogpost_imgs/Sat_HSV_Fig9_satshiftImage_Camelyon17.png" alt="Saturation equivariance on Camelyon17 dataset with transformations applied on image" width="70%">
 
   *Figure E.2: Test accuracy over test-time saturation shift for saturation equivariant networks trained using input images from Camelyon17 dataset in HSV color space format. ResNet-18 indicates a baseline model, CE indicates Color (saturation) Equivariant networks, jitter indicates training time saturation augmentation set to be in [0, 20], and random baseline displays what the test accuracy would be if a class was randomly picked. The CE-ResNet-18 models are trained for 5 saturation shifts of -1, -0.5, 0, 0.5, and 1 that were applied to the input image. ([source](CEConv/plot_saturation.py))*
 </div>
