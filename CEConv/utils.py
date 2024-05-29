@@ -969,8 +969,8 @@ def plot_sat_shift(paths, shift="Kernel"):
 
     fig, ax = plt.subplots(figsize=(14, 7))
     plt.plot(x, y_nonorm_baseline, label=f"None ({np.mean(y_nonorm_baseline):.1f}%)",  linewidth=3)
-    plt.plot(x, y_nonorm, label=f"3 shifts ({np.mean(y_nonorm):.1f}%)",  linewidth=3)
-    plt.plot(x, y_nonorm_baseline_jitter, label=f"5 shifts ({np.mean(y_nonorm_baseline_jitter):.1f}%)",  linewidth=3)
+    plt.plot(x, y_nonorm_baseline_jitter, label=f"3 shifts ({np.mean(y_nonorm_baseline_jitter):.1f}%)",  linewidth=3)
+    plt.plot(x, y_nonorm, label=f"5 shifts ({np.mean(y_nonorm):.1f}%)",  linewidth=3)
     plt.plot(x_nonorm_jitter, y_nonorm_jitter, label=f"10 shifts ({np.mean(y_nonorm_jitter):.1f}%)",  linewidth=3)
 
     plt.title(f"Saturation equivariant network trained in HSV space\n{shift} Shift | Flowers-102 dataset", fontsize=22, pad=10)
