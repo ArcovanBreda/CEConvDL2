@@ -534,7 +534,7 @@ Further investigation was conducted on the impact of the number of shifts and th
 
 **Effects of Saturation Shifts -** For the number of shifts, different models were trained with respectively 3, 5, and 10 saturation shifts ranging from -1 to 1 and including 0, so no shift. The baseline model was a default ResNet-18.
 <div align="center">
-  <img src="blogpost_imgs/Sat_HSV_ShiftsKernel.png" alt="Hue and Saturation equivariance in HSV space" width="70%">
+  <img src="blogpost_imgs/Sat_HSV_ShiftsKernel.jpg" alt="Hue and Saturation equivariance in HSV space" width="70%">
 
   *Figure B.1: Test accuracy of a saturation equivariant model trained on a varying number of saturation shifts ranging from -1 to 1 while including 0. The baseline is indicated with None. No jitter was applied. ([source](CEConv/plot_saturation.py))* 
 </div>
