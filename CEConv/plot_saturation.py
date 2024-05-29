@@ -119,8 +119,8 @@ def plot_sat_shift(paths, shift="Kernel"):
 
     fig, ax = plt.subplots(figsize=(14, 7))
     plt.plot(x, y_nonorm_baseline, label=f"None ({np.mean(y_nonorm_baseline):.1f}%)",  linewidth=3)
-    plt.plot(x, y_nonorm, label=f"3 shifts ({np.mean(y_nonorm):.1f}%)",  linewidth=3)
-    plt.plot(x, y_nonorm_baseline_jitter, label=f"5 shifts ({np.mean(y_nonorm_baseline_jitter):.1f}%)",  linewidth=3)
+    plt.plot(x, y_nonorm_baseline_jitter, label=f"3 shifts ({np.mean(y_nonorm_baseline_jitter):.1f}%)",  linewidth=3)
+    plt.plot(x, y_nonorm, label=f"5 shifts ({np.mean(y_nonorm):.1f}%)",  linewidth=3)
     plt.plot(x_nonorm_jitter, y_nonorm_jitter, label=f"10 shifts ({np.mean(y_nonorm_jitter):.1f}%)",  linewidth=3)
 
     plt.title(f"Saturation equivariant network trained in HSV space\n{shift} Shift | Flowers-102 dataset", fontsize=22, pad=10)
@@ -169,14 +169,14 @@ paths_sat_base = [
 ]
 
 paths_camelyon17 = [
-    "CEConv/output/test_results/camelyon17-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-val_jitter_1_1-hsv_test-no_norm.npz",
-    "CEConv/output/test_results/camelyon17-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-val_jitter_1_1-hsv_test-no_norm.npz",
-    "CEConv/output/test_results/camelyon17-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-val_jitter_1_1-hsv_test-no_norm.npz",
-    "CEConv/output/test_results/camelyon17-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-val_jitter_1_1-hsv_test-no_norm.npz",
-    "CEConv/output/test_results/camelyon17-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-val_jitter_1_1-img_shift-hsv_test-no_norm.npz",
-    "CEConv/output/test_results/camelyon17-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-val_jitter_1_1-img_shift-hsv_test-no_norm.npz",
-    "CEConv/output/test_results/camelyon17-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-val_jitter_1_1-img_shift-hsv_test-no_norm.npz",
-    "CEConv/output/test_results/camelyon17-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-val_jitter_1_1-img_shift-hsv_test-no_norm.npz"
+    "CEConv/output/test_results/sat/camelyon17-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-val_jitter_1_1-hsv_test-no_norm.npz",
+    "CEConv/output/test_results/sat/camelyon17-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-val_jitter_1_1-hsv_test-no_norm.npz",
+    "CEConv/output/test_results/sat/camelyon17-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-val_jitter_1_1-hsv_test-no_norm.npz",
+    "CEConv/output/test_results/sat/camelyon17-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-val_jitter_1_1-hsv_test-no_norm.npz",
+    "CEConv/output/test_results/sat/camelyon17-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-val_jitter_1_1-img_shift-hsv_test-no_norm.npz",
+    "CEConv/output/test_results/sat/camelyon17-resnet18_1-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-val_jitter_1_1-img_shift-hsv_test-no_norm.npz",
+    "CEConv/output/test_results/sat/camelyon17-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_1_1-val_jitter_1_1-img_shift-hsv_test-no_norm.npz",
+    "CEConv/output/test_results/sat/camelyon17-resnet18_5-true-jitter_0_0-split_1_0-seed_0-hsv_space-sat_shift-sat_jitter_0_20-val_jitter_1_1-img_shift-hsv_test-no_norm.npz"
 ]
 
 plot_3d(paths_3d[0], saturations=25, rotations=25, num_shift=0, shift="Image", filename="HueSat_HSV_shiftImgBase_noNorm.jpg")
@@ -187,5 +187,5 @@ plot_sat_base(paths_sat_base[4:])
 plot_sat_base(paths_sat_base, shift="Image")
 plot_sat_shift(paths_sat_shifts)
 plot_sat_jitters(paths_jit)
-plot_sat_base(paths_camelyon17, shift="Kernel", dataset="Camelyon17", top=100)
+plot_sat_base(paths_camelyon17[:4], shift="Kernel", dataset="Camelyon17", top=100)
 plot_sat_base(paths_camelyon17[4:], shift="Image", dataset="Camelyon17", top=100)
