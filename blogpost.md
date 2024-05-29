@@ -545,7 +545,7 @@ Figure B.1 showcases that the number of shifts does not make a significant impac
 <div align="center">
   <img src="blogpost_imgs/Sat_HSV_satshiftkernel_jitter.png" alt="Hue and Saturation equivariance in HSV space" width="70%">
 
-  *Figure B.2: Test accuracy of a saturation equivariant model. The model was trained on 5 saturation shifts, namely -1, 0.5, 0, 0.5 and 1. Saturation jitter was applied during training with varying upper bounds of 2, 20 and 100. ([source](CEConv/plot_saturation.py))* 
+  *Figure B.2: Test accuracy of a saturation equivariant model. The model was trained on 5 saturation shifts, namely -1, 0.5, 0, 0.5 and 1. The baseline model(None) is a CE-ResNet-18 model trained with 5 shifts without any jitter. Saturation jitter was applied during training with varying upper bounds of 2, 20 and 100. ([source](CEConv/plot_saturation.py))* 
 </div>
 
 In the above figure, all degrees of saturation jitter enhance robustness to test-time saturation distribution shifts compared to the baseline with none. The upper bound of 2 ensures an increased test accuracy when no shift is applied. However, it rapidly drops when shifts are applied, where it is outperformed by the upper bound of 20. The upper bound of 100 also appears to be robust. Nevertheless, it suffers from a significant drop in test accuracy for many saturation shifts. Eventually, we decided to utilize an upper bound of 20. This led to the most stable results while preserving test accuracy despite the lower peak when no jitter was applied. 
