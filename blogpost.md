@@ -457,7 +457,7 @@ In future research, the use of steerable convolutions could be explored. Steerab
   <li>Hannah van den Bos: Reproduction of color selectivity, rotation, and jitter ablation with implementation of plots and supplementary function evaluate, wrote introduction, recap on group equivariant convolutions, color equivariance and concluding remarks</li>
   <li>Rens den Braber: Implementation/Description of LAB space and Value equivariance, and HSV equivariance formulas. </li>
   <li>Arco van Breda: Reproduction of color imbalance and image classification, implementation of reproducibility plots and supplementary functionalities (load, save, evaluate) in the original code, and an additional experiment on the reproduction of color imbalance.</li>
-  <li>Dante Zegveld: Implementation of Hue shift equivariance and combining hue and shift equivariance on kernels and images, wrote color spaces, future research introduction and HSV equivariance </li>
+  <li>Dante Zegveld: Implementation of hue shift equivariance with lifting performed on the kernel but also on the image. Implementation of saturation shift equivariance when lifting the image and combining hue and saturation shift equivariance on kernels and images. Wrote color spaces, future research introduction and HSV equivariance. </li>
 
 </ul>
 
