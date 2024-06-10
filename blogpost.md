@@ -2,6 +2,8 @@
 
 **Authors:** *S.R. Abbring, H.C. van den Bos, R. den Braber, A.J. van Breda, D. Zegveld*
 
+**Supervised by**: *Alejandro García Castellanos, a.garciacastellanos@uva.nl*
+
 ---
 
 In this blog post, we discuss, analyze, and extend upon the findings of the paper titled *Color Equivariant Convolutional Networks* [[5]](#main). The paper introduces Color Equivariant Convolutions (CEConvs) that leverage parameter sharing over hue shifts. The authors demonstrate the benefits of the novel model in terms of robustness to color alterations and classification accuracy when confronted with test-time hue shifts.
